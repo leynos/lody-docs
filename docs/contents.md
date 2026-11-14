@@ -12,8 +12,9 @@ once, with a note on why a reader would open it.
   generated references, and tooling live, and which files are generated.
 - [Developer's guide](developers-guide.md): how to run the gates, check the
   TLA+ models, regenerate the cloud API reference, and add a document.
-- [Documentation style guide](https://github.com/leynos/agent-helper-scripts/blob/main/documentation-library/documentation-style-guide.md):
-  the conventions that new documents in this repository follow.
+- [Documentation style guide](documentation-style-guide.md): the spelling,
+  formatting, captioning, and document-type conventions that every document
+  here follows.
 
 ## Flock protocol
 
