@@ -89,5 +89,96 @@
     "expect": "pass",
     "group": "liveness",
     "note": "L1 and L2: cancellation wins; the queue settles."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped request replay: once per server instance, bounded restart loop, no silent loss (R1-R3)."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_RestartSingleUse.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "If the backend refuses a reused lifecycle proof, a restart request restarts the daemon once."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_DurableOffset.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Candidate: with a persisted read offset, a request runs at most once."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped history-write admission: the write is applied at most once (H1, H2)."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped encrypted dispatch over three routes: one offer and at most one agent start (X1-X3)."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_AtMostOnce.cfg",
+    "expect": "AtMostOnce",
+    "group": "ablation",
+    "note": "Observation: the shipped protocol runs an unexpired request again after a restart."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_RestartLoop.cfg",
+    "expect": "RestartOnce",
+    "group": "ablation",
+    "note": "Observation: if the backend accepts a reused lifecycle proof, a restart request restarts the daemon repeatedly until it expires."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_DurableOffsetLoss.cfg",
+    "expect": "NoSilentLoss",
+    "group": "ablation",
+    "note": "Candidate trade-off: a persisted read offset loses a request read just before a crash."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_WriteFirst.cfg",
+    "expect": "WriteAtMostOnce",
+    "group": "ablation",
+    "note": "Writing before claiming applies the write twice after a crash."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_ClaimedUnwritten.cfg",
+    "expect": "ClaimImpliesWritten",
+    "group": "ablation",
+    "note": "Observation: a crash after the claim leaves the write undone and the identifier refused."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_NoStartClaim.cfg",
+    "expect": "RunAtMostOnce",
+    "group": "ablation",
+    "note": "Without the agent-start claim, two routes start the same turn."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_Uncertain.cfg",
+    "expect": "ClaimImpliesRan",
+    "group": "ablation",
+    "note": "Observation: a crash after the start claim leaves the turn claimed and never run."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_NoAck.cfg",
+    "expect": "DeliveryAcknowledged",
+    "group": "ablation",
+    "note": "Observation: a crash between the receipt claim and the retained ACK silences the request."
   }
 ]

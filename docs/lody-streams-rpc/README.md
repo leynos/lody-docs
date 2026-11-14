@@ -78,6 +78,7 @@ repository.
 | [Method reference](methods.md) | Every declared and registered method reconciled; per-method rules; detailed lifecycles for dispatch, cancel, steer, terminate, status, history, restart and upgrade |
 | [Encrypted RPC](encrypted-rpc.md) | Encrypted workspaces: frames, keys, journals, receipts, and how Streams, Iroh and durable dispatch interact |
 | [Conformance](conformance.md) | Executed probes, validated examples, failure matrix, compatibility classes, conformance cases and the interoperability suite |
+| [Formal models](formal-model.md) | TLA+ models of request replay, the history-write claim and encrypted multi-route dispatch, with TLC's verdicts |
 | [Implementation notes](implementation-notes.md) | Contradictions, evidence gaps, known defects, and the implications for the Rust implementation |
 | [Evidence index](evidence.md) | Every cited source location with a permalink |
 | [`probes/`](probes/) | Sources and raw results of the probes |

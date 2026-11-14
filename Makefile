@@ -30,7 +30,7 @@ deps: $(NODE_DEPS) ## Install the pinned Node.js development dependencies
 $(NODE_DEPS): package-lock.json
 	npm ci
 
-tlc: tools ## Run the safety and ablation models (about one minute)
+tlc: tools ## Run the safety and ablation models (about two minutes)
 	python3 scripts/check_models.py --group safety --group ablation
 
 tlc-liveness: tools ## Run the liveness models (about ten minutes)

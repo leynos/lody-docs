@@ -65,6 +65,9 @@ Loro Durable Streams.
 - [Conformance](lody-streams-rpc/conformance.md): executed probes, validated
   examples, the failure matrix, and the conformance cases to test an
   implementation against.
+- [Formal models](lody-streams-rpc/formal-model.md): TLA+ models of request
+  replay, the history-write claim, and encrypted dispatch over three routes,
+  with what TLC found to hold and not to hold.
 - [Implementation notes](lody-streams-rpc/implementation-notes.md): where
   Lody's code, tests, and prose disagree, the known defects, and what these
   imply for a Rust implementation.
@@ -102,6 +105,7 @@ The optional cloud services that the public Lody clients call.
 ## Formal models
 
 - [TLA+ models](../tla/): the modules and TLC configurations behind the Flock
-  guarantees, explained in the Flock formal model document listed above.
+  and RPC guarantees, explained in the two formal model documents listed
+  above.
   - [Model manifest](../tla/models.json): every configuration with the verdict
     TLC is expected to reach, including the ablations that must fail.

@@ -272,7 +272,7 @@ look for unbounded guarantees about LWW merge itself.
 
 ```sh
 make tools          # download the pinned tla2tools.jar (checksum verified)
-make tlc            # safety and ablation models, about one minute
+make tlc            # safety and ablation models, about two minutes
 make tlc-liveness   # liveness models, about ten minutes on 32 cores
 ```
 

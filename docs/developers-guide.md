@@ -40,7 +40,7 @@ Every gate is a `Makefile` target. `make help` lists them.
 | `cloud-api-check` | The generated cloud API files match what the generator produces from the pinned Lody source |
 | `openapi` | `openapi.yaml` is a valid OpenAPI document |
 | `lint` | All of the above, in that order |
-| `tlc` | Each safety model holds, and each ablation still produces its counterexample (about one minute) |
+| `tlc` | Each safety model holds, and each ablation and observation still produces its counterexample (about two minutes) |
 | `tlc-liveness` | Each liveness property holds (about ten minutes on 32 cores) |
 | `all` | `lint` and `tlc` |
 | `check` | `lint`, `tlc`, and `tlc-liveness` |
@@ -53,7 +53,7 @@ in `tla/`. Run the gates one after another, not in parallel.
 `make fmt` rewrites Python, JavaScript, and JSON formatting. Nothing reformats
 Markdown; wrap prose at 80 columns by hand.
 
-## 3. The Flock models
+## 3. The formal models
 
 The model runner, `scripts/check_models.py`, reads `tla/models.json`. Each
 entry names a module, a configuration, a group (`safety`, `ablation`, or
@@ -66,9 +66,15 @@ To add a configuration, create the `.cfg` file in `tla/` and add its entry to
 one at a time: the state space grows quickly with the number of keys and the
 clock bound.
 
+The manifest uses the `ablation` group for every configuration that must
+fail. That covers true ablations, where a mechanism is removed, and
+observations, where a property the shipped protocol lacks is checked against
+the shipped behaviour.
+
 A change to a model's properties or results must also be reflected in the
-[formal model](flock-protocol/formal-model.md) document, which reports state
-counts and verdicts.
+document that reports its state counts and verdicts: the
+[Flock formal model](flock-protocol/formal-model.md) or the
+[RPC formal models](lody-streams-rpc/formal-model.md).
 
 ## 4. The cloud API reference
 
