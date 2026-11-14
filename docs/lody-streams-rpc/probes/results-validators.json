@@ -1,0 +1,126 @@
+{
+  "requests": {
+    "REQ-V1 ping": true,
+    "REQ-V2 fractional timestamps": true,
+    "REQ-V3 status empty params": true,
+    "REQ-V4 status includeDisk true": true,
+    "REQ-V5 legacy replyTo": true,
+    "REQ-V6 arbitrary replyTo": true,
+    "REQ-V7 rpcVersion 2 (schema only)": true,
+    "REQ-V8 expired (schema only)": true,
+    "REQ-V9 sentAt 0": true,
+    "REQ-V10 expiresAt before sentAt": true,
+    "REQ-I1 unknown top-level key": false,
+    "REQ-I2 unknown method": false,
+    "REQ-I3 expiresAt 0": false,
+    "REQ-I4 includeDisk false": false,
+    "REQ-I5 unknown params key": false,
+    "REQ-I6 params null": false,
+    "REQ-I7 missing params": false,
+    "REQ-I8 ISO expiresAt": false,
+    "REQ-I9 plaintext params on file/preview": false,
+    "REQ-I10 whitespace id": false,
+    "REQ-I11 jsonrpc 1.0": false,
+    "REQ-I12 replyTo null": false,
+    "REQ-I13 numeric rpcVersion": false,
+    "REQ-I14 batch array": false
+  },
+  "trim": {
+    "id": "padded"
+  },
+  "parsedKeyOrder": [
+    "jsonrpc",
+    "id",
+    "method",
+    "rpcVersion",
+    "machineId",
+    "workspaceId",
+    "replyTo",
+    "sentAt",
+    "expiresAt",
+    "params"
+  ],
+  "responses": {
+    "RES-V1 ping result": true,
+    "RES-V1 result matches MachinePingResponseSchema": true,
+    "RES-V2 busy error": true,
+    "RES-V3 result null (envelope only)": true,
+    "RES-V4 error with data": true,
+    "RES-I1 both result and error": false,
+    "RES-I2 neither": false,
+    "RES-I3 whitespace message": false,
+    "RES-I4 error null": false,
+    "RES-I5 unknown method": false,
+    "RES-I6 extra key": false,
+    "RES-I7 numeric error code": false,
+    "RES-I8 error extra key": false
+  },
+  "ownerEnvelope": {
+    "derivedKeyIdForSession1": "ccv2:efb61a27dce18cd331dd9f25",
+    "envelopeKeys": [
+      "type",
+      "keyVersion",
+      "algorithm",
+      "ownerSessionId",
+      "keyId",
+      "iv",
+      "ciphertext"
+    ],
+    "type": "code-collab-v2-content-envelope",
+    "keyVersion": 1,
+    "algorithm": "AES-256-GCM",
+    "keyIdMatches": true,
+    "ivChars": 16,
+    "ciphertextIsBase64Url": true,
+    "roundTrip": {
+      "v": 3,
+      "sessionId": "session-1",
+      "path": "a.txt"
+    },
+    "wrongOwner": "Code Collab RPC payload owner session mismatch.",
+    "requestSchemaAccepts": true
+  },
+  "authThrow": {
+    "read": {
+      "thrown": true,
+      "isTokenAuthError": false,
+      "isGatewayError": false,
+      "name": "Error",
+      "message": "Failed to read live updates from s (operation=json.live, method=GET, url=http://stub.invalid/ds/probe/s, code=unknown): rejected"
+    },
+    "append": {
+      "thrown": true,
+      "isTokenAuthError": false,
+      "isGatewayError": false,
+      "name": "Error",
+      "message": "Failed to append to stream s (operation=json.append, method=POST, url=http://stub.invalid/ds/probe/s, code=unknown): rejected"
+    },
+    "fetchCalls": []
+  },
+  "auth401": {
+    "error": {
+      "thrown": false,
+      "isTokenAuthError": false,
+      "isGatewayError": false
+    },
+    "getTokenArgCounts": [
+      0,
+      0
+    ],
+    "authorizationHeaders": [
+      "Bearer token-1",
+      "Bearer token-2"
+    ]
+  },
+  "appendShape": [
+    {
+      "method": "POST",
+      "url": "http://stub.invalid/ds/bucket-1/workspace-1%3Arpc%3Areq%3Amachine-1",
+      "headers": {
+        "authorization": "Bearer tok",
+        "content-type": "application/json"
+      },
+      "body": "<object>"
+    }
+  ]
+}
