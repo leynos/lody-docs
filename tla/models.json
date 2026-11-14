@@ -1,0 +1,93 @@
+[
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped replication, checkpointing and upload scheduling: S1-S4."
+  },
+  {
+    "module": "ProviderSetup",
+    "config": "ProviderSetup.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped provider-setup queue with the authority gate: P1-P4."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped delete-local-project command: D1 and L1."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_NoRowUpdates.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Without client row rewrites, a removed registration stays removed (D2)."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_CursorFirst.cfg",
+    "expect": "NoSkippedRange",
+    "group": "ablation",
+    "note": "Saving the cursor before the data lets the durable cursor run ahead."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_CursorFirstDiverges.cfg",
+    "expect": "QuiescentConvergence",
+    "group": "ablation",
+    "note": "A crash in that window makes a replica skip remote data permanently."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_NoDirtyVersion.cfg",
+    "expect": "CleanImpliesPushed",
+    "group": "ablation",
+    "note": "Without dirtyVersion, a write during a sync is marked clean unsent."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_NoOnlineKick.cfg",
+    "expect": "NoStrandedDirty",
+    "group": "ablation",
+    "note": "Without the streams-online kick, an offline write is never retried."
+  },
+  {
+    "module": "ProviderSetup",
+    "config": "ProviderSetup_NoAuthorityGate.cfg",
+    "expect": "NoStalePublish",
+    "group": "ablation",
+    "note": "Without the authority gate, a stale setup row outruns a remote cancellation."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_NoStaleGuard.cfg",
+    "expect": "FreshProjectNeverRemoved",
+    "group": "ablation",
+    "note": "Without the createdAtMs guard, an old command removes a newer registration."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_Resurrection.cfg",
+    "expect": "NoResurrection",
+    "group": "ablation",
+    "note": "Observation on shipped behaviour: a concurrent row rewrite can undo a removal."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplicationLive.cfg",
+    "expect": "pass",
+    "group": "liveness",
+    "note": "L1: every replica ends clean and fully exchanged."
+  },
+  {
+    "module": "ProviderSetup",
+    "config": "ProviderSetupLive.cfg",
+    "expect": "pass",
+    "group": "liveness",
+    "note": "L1 and L2: cancellation wins; the queue settles."
+  }
+]
