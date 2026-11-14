@@ -7,6 +7,10 @@ TLA_TOOLS_URL := https://github.com/tlaplus/tlaplus/releases/download/v$(TLA_TOO
 TLA_TOOLS_JAR := .tools/tla2tools.jar
 NODE_DEPS := node_modules/.package-lock.json
 PYTHON_SOURCES := scripts docs/lody-streams-rpc/probes
+# The Lody checkout that the cloud API generator reads. It sits beside this
+# repository, or two levels up when this is a linked worktree.
+LODY_SOURCE ?= $(or $(firstword $(wildcard ../Lody ../../Lody)),../../Lody)
+export LODY_SOURCE
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "%-16s %s\n", $$1, $$2}'

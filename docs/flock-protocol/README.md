@@ -27,6 +27,14 @@ daemon also reads a per-workspace catalogue Flock and publishes code
 collaboration index Flocks; those share the replication layer described here
 but carry no commands, and are covered only where they clarify a boundary.
 
+Two neighbouring subjects have their own document sets. Requests that need
+an immediate reply travel by [RPC over Loro Streams](../lody-streams-rpc/README.md),
+not by Flock rows. The token that admits a replica to the cloud stream is
+issued by the cloud services described in the
+[cloud API guide](../cloud-api/README.md). The
+[documentation contents](../contents.md) list every document in the
+repository.
+
 ## What the protocol is, in one page
 
 1. **State.** A Machine Flock is a map from tuple keys to JSON rows. Concurrent

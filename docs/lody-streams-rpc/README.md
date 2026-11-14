@@ -53,11 +53,16 @@ distinct, and the documents keep them distinct.
 | Loro Durable Streams | Append-only named streams over HTTP, with live tail | [Protocol: transport](protocol.md#transport) |
 | Lody RPC | JSON envelopes on a request stream per machine and a response stream per caller, dispatched by the daemon | [Protocol](protocol.md), [methods](methods.md) |
 | Encrypted RPC | Signed and sealed frames with journals, for encrypted workspaces | [Encrypted RPC](encrypted-rpc.md) |
-| Loro and Flock document synchronization | Replicated state and durable commands as document rows | Touched where it meets RPC; the Flock protocol has its own document set in this repository, on the `docs/flock-protocol` branch |
+| Loro and Flock document synchronization | Replicated state and durable commands as document rows | Touched where it meets RPC; the Flock protocol has [its own document set](../flock-protocol/README.md) |
 | Agent Client Protocol | Daemon to agent, over the agent's standard streams | Only its boundary: [protocol: layers](protocol.md#layers) |
 
 A Streams client, the Loro software development kit, an ACP library and Iroh
 each implement one of the other layers. None of them implements Lody RPC.
+
+The Streams token that admits a caller to the gateway is issued by the cloud
+services, which the [cloud API guide](../cloud-api/README.md) documents. The
+[documentation contents](../contents.md) list every document in the
+repository.
 
 ## Reading order
 

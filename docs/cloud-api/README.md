@@ -11,6 +11,13 @@ Start with the [HTTP route index](routes.md), use the
 [coverage and limitations](coverage.md) identify the contracts that cannot be
 established from this checkout.
 
+Two neighbouring subjects have their own document sets:
+[RPC over Loro Streams](../lody-streams-rpc/README.md) and the
+[Flock protocol](../flock-protocol/README.md). This reference covers only the
+cloud credential exchange that admits a client to the Streams gateway. The
+[documentation contents](../contents.md) list every document in the
+repository.
+
 ## Scope and evidence
 
 The public repository deliberately excludes hosted backend handlers and generated
