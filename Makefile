@@ -27,7 +27,7 @@ tlc-liveness: tools ## Run the liveness models (several minutes)
 tlc-all: tlc tlc-liveness ## Run every model
 
 markdownlint: ## Lint the Markdown sources
-	markdownlint-cli2 "**/*.md" "#.tools"
+	markdownlint-cli2 "**/*.md"
 
 fmt: ## Format the Python sources
 	ruff format scripts

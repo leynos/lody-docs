@@ -1,0 +1,11 @@
+{
+  // Tables and link-heavy evidence rows cannot be wrapped; prose is wrapped at 80.
+  "config": {
+    "MD013": { "line_length": 80, "tables": false, "code_blocks": false },
+    // Anchors for evidence and reference ids.
+    "MD033": { "allowed_elements": ["a", "br"] },
+    // Each model section repeats "State", "Properties" and so on.
+    "MD024": { "siblings_only": true }
+  },
+  "ignores": [".tools/**"]
+}
