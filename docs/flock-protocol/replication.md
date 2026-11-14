@@ -6,6 +6,11 @@ keeps a replica from silently skipping data after a crash.
 
 ## Topology
 
+For screen readers: the following flowchart shows the daemon and the desktop
+renderer on the owning machine, a mobile app, and a web tab. Each exchanges
+changes with one cloud stream for the Machine Flock. The renderer and the daemon
+also exchange changes directly over the local data plane.
+
 ```mermaid
 flowchart LR
     subgraph Machine["Owning machine"]
@@ -23,6 +28,9 @@ flowchart LR
     R <-- "local data plane" --> D
 ```
 
+_Figure 1: Replicas of a Machine Flock and the paths that changes travel between
+them._
+
 There are three ways changes travel:
 
 | Path | Participants | State kept between sessions |
@@ -30,6 +38,9 @@ There are three ways changes travel:
 | Cloud Streams transport | Daemon, renderer, web | A durable cursor per replica |
 | Local data plane | Renderer and the daemon on the same machine | None; a version vector is exchanged at each join |
 | Raw Streams client | Mobile | An optional cached replica |
+
+_Table 1: The three paths by which changes travel, and the state each keeps
+between sessions._
 
 A desktop renderer whose machine is on the local plane joins a Machine Flock
 room over both `local` and `cloud`; rooms for other machines use `cloud` only
@@ -42,8 +53,8 @@ a stream as "like an append-only file": every appended update can be
 broadcast, and a client can take an offset and fetch everything after it
 ([[20]](references.md#ref-20)). This is the log abstraction of Kreps
 [[18]](references.md#ref-18), and the client side is the anti-entropy session
-of Bayou [[19]](references.md#ref-19): pull what the log has that you lack,
-push what you have that the log lacks.
+of Bayou [[19]](references.md#ref-19): pull what the log has that the replica
+lacks, push what the replica has that the log lacks.
 
 ### What is appended
 
@@ -97,7 +108,7 @@ replica that keeps reading.
 returns a report listing the transports it attempted. With **no** transport
 registered it returns at once with `ok: true`, outcome `no-route` and an empty
 transport list ([E-U10](evidence.md#e-u10)). Both the daemon and the renderer
-therefore treat "resolved with zero transports" as *not confirmed*
+therefore treat "resolved with zero transports" as _not confirmed_
 ([E-S5](evidence.md#e-s5), [E-T8](evidence.md#e-t8)).
 
 ### Room status
@@ -112,10 +123,10 @@ treats only `disconnected` and `error` as worth rejoining
 
 ### The hazard
 
-A cursor says "I have everything before this offset". If the cursor becomes
-durable while the data it covers is still only in memory, a crash leaves a
-replica that resumes *past* data it never stored. Nothing later repairs the
-gap, because the replica never asks for those offsets again.
+A cursor asserts that its replica holds everything before an offset. If the
+cursor becomes durable while the data it covers is still only in memory, a crash
+leaves a replica that resumes _past_ data it never stored. Nothing later repairs
+the gap, because the replica never asks for those offsets again.
 
 Lody had three forms of this mismatch ([E-T4](evidence.md#e-t4)):
 
@@ -156,9 +167,10 @@ from `loro-repo`'s replica-bound persistence
   ([E-U8](evidence.md#e-u8), [E-U9](evidence.md#e-u9)). The ordering relies
   on SQLite's write-ahead log keeping commits in order across a power loss
   [[30]](references.md#ref-30).
-- **IndexedDB.** The renderer keeps checkpoints in the repository database
-  with strict durability [[31]](references.md#ref-31), and a lineage marker
-  discards a checkpoint whose data was rewritten by an older release ([E-U8](evidence.md#e-u8)).
+- **IndexedDB.** The renderer keeps checkpoints in the repository database with
+  strict durability [[31]](references.md#ref-31), and a lineage marker discards
+  a checkpoint whose data was rewritten by an older release
+  ([E-U8](evidence.md#e-u8)).
 
 The daemon is the only process with durable cursors for Loro documents;
 one-shot commands keep theirs in memory, and Meta and Flock checkpoints are
@@ -170,6 +182,11 @@ behaviours that matter: a process that loaded its data before another process
 advanced the file bootstraps instead of resuming at that process's tail; a
 failed write followed by a crash leaves the checkpoint unadvanced; and a
 normal restart resumes from its own checkpoint ([E-T3](evidence.md#e-t3)).
+
+For screen readers: the following sequence diagram shows an update arriving from
+the stream at a replica. The replica merges it in memory, persists the data to
+disk, waits for the disk to report it durable, and only then saves the advanced
+cursor. A crash before the last step replays the update and cannot skip it.
 
 ```mermaid
 sequenceDiagram
@@ -185,6 +202,9 @@ sequenceDiagram
     Note over M,K: A crash before the last step replays offset n.<br/>It cannot skip it.
 ```
 
+_Figure 2: The order in which a replica persists received data and then its
+cursor._
+
 ### The persistence journal
 
 `loro-repo` persists a named Flock through a journal rather than by comparing
@@ -196,7 +216,7 @@ is the next section.
 ## The version vector hole
 
 A version vector holds, per peer, the highest clock seen. It does not say
-*which* entries below that clock a replica holds. Suppose a replica has peer
+_which_ entries below that clock a replica holds. Suppose a replica has peer
 P's entry at clock 20 for one key but lost P's entry at clock 10 for another
 key. Its vector says `P: 20`. Any exchange of the form "send me what is newer
 than my vector" will never resend the clock-10 entry.
@@ -204,7 +224,7 @@ than my vector" will never resend the clock-10 entry.
 `loro-repo` 0.20.0 used the vector as proof that everything below it had been
 saved, which is what the journal replaced ([E-T4](evidence.md#e-t4)). Delta
 exchange by version vector is sound only when each replica's state is
-*causally closed* below its vector, the condition delta-CRDT anti-entropy
+_causally closed_ below its vector, the condition delta-CRDT anti-entropy
 makes explicit [[10]](references.md#ref-10).
 
 The cloud path no longer depends on this assumption for persistence. The

@@ -15,6 +15,8 @@ reproduced against a running Lody; each says how it was established.
 | O7 | Upstream behaviour could only partly be verified | Research | Limits confidence |
 | O8 | Minor documentation drift in the Lody source | Code reading | Cosmetic |
 
+_Table 1: Observations, how each was established, and its severity._
+
 ## O1. A removed project can come back
 
 **What the model shows.** `LocalProjectDelete_Resurrection.cfg` checks
@@ -29,6 +31,29 @@ counterexample in ten steps
 4. After all replicas exchange state, the client's rewrite carries the later
    clock, so it outranks the tombstone. The project is visible again and no
    command is pending.
+
+For screen readers: the following sequence diagram shows the resurrection. A
+client writes a delete command, which reaches the daemon. The client then
+rewrites the project row, giving it a later clock. The daemon, which has not
+seen the rewrite, deletes the project row and the command row. When the two
+exchange state, the rewrite outranks the daemon's tombstone, so both hold a
+visible project row and no pending command.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant D as Daemon
+
+    C->>D: delete command row
+    C->>C: rewrite the localProject row (later clock)
+    D->>D: delete the project row (tombstone) and the command row
+    C-->>D: merge
+    D-->>C: merge
+    Note over C,D: The rewrite outranks the tombstone.<br/>The project is visible again and no command is pending.
+```
+
+_Figure 1: A client's row rewrite resurrecting a project that the daemon
+removed._
 
 With client rewrites disabled (`LocalProjectDelete_NoRowUpdates.cfg`) the
 property holds, which isolates the cause.
@@ -79,7 +104,7 @@ the user registers the same folder again in that window:
 The staleness guard compares `createdAtMs` with `requestedAt`
 ([E-D5](evidence.md#e-d5)), so the pending command still applies and the
 project is removed after the user re-added it. Property D1 holds, because the
-project was not *created* after the request; the guard protects a
+project was not _created_ after the request; the guard protects a
 registration that follows a completed removal, not one that overlaps a
 pending one.
 
@@ -91,7 +116,7 @@ wider protection than it gives.
 
 The local data plane exchanges Flock deltas by version vector
 ([replication](replication.md#the-local-data-plane)). A version vector cannot
-describe a replica that is missing an entry *below* its own frontier
+describe a replica that is missing an entry _below_ its own frontier
 ([replication](replication.md#the-version-vector-hole)). Lody's migration
 note says so directly: the local plane "relies on the same 'equal version
 vector means complete' assumption, so it cannot repair a same-version hole
@@ -119,7 +144,7 @@ The document would then be dirty, online and idle, which is what S3 forbids.
 In the code, step 1 is a synchronous check at the top of `sync()`
 ([E-U10](evidence.md#e-u10)), and step 3 follows it after only a few promise
 turns. For step 2 to fall between them, a transport would have to be attached
-*and* reported healthy within those turns. Attaching a transport involves
+_and_ reported healthy within those turns. Attaching a transport involves
 network I/O before health can rise, so this ordering appears unreachable in
 practice. It is an assumption, not a verified fact. If it ever mattered, the
 cheap hardening is to re-check for a transport when a sync resolves as "not
@@ -139,6 +164,8 @@ clock.
 | --------- | ------ | -------------- | ---------- |
 | Flock entry clock (`physicalTime`) | Server-synchronized, passed explicitly | Device clock (Flock's default) | Device clock (Flock's default) |
 | Payload fields (`requestedAt`, `cancelledAt`, `createdAtMs`) | Server-synchronized | Server-synchronized | Device clock (`cancelledAt` and the legacy `requestedAt`; others not traced) |
+
+_Table 2: Sources of each kind of timestamp, by replica._
 
 Sources: [E-S15](evidence.md#e-s15), [E-K14](evidence.md#e-k14),
 [E-T9](evidence.md#e-t9), [E-T10](evidence.md#e-t10),
@@ -176,8 +203,8 @@ launched only from a configuration that passes `isValidDaemonLaunchConfig`
 for this machine, read from the daemon's own replica, and never from fields
 supplied in the request ([E-P16](evidence.md#e-p16)). Setup rows are also
 forbidden from carrying secrets ([E-P12](evidence.md#e-p12)). The trust
-boundary is therefore *workspace membership with write access to the
-stream*, which is enforced by the Streams gateway and is outside this study.
+boundary is therefore _workspace membership with write access to the
+stream_, which is enforced by the Streams gateway and is outside this study.
 
 ## O7. Limits of upstream verification
 

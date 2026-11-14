@@ -19,9 +19,12 @@ instance was searched.
 | [`ProviderSetup`](../../tla/ProviderSetup.tla) | The setup queue, cancellation, the authority gate | [Durable commands](durable-commands.md#provider-setup) |
 | [`LocalProjectDelete`](../../tla/LocalProjectDelete.tla) | The delete command and its staleness guard | [Durable commands](durable-commands.md#delete-local-project) |
 
+_Table 1: The TLA+ modules, what each models, and where the modelled behaviour
+is described._
+
 The split is deliberate. `FlockReplication` models the transport in detail and
 treats row contents as opaque. The two command modules model row contents in
-detail and abstract the transport to *state-based anti-entropy*: `Push` merges
+detail and abstract the transport to _state-based anti-entropy_: `Push` merges
 a replica into the stream's accumulated state, and `Pull` merges that state
 into a replica. Property S4 of `FlockReplication` (replicas that have
 exchanged everything agree) is what licenses the abstraction.
@@ -54,6 +57,9 @@ tombstone is an entry whose value is `Tomb`; a key never written holds
 | `dirty`, `sync`, `snap`, `wrote`, `timer` | Coordinator state | No |
 | `online[r]` | `r` has a usable transport | n/a |
 
+_Table 2: State variables of `FlockReplication` and whether each survives a
+crash._
+
 ### Actions and their sources
 
 | Action | Code | Evidence |
@@ -69,6 +75,8 @@ tombstone is an entry whose value is `Tomb`; a key never written holds
 | `JoinRoom` | Initial join sync uploads what the stream lacks | [E-U13](evidence.md#e-u13) |
 | `Crash` | Process restart: volatile state reset from `disk` | [E-S1](evidence.md#e-s1) |
 
+_Table 3: Actions of `FlockReplication` and the code each one models._
+
 ### Properties
 
 | Id | Name | Statement |
@@ -78,6 +86,8 @@ tombstone is an entry whose value is `Tomb`; a key never written holds
 | S3 | `NoStrandedDirty` | A dirty, online replica has a sync in flight or a timer armed |
 | S4 | `QuiescentConvergence` | If every replica has applied the whole stream and has nothing unsent, all replicas are equal |
 | L1 | `EventuallyQuiescent` | Eventually, and from then on, every replica is clean, caught up and has nothing unsent |
+
+_Table 4: Properties checked for `FlockReplication`._
 
 S4 is strong eventual consistency [[1]](references.md#ref-1), stated for the
 quiescent case. L1 is eventual delivery.
@@ -118,6 +128,8 @@ resumable; `dormant` stands for both `failed` and `awaiting-auth`.
 | `DmnPublish` | `publishVerifiedConfig` | [E-P11](evidence.md#e-p11) |
 | `DmnResume` | `resumeAfterAuthentication` | [E-P3](evidence.md#e-p3) |
 
+_Table 5: Actions of `ProviderSetup` and the code each one models._
+
 `Gate == ~WaitForAuthority \/ auth` guards `DmnReconcile` and `DmnAdopt`,
 matching `rescanMachineCommands` ([E-C6](evidence.md#e-c6)). `DmnResume` is an
 RPC and is not gated.
@@ -132,6 +144,8 @@ RPC and is not gated.
 | P4 | `NoPublishOverVisibleCancel` | No step makes `config` visible on the daemon while the daemon can see the marker |
 | L1 | `CancelWins` | Once a client holds the marker, eventually and permanently every replica holds the marker and neither a setup nor a config |
 | L2 | `EventuallySettled` | Eventually and permanently, replicas agree, nothing is in flight, and any remaining setup is dormant |
+
+_Table 6: Properties checked for `ProviderSetup`._
 
 P3 is tracked with two history variables: `startCancel` records, at each
 daemon start, whether the stream held the marker; `stalePublish` latches if a
@@ -157,11 +171,15 @@ two kinds of timestamp are distinct.
 | `DmnProcess` | One successful pass over the command | [E-D3](evidence.md#e-d3), [E-D4](evidence.md#e-d4), [E-D5](evidence.md#e-d5) |
 | `UiAck` | Delete a completed command | [E-D2](evidence.md#e-d2) |
 
+_Table 7: Actions of `LocalProjectDelete` and the code each one models._
+
 | Id | Name | Statement |
 | -- | ---- | --------- |
 | D1 | `FreshProjectNeverRemoved` | The daemon never removes a project whose `createdAtMs` is later than the command's `requestedAt` |
 | D2 | `NoResurrection` | In a converged state, no project registration that the daemon removed is visible. **Not a property of the shipped protocol** |
 | L1 | `CommandsDrain` | Eventually and permanently, replicas agree and no command row is visible |
+
+_Table 8: Properties checked for `LocalProjectDelete`._
 
 ## Results
 
@@ -179,6 +197,8 @@ on OpenJDK 21 with 32 workers.
 | `ProviderSetup.cfg` | 2 attempts, 2 disruptions, skew 1 | P1 to P4 | 3,259,864 | Pass |
 | `ProviderSetupLive.cfg` | 2 attempts, 1 disruption, skew 1 | P1 to P4, L1, L2 | 970,852 | Pass |
 | `LocalProjectDelete.cfg` | Clock to 4, 1 row rewrite, skew 1 | D1, L1 | 80,682 | Pass |
+
+_Table 9: TLC results for the shipped protocol._
 
 The liveness instances are smaller because TLC's liveness check is far more
 expensive than its invariant check. `FlockReplicationLive.cfg` uses two keys
@@ -198,6 +218,8 @@ The trace is the shortest counterexample TLC found.
 | `ProviderSetup_NoAuthorityGate.cfg` | Authority gate | P3 | Request reaches the daemon; client cancels and uploads; daemon restarts and, without waiting for its first remote sync, adopts, verifies and publishes |
 | `LocalProjectDelete_NoStaleGuard.cfg` | `createdAtMs` guard | D1 | Client registers and requests delete; daemon, not yet synced, registers the project itself (later `createdAtMs`); daemon then receives the old command and removes the newer registration |
 
+_Table 10: TLC results for the ablations, each with the property it violates._
+
 These mirror, at design level, the ablations Lody's own tests use: the
 checkpoint tests fail under the shared-cursor and schedule-only variants
 ([E-T4](evidence.md#e-t4)).
@@ -208,6 +230,9 @@ checkpoint tests fail under the shared-cursor and schedule-only variants
 | ------------- | ------- | -------- | ------ |
 | `LocalProjectDelete_Resurrection.cfg` | Shipped (`UiRowUpdates = TRUE`) | D2 | **Violated** |
 | `LocalProjectDelete_NoRowUpdates.cfg` | Client row rewrites disabled | D1, D2 | Pass (15,081 states) |
+
+_Table 11: TLC results for `NoResurrection`, with and without client row
+rewrites._
 
 Counterexample: a client requests the delete; the daemon receives it; the
 client rewrites the project row (for example, to record imported history)
@@ -234,6 +259,9 @@ shows.
 | A9 | The local data plane and the mobile client are not modelled | Their behaviour rests on the prose and the cited tests |
 | A10 | The stream server is reliable and ordered | Server faults are out of scope |
 | A11 | Daemon processing steps are atomic at the granularity of the row re-reads in the code | Finer interleavings inside one `await`-free block cannot occur in a single-threaded runtime |
+
+_Table 12: Abstractions and assumptions in the models, and the consequence of
+each._
 
 TLC explores small finite instances. A property that holds for two replicas
 and two attempts is strong evidence, not proof, for larger ones. The

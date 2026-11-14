@@ -24,7 +24,30 @@ state-based CRDT to converge [[1]](references.md#ref-1). The tie-break by
 process identifier follows Lamport's construction of a total order from
 logical clocks [[3]](references.md#ref-3).
 
-**Deletes.** A delete writes a *tombstone*: an entry with a clock and no data.
+For screen readers: the following flowchart shows how two different entries for
+one key are ordered. If their physical times differ, the entry with the higher
+physical time wins. Otherwise, if their logical counters differ, the entry with
+the higher counter wins. Otherwise the entry with the lexicographically greater
+peer identifier wins.
+
+```mermaid
+flowchart TD
+    A{"physicalTime<br/>differs?"}
+    B{"logicalCounter<br/>differs?"}
+    W1["Higher physicalTime wins"]
+    W2["Higher logicalCounter wins"]
+    W3["Greater peerId wins"]
+
+    A -- yes --> W1
+    A -- no --> B
+    B -- yes --> W2
+    B -- no --> W3
+```
+
+_Figure 1: The order in which the parts of a clock decide between two entries
+for one key._
+
+**Deletes.** A delete writes a _tombstone_: an entry with a clock and no data.
 A tombstone competes exactly like a value. A delete with a lower clock than an
 existing write is ignored during merge, and one with a higher clock wins.
 Deleting a key that was never written, or is already deleted, is a no-op
@@ -40,13 +63,13 @@ two statements agree only if the library raises a local write's clock above
 the entry it replaces. How it derives that clock from the wall clock, the
 caller's timestamp and the superseded entry is not documented and could not
 be read from source. The model takes the first statement at face value as
-assumption **A1**: *a local write
-receives a clock greater than the entry it supersedes on that replica.*
+assumption **A1**: _a local write
+receives a clock greater than the entry it supersedes on that replica._
 Hybrid logical clocks [[4]](references.md#ref-4) are the standard way to
 obtain this property while staying close to physical time.
 
 **Versions.** `version()` returns a per-peer vector of the highest clock among
-*visible* entries; `inclusiveVersion()` also counts overwritten peers.
+_visible_ entries; `inclusiveVersion()` also counts overwritten peers.
 `exportJson(from)` returns only entries newer than a given vector
 ([E-U5](evidence.md#e-u5)). A version vector [[5]](references.md#ref-5)
 [[29]](references.md#ref-29) records a maximum per peer, not a set of
@@ -61,7 +84,7 @@ key; a delete arrives with `value: undefined` ([E-U6](evidence.md#e-u6)).
 
 - **No coordination is needed to write.** Any replica can write any key while
   offline. This is the local-first property [[7]](references.md#ref-7).
-- **One row is one register.** Two concurrent edits to *different fields* of
+- **One row is one register.** Two concurrent edits to _different fields_ of
   one row do not merge: one whole row wins. Lody therefore keeps independent
   facts in separate keys (a setup task, its cancellation and the published
   configuration are three rows) and serializes daemon read-modify-write cycles
@@ -92,6 +115,8 @@ handle with the Flock itself, `syncOnce()` and `joinRoom()`
 | Workspace Flock | `<workspaceId>:wf:workspace` | One per workspace | No |
 | Code collaboration file index | Per owner session | Transient, with a time-to-live | No |
 
+_Table 1: Flock documents in a Lody workspace._
+
 Sources: [E-K1](evidence.md#e-k1), [E-K13](evidence.md#e-k13),
 [E-T1](evidence.md#e-t1). The Machine Flock's stream id in the cloud transport
 is the document id itself ([E-T1](evidence.md#e-t1)).
@@ -117,6 +142,8 @@ All keys are built by `machineFlockKeys` and recognized by
 | `['agentConfigIndex', id]` | Summary | Not traced | Listing index |
 | `['cmd', 'archiveSession', id]`, `['cmd', 'deleteSession', id]` | Legacy commands | Old clients; daemon discards | [Retired](durable-commands.md#retired-session-commands) |
 | `['sessionLaunchConfig', id]` | Legacy | Clean-up only | Deprecated |
+
+_Table 2: Machine Flock keys, their values, writers, and purpose._
 
 Sources: key types [E-K2](evidence.md#e-k2); daemon writers
 [E-S15](evidence.md#e-s15), [E-D7](evidence.md#e-d7),
@@ -151,7 +178,7 @@ writes keeps idempotent re-processing of a command from producing new clocks.
 Multi-row changes that must appear together are staged with several `set` and
 `delete` calls and one `commit()`: publishing a provider writes the
 configuration and deletes the setup task in one commit
-([E-P11](evidence.md#e-p11)). A commit groups the *event batch* and the
+([E-P11](evidence.md#e-p11)). A commit groups the _event batch_ and the
 persistence record; it is not a transaction across replicas. After a merge,
 each key is still resolved independently.
 

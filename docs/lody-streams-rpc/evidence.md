@@ -1,7 +1,7 @@
 # Evidence index
 
-Every citation of the form `E-…` in this documentation resolves to a row
-below. Lody sources are linked at commit
+Every citation of the form `E-…` in this documentation resolves to a row below.
+Lody sources are linked at commit
 [`61bd9701a`](https://github.com/LodyAI/Lody/tree/61bd9701a5ed6899a9f42787df682acfc3fd7d4b);
 line numbers refer to that commit. Upstream sources are files inside the
 published packages, linked through unpkg or crates.io, with line numbers from
@@ -64,6 +64,8 @@ the claim is made.
 | <a id="e-t41"></a>E-T41 | `packages/loro-streams-rpc/src/rpc.ts` [1322–1349](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/src/rpc.ts#L1322-L1349) | A new upstream client per operation; the auth callback ignores its argument. | Checked |
 | <a id="e-t42"></a>E-T42 | `apps/cli/src/lib/cloud-cli-port.ts` [177–196](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/cloud-cli-port.ts#L177-L196) | Daemon token endpoint and credential source. | Checked |
 
+_Table 1: Evidence for the transport._
+
 ## Upstream packages
 
 | Id | Location | Shows | Basis |
@@ -81,6 +83,8 @@ the claim is made.
 | <a id="e-u11"></a>E-U11 | `@loro-dev/streams-client@0.12.2` `dist/index.js` 1736–1748 ([file](https://unpkg.com/@loro-dev/streams-client@0.12.2/dist/index.js)) | Upstream issues `HEAD` when the content type is unknown. | Checked |
 | <a id="e-u12"></a>E-U12 | crate `loro-streams-client` 0.1.0, `src/client.rs` ([crate](https://crates.io/crates/loro-streams-client/0.1.0)) | Published Rust crate: transport operations only. | Reported |
 | <a id="e-u13"></a>E-U13 | `@loro-dev/loro-cli@0.6.0` `dist/cli.mjs` ([file](https://unpkg.com/@loro-dev/loro-cli@0.6.0/dist/cli.mjs)) | Bundled development server: 20-digit decimal offsets, creation-relative TTL, one-second long-poll hold. | Reported |
+
+_Table 2: Evidence from upstream packages._
 
 ## Wire contract
 
@@ -116,6 +120,8 @@ the claim is made.
 | <a id="e-w29"></a>E-W29 | `packages/loro-streams-rpc/tests/loro-streams-rpc.test.ts` [1044–1087](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/tests/loro-streams-rpc.test.ts#L1044-L1087) | Tests of timestamp rounding and of fractional timestamps, with literal request envelopes. | Checked |
 | <a id="e-w31"></a>E-W31 | `packages/loro-streams-rpc/AGENTS.md` [72–74](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/AGENTS.md#L72-L74) | Package instructions: workspace RPC cannot authenticate a claimed requester identity. | Checked |
 
+_Table 3: Evidence for the wire contract._
+
 ## Client
 
 | Id | Location | Shows | Basis |
@@ -126,6 +132,8 @@ the claim is made.
 | <a id="e-c4"></a>E-C4 | `packages/loro-streams-rpc/src/rpc.ts` [2695–2709](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/src/rpc.ts#L2695-L2709) | Dispatcher stop resolves every pending request as null without draining. | Checked |
 | <a id="e-c5"></a>E-C5 | `packages/loro-streams-rpc/src/rpc.ts` [4851–4898](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/src/rpc.ts#L4851-L4898) | Append failure becomes `request_failed`, or `machine_rpc_unavailable` on 404. | Checked |
 | <a id="e-c6"></a>E-C6 | `packages/loro-streams-rpc/src/rpc.ts` [4820–4839](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/src/rpc.ts#L4820-L4839) | The append is raced against the response; a late append failure is only traced. | Checked |
+
+_Table 4: Evidence for the client._
 
 ## Daemon RPC server
 
@@ -154,6 +162,8 @@ the claim is made.
 | <a id="e-s22"></a>E-S22 | `packages/loro-streams-rpc/src/machine-rpc-server.ts` [1368–1396](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/src/machine-rpc-server.ts#L1368-L1396) | Per-request abort controller for the capability refresh. | Checked |
 | <a id="e-s24"></a>E-S24 | `packages/loro-streams-rpc/src/machine-rpc-server.ts` [235–273](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/src/machine-rpc-server.ts#L235-L273) | Log redaction covers only some methods. | Checked |
 
+_Table 5: Evidence for the daemon RPC server._
+
 ## Daemon composition and liveness
 
 | Id | Location | Shows | Basis |
@@ -172,6 +182,8 @@ the claim is made.
 | <a id="e-d13"></a>E-D13 | `apps/cli/src/lib/machine-runtime.ts` [284–296](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/machine-runtime.ts#L284-L296) | Workspace revocation cancels active turns and re-checks pending access. | Checked |
 | <a id="e-d14"></a>E-D14 | `packages/shared/src/presence.ts` [5–12](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/shared/src/presence.ts#L5-L12) | Comment: the presence channel is serial and a heartbeat is stamped at creation. | Checked |
 | <a id="e-d16"></a>E-D16 | `apps/cli/src/session/session-execution-service.ts` [5378–5386](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/session/session-execution-service.ts#L5378-L5386) | The daemon calls the agent's ACP prompt; prompt blocks are built on the daemon. | Checked |
+
+_Table 6: Evidence for daemon composition and liveness._
 
 ## Method inventory
 
@@ -273,6 +285,8 @@ the claim is made.
 | <a id="e-m94"></a>E-M94 | `packages/loro-streams-rpc/tests/machine-rpc-server.test.ts` [3191–3194](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/tests/machine-rpc-server.test.ts#L3191-L3194) | A test covers aborting a capability refresh. | Checked |
 | <a id="e-m95"></a>E-M95 | `apps/cli/src/lib/message-handler.ts` [7744–7757](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/message-handler.ts#L7744-L7757) | Local-machine requests enter an exhaustive local dispatcher. | Checked |
 
+_Table 7: Evidence for the method inventory._
+
 ## Method lifecycles
 
 | Id | Location | Shows | Basis |
@@ -367,6 +381,8 @@ the claim is made.
 | <a id="e-l88"></a>E-L88 | `apps/cli/src/session/README.md` [501–513](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/session/README.md#L501-L513) | Documented intent that draft preparation is retired. | Checked |
 | <a id="e-l89"></a>E-L89 | `packages/loro-streams-rpc/tests/machine-rpc-server.test.ts` [1817–1820](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/tests/machine-rpc-server.test.ts#L1817-L1820) | A test covers the ping response. | Checked |
 | <a id="e-l90"></a>E-L90 | `apps/cli/src/session/session-execution-service.ts` [4948–4965](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/session/session-execution-service.ts#L4948-L4965) | A refused Inbox claim for an ended input retires the turn. | Checked |
+
+_Table 8: Evidence for method lifecycles._
 
 ## Encrypted RPC
 
@@ -482,6 +498,8 @@ the claim is made.
 | <a id="e-x108"></a>E-X108 | `apps/cli/src/lib/e2ee/realtime-journal.test.ts` [1025](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/realtime-journal.test.ts#L1025), [1233](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/realtime-journal.test.ts#L1233), [1271](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/realtime-journal.test.ts#L1271), [290](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/realtime-journal.test.ts#L290), [450](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/realtime-journal.test.ts#L450) | Journal tests: one start permit across SQLite connections, one start per message, other content refused under a started ID, scope isolation and complete-request matching. | Checked |
 | <a id="e-x109"></a>E-X109 | `apps/cli/src/lib/e2ee/rpc-ledger-catch-up.test.ts` [60](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/rpc-ledger-catch-up.test.ts#L60), [76](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/rpc-ledger-catch-up.test.ts#L76), [82](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/e2ee/rpc-ledger-catch-up.test.ts#L82) | Catch-up tests cover the cases that must not trigger a refresh. | Checked |
 
+_Table 9: Evidence for encrypted RPC._
+
 ## Client call sites
 
 | Id | Location | Shows | Basis |
@@ -492,6 +510,8 @@ the claim is made.
 | <a id="e-k4"></a>E-K4 | `packages/components/src/hooks/use-session-actions.ts` [571–597](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/components/src/hooks/use-session-actions.ts#L571-L597) | Cancel is sent by RPC and also written to the session document under the same cancel identifier. | Checked |
 | <a id="e-k6"></a>E-K6 | `packages/components/src/providers/create-workspace-runtime.ts` [5012–5016](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/components/src/providers/create-workspace-runtime.ts#L5012-L5016) | The Roost history backend is created only for Roost sessions and needs the owning machine. | Checked |
 | <a id="e-k7"></a>E-K7 | `apps/mobile/ios/packages/cloud-runtime/src/runtime/machine-rpc.ts` [10–86](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/cloud-runtime/src/runtime/machine-rpc.ts#L10-L86) | The mobile client's own machine RPC implementation. | Checked |
+
+_Table 10: Evidence for client call sites._
 
 ## Notes, specifications and prose
 
@@ -507,3 +527,5 @@ the claim is made.
 | <a id="e-n8"></a>E-N8 | `.agents/docs/rpc-loro-streams-rpc.md` [53–78](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/.agents/docs/rpc-loro-streams-rpc.md#L53-L78) | Internal map: history readiness, refusal store and replay after restart. | Checked |
 | <a id="e-n9"></a>E-N9 | `packages/loro-streams-rpc/AGENTS.md` [57–69](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/loro-streams-rpc/AGENTS.md#L57-L69) | Package instructions on scheduling, serialization and stop. | Checked |
 | <a id="e-n10"></a>E-N10 | `specs/machine-lifecycle-ack.md` ([file](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/specs/machine-lifecycle-ack.md)) | Draft specification of lifecycle acknowledgements. | Reported |
+
+_Table 11: Evidence from notes, specifications, and prose._

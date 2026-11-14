@@ -13,6 +13,7 @@ files.
 │   ├── contents.md              Index of every document
 │   ├── repository-layout.md     This document
 │   ├── developers-guide.md      How to check and maintain the repository
+│   ├── documentation-style-guide.md  Conventions every document follows
 │   ├── flock-protocol/          Document set: the Flock protocol
 │   ├── lody-streams-rpc/        Document set: RPC over Loro Streams
 │   │   └── probes/              Probe sources and recorded results
@@ -36,6 +37,7 @@ _Figure 1: The repository tree, with one line on each path._
 | ---- | ------- | ----------- |
 | `README.md` | The reader's entry point: the three document sets, entry points by task, and how the subjects relate | The only document that may address the reader directly |
 | `docs/contents.md` | The index; lists every document once | Updated whenever a document is added, renamed, or removed |
+| `docs/documentation-style-guide.md` | The conventions every document follows | A copy of the upstream guide; refreshed from upstream, not edited here |
 | `docs/flock-protocol/` | Hand-written documents on the Flock protocol | Claims cite `evidence.md` rows (`E-…`) and `references.md` entries (`[n]`); `README.md` is the set's overview |
 | `docs/lody-streams-rpc/` | Hand-written documents on the Streams remote procedure call (RPC) protocol | Claims carry a basis tag and cite `evidence.md` rows; `README.md` is the set's overview |
 | `docs/lody-streams-rpc/probes/` | Sources and raw results of the probes cited in `conformance.md` | A record of what was run, not a test suite; the TypeScript sources need a Lody export to run |
@@ -64,10 +66,6 @@ Only the cloud API set contains generated files. Editing one by hand makes
 | `sources.json` | Generated | No |
 
 _Table 2: Which cloud API files are generated._
-
-`docs/cloud-api/.markdownlint.json` disables the line-length rule for that
-directory, because the generated references contain rows that cannot be
-wrapped.
 
 ## Where new material belongs
 

@@ -26,6 +26,8 @@ in [evidence.md](evidence.md).
 | Loro and Flock document synchronization, durable command dispatch | The session document turn row with its signed execution intent, and the Meta activation the machine observes | Carries the signed intent; no deadline |
 | Agent Client Protocol (ACP) | The daemon's conversation with the agent process | Never carried by any RPC frame; the daemon is the only ACP client |
 
+_Table 1: Layers involved in encrypted RPC, and whether each grants authority._
+
 These five layers are kept distinct throughout. Iroh appears only as an
 alternative carrier for the same encrypted envelope: this file covers its route
 selection, shared receivers and journals, fallback and deduplication, and
@@ -37,8 +39,10 @@ Scope and boundary of encrypted RPC:
 | --- | --- | --- |
 | Which workspaces use it? | Encrypted workspaces only. The machine starts the listener from the encrypted workspace runtime and refuses when the Streams bucket is empty or equals `lody`, or no gateway URL is known (`e2ee_content_configuration`) | **Impl** [E-X3](evidence.md#e-x3) |
 | Is the ordinary request stream opened? | No. The daemon keeps its ordinary RPC server object only as an in-process query server for the encrypted read route; the client-side machine client does not start its ordinary response reader, and `sendRequest` throws `e2ee_rpc_unavailable` for every method that is not an encrypted read query | **Impl** [E-X85](evidence.md#e-x85) [E-X83](evidence.md#e-x83) |
-| Which channels exist? | *Dispatch*: exactly one method, `session/dispatch-turn`, answered by a receipt acknowledgement (ACK). *Feature RPC*: a closed allowlist of reads and writes, answered by a paged result. Both share the carrier, key domain and stream names; the receiver tells them apart by the method inside the decrypted frame | **Impl** [E-X42](evidence.md#e-x42) [E-X53](evidence.md#e-x53) |
+| Which channels exist? | _Dispatch_: exactly one method, `session/dispatch-turn`, answered by a receipt acknowledgement (ACK). _Feature RPC_: a closed allowlist of reads and writes, answered by a paged result. Both share the carrier, key domain and stream names; the receiver tells them apart by the method inside the decrypted frame | **Impl** [E-X42](evidence.md#e-x42) [E-X53](evidence.md#e-x53) |
 | Do the nested error and presence codecs enable anything? | No. No production path emits a response of kind `error` or an encrypted presence body; the dispatch sender accepts only `progress` and the page decoder only `progress` and `success`. Method failures travel as an ordinary `{ok: false, ...}` result inside `success`-terminated pages | **Impl** [E-X15](evidence.md#e-x15) [E-X36](evidence.md#e-x36) [E-X17](evidence.md#e-x17); **Intent** [E-X82](evidence.md#e-x82) |
+
+_Table 2: Scope and boundary of encrypted RPC._
 
 ## Addressing and correlation
 
@@ -49,6 +53,8 @@ Scope and boundary of encrypted RPC:
 | Resource | `rpc:` followed by unpadded base64url of the machine ID's UTF-8 bytes | **Impl** [E-X1](evidence.md#e-x1) |
 | Request stream | `<workspaceId>:e2ee-rpc:req:<base64url(machineId)>` | **Impl** [E-X2](evidence.md#e-x2) |
 | Response stream | `<workspaceId>:e2ee-rpc:res:<requesterDevice>`, where `requesterDevice` is 64 lowercase hexadecimal characters (the requester's signing public key) | **Impl** [E-X2](evidence.md#e-x2) |
+
+_Table 3: Stream names and the resource string._
 
 The machine ID must be a string of 1 to 256 UTF-8 bytes that survives a strict
 decode unchanged; anything else fails with `e2ee_rpc_machine_id`, and no
@@ -114,6 +120,9 @@ written envelopes do not contain the prompt. **Test** [E-X99](evidence.md#e-x99)
 | Request reader | Machine listener, one per workspace and machine | Queue of 128; 4 handlers | Envelopes beyond the queue are dropped | **Impl** [E-X7](evidence.md#e-x7) |
 | Iroh listener | Machine, when relays and the native module are present | 4 handlers | The native queue applies backpressure | **Impl** [E-X75](evidence.md#e-x75) |
 
+_Table 4: Shared bounded readers, their bounds, and their behaviour at the
+bound._
+
 A failed read marks the stream for re-ensure, sleeps one second and loops; the
 machine also retries the whole listener scope one second after it fails, for
 example on a token or configuration failure. **Impl** [E-X8](evidence.md#e-x8)
@@ -157,6 +166,8 @@ This file does not restate a byte layout; take it from these definitions.
 | Feature result page | `packages/loro-streams-rpc/src/e2ee-feature-parts.ts`: `encodeFeatureResponsePage`, `decodeFeatureResponsePage` | **Impl** [E-X17](evidence.md#e-x17) |
 | Multi-frame request packing | `packages/loro-streams-rpc/src/e2ee-feature-client.ts`: `packFrames`, `unpackFrames` | **Impl** [E-X18](evidence.md#e-x18) |
 
+_Table 5: Authoritative definitions of the sealed frame._
+
 What the code and specification state about the sealed frame:
 
 - Each message is one "content v0" frame whose fixed overhead is 143 bytes: a
@@ -186,6 +197,8 @@ Frame kinds in use:
 | Feature result page | `rpc-response` | `progress` for pages before the last, `success` for the last; sequence is the page index | Yes [E-X23](evidence.md#e-x23) |
 | Error response, encrypted presence | `rpc-response`, `presence` | `error` | No; codec only [E-X15](evidence.md#e-x15) |
 
+_Table 6: Frame kinds in use._
+
 ### What is signed and bound
 
 | Field | Where it is bound | Basis |
@@ -195,6 +208,8 @@ Frame kinds in use:
 | Request ID, deadline `expiresAt`, method, parameters | Inside the encrypted request body, so covered by the cipher and, through the ciphertext, by the signature | **Impl** [E-X16](evidence.md#e-x16) |
 | Reply-to-request binding | `requestId` and `requestDigest` inside the encrypted response body; the digest is SHA-256 of the entire original sealed request | **Impl** [E-X16](evidence.md#e-x16) [E-X36](evidence.md#e-x36) |
 | Execution intent (dispatch only) | A separate device signature carried as `e2eeIntent` inside the dispatch parameters and repeated in the document turn row | **Impl** [E-X37](evidence.md#e-x37) [E-X43](evidence.md#e-x43) |
+
+_Table 7: Fields that are signed, and where each is bound._
 
 There is no separate signature over the deadline or the request ID. A "signed
 deadline" in this file means a deadline inside the signed, encrypted body. For a
@@ -254,6 +269,8 @@ The response body holds a version, the request ID, the request digest, a kind
 | Feature request | 32 MiB of JSON, at most 128 frames | **Impl** [E-X17](evidence.md#e-x17) [E-X18](evidence.md#e-x18) |
 | Feature result | 16 MiB of JSON (64 pages) | **Impl** [E-X17](evidence.md#e-x17) |
 
+_Table 8: Size limits._
+
 The frame limit is enforced when encoding, when decoding, when the sender
 reopens its own original, when hexadecimal is decoded and per packed frame.
 **Impl** [E-X15](evidence.md#e-x15) [E-X35](evidence.md#e-x35)
@@ -297,6 +314,8 @@ including across reopen, and returns an explicit error above 16 MiB"
 | `packages/loro-streams-rpc/tests/fixtures/e2ee-native-fixture.ts` | A test harness (ledger, hosts, stores) | Not a vector |
 | `packages/e2ee-core/test/content-vector.json`, `crypto-vector.json` | Document content and primitives | Not RPC |
 
+_Table 9: Fixtures and test vectors in the repository, and what each covers._
+
 No end-to-end vector exists in the repository that combines an `rpc:` resource,
 an RPC request or response body and a sealed frame. A compatible implementation
 can check the body codec and the generic sealed frame separately against these
@@ -306,13 +325,15 @@ files, but not the composition. **Infer** from the directory listings.
 
 | Topic | What Lody does | Basis |
 | --- | --- | --- |
-| Signing key | Frames are signed by the workspace ledger *device* key of the sealing host: the requester's personal device for requests, the machine's device for responses. Membership and role are looked up from that device's membership in the verified ledger; no separate member key exists in this path | **Impl** [E-X39](evidence.md#e-x39) [E-X40](evidence.md#e-x40) [E-X33](evidence.md#e-x33) |
+| Signing key | Frames are signed by the workspace ledger _device_ key of the sealing host: the requester's personal device for requests, the machine's device for responses. Membership and role are looked up from that device's membership in the verified ledger; no separate member key exists in this path | **Impl** [E-X39](evidence.md#e-x39) [E-X40](evidence.md#e-x40) [E-X33](evidence.md#e-x33) |
 | Encryption key | Derived from the workspace epoch key for the frame's epoch. Any current member device that holds the epoch key can decrypt; authenticity rests on the device signature | **Impl** [E-X39](evidence.md#e-x39) [E-X14](evidence.md#e-x14); **Intent** [E-X44](evidence.md#e-x44) |
 | Target key selection | The sender finds the ledger devices of kind `machine` with the requested machine ID. Exactly one must exist and, unless the call may cross membership, its membership must equal the requester's, else `e2ee_machine_not_owned`. The chosen signer key is stored with the original and compared on every reuse (`e2ee_rpc_target_changed`) | **Impl** [E-X34](evidence.md#e-x34) [E-X9](evidence.md#e-x9); **Intent** [E-X44](evidence.md#e-x44) |
 | Sender checks before signing | A revoked device or removed member fails with `e2ee_device_revoked` or `e2ee_member_removed`. Dispatch and feature writes need a non-recovery device of a member whose role is not Guest (`e2ee_rpc_denied`); read queries need a non-recovery device of a current member, Guests included | **Impl** [E-X34](evidence.md#e-x34) |
 | Sharing preflight | For a dispatch or `session/fork` to another member's machine the host consults a sharing policy reader. Only a verified denial withholds the request (`e2ee_machine_not_shared`); a failed or absent reader signs and leaves the decision to the machine | **Impl** [E-X9](evidence.md#e-x9) [E-X21](evidence.md#e-x21); **Test** "withholds another member's dispatch only on a verified sharing denial" [E-X102](evidence.md#e-x102) |
 | Admission by the binding | Opening a frame, in either direction, requires ledger continuity under the pinned genesis and a signer that is a current non-recovery device whose member exists. Role is not checked at this level | **Impl** [E-X33](evidence.md#e-x33) |
 | Execution intent | For dispatch the same device also signs an intent over workspace, target machine, session, message ID and content digest; the opener requires the intent's signer to equal the frame signer | **Impl** [E-X9](evidence.md#e-x9) [E-X35](evidence.md#e-x35) |
+
+_Table 10: Keys and identities._
 
 Epoch and rotation behaviour:
 
@@ -324,6 +345,8 @@ Epoch and rotation behaviour:
 | Opening a response | Against the stored target signer and the request's epoch; both senders first reopen their saved request, which requires the current epoch | **Impl** [E-X33](evidence.md#e-x33) [E-X36](evidence.md#e-x36) [E-X22](evidence.md#e-x22) |
 | Rotation during an exchange | The exchange does not survive on either side: the receiver rejects an old-epoch request, the sender cannot reopen an old-epoch original to verify a late reply, and a repeated dispatch preparation for the same session, turn and content finds the old-epoch original, fails to open it and fails instead of sealing again (no re-seal branch exists). The durable route is unaffected because the execution intent does not depend on an epoch | **Infer**; no test was found |
 | Machine behind the ledger | When opening fails as `unauthorized` or for a missing key, and the frame names a newer epoch and verifies for a current ledger device, the machine joins one bounded ledger and key refresh (30-second timeout, 60-second cooldown) and reopens once | **Impl** [E-X41](evidence.md#e-x41); **Test** "does not refresh current-epoch missing-key requests with unauthenticated signatures" and two sibling titles [E-X109](evidence.md#e-x109) |
+
+_Table 11: Epoch and rotation behaviour._
 
 What a browser may hold:
 
@@ -357,6 +380,8 @@ What a browser may hold:
 | 7 | Renderer | Try Iroh (ready within 100 ms, call within 800 ms), then Streams (800 ms by default); `null` means no verified ACK within the budgets | **Impl** [E-X46](evidence.md#e-x46) [E-X47](evidence.md#e-x47) [E-X6](evidence.md#e-x6) |
 | 8 | Host | Accept the ACK: reopen the original, open the reply against the stored target signer and request epoch, require request ID, digest of the stored frame, kind `progress`, sequence 0 and the same session and turn (`e2ee_rpc_response_binding`), retain the frame at sequence 0 | **Impl** [E-X36](evidence.md#e-x36) |
 
+_Table 12: Steps of the dispatch sender._
+
 The original is retained before preparation returns, hence before any append.
 **Impl** [E-X9](evidence.md#e-x9); **Test** "persists an original before
 returning it and reopens exact ID/ciphertext without re-signing"
@@ -378,6 +403,8 @@ discarded. **Impl** [E-X78](evidence.md#e-x78)
 | 5 | Renderer | Try Iroh only for a single-frame original, with the request timeout or 30 s; then Streams with the same timeout; otherwise return `{ok: false, error: 'Encrypted machine request timed out.'}` | **Impl** [E-X46](evidence.md#e-x46) [E-X48](evidence.md#e-x48) |
 | 6 | Host | Accept each reply frame under the assembly rules above | **Impl** [E-X22](evidence.md#e-x22) |
 
+_Table 13: Steps of the feature sender._
+
 The read adapter that lets ordinary method helpers use this channel refuses
 non-read methods with `e2ee_query_method` and caps the request timeout at 60 s.
 **Impl** [E-X52](evidence.md#e-x52)
@@ -387,8 +414,8 @@ non-read methods with `e2ee_query_method` and caps the request timeout at 60 s.
 ### Wiring
 
 For each transport the machine builds a dispatch receiver and a feature receiver
-over the *same* native client (wrapped with ledger catch-up), the *same* receipt
-journal and the *same* authorization object. The listener gives each envelope to
+over the _same_ native client (wrapped with ledger catch-up), the _same_ receipt
+journal and the _same_ authorization object. The listener gives each envelope to
 the feature receiver first; a `false` return means that the frame is a dispatch
 and hands it to the dispatch receiver. **Impl** [E-X53](evidence.md#e-x53) A
 failed receive logs once and never stops sibling intake. **Impl**
@@ -407,6 +434,8 @@ failed receive logs once and never stops sibling intake. **Impl**
 | 7 | Else: return if 32 ACKs are pending; retain the received original; claim the receipt row and return silently unless claimed; offer the turn to the dispatch watcher; seal the ACK; retain it at position 0; never finish the claim | **Impl** [E-X56](evidence.md#e-x56) |
 | 8 | Deliver the ACK through the Iroh sink, or ensure and append to the requester's response stream | **Impl** [E-X56](evidence.md#e-x56) |
 
+_Table 14: Steps of the dispatch receiver._
+
 The offer only validates, stashes the payload for 10 minutes in memory and
 enqueues an ordinary dispatch check. **Impl** [E-X57](evidence.md#e-x57)
 
@@ -424,6 +453,8 @@ enqueues an ordinary dispatch check. **Impl** [E-X57](evidence.md#e-x57)
 | 8 | Authorize again; reopen the request, which re-validates signer and epoch; publish each page, re-checking open state, authority and deadline before every append; for `session/history-read` run the full authorizer before each page | **Impl** [E-X73](evidence.md#e-x73) |
 | 9 | Finally drop the active ID and end the Iroh sink; all failures in the task are swallowed | **Impl** [E-X73](evidence.md#e-x73) |
 
+_Table 15: Steps of the feature receiver._
+
 The handler checks that the request names this workspace and machine
 (`e2ee_feature_scope`), that a fork names the verified signer's account and that
 any other `requestedByUserId` equals the machine owner's
@@ -434,6 +465,20 @@ the local machine dispatcher. **Impl** [E-X74](evidence.md#e-x74)
 ## Sequence diagrams
 
 ### Encrypted dispatch over Streams with receipt ACK
+
+For screen readers: the following sequence diagram shows the renderer asking the
+personal host to prepare a dispatch. The host checks the writer role, resolves
+the target signer, signs the intent, seals the request with no deadline, and
+retains the sent original. The renderer appends the envelope to the request
+stream. The machine receiver opens the frame against the ledger, verifies the
+signature, authorizes execution for the signer, records the receipt, retains the
+received original, and claims the receipt row. It offers the turn to the
+dispatch watcher, seals an acknowledgement as progress with sequence zero,
+retains it, and appends it to the response stream. The renderer's shared reader
+matches it by identifier, and the host checks the signer and digest before
+returning the acknowledgement. The acknowledgement is a receipt only: the
+watcher claims the agent start in the execution journal later, and finishes it
+as settled after the turn.
 
 ```mermaid
 sequenceDiagram
@@ -472,7 +517,23 @@ sequenceDiagram
     Watcher->>Exec: finish as settled after the turn
 ```
 
+_Figure 1: Encrypted dispatch over Streams, with its receipt acknowledgement._
+
 ### Parallel durable route and Iroh attempt
+
+For screen readers: the following sequence diagram shows the renderer preparing
+a dispatch and writing the turn row, with its signed intent, to the session
+document in one commit. Two things then happen in parallel. On the durable
+route, which is never cancelled, the renderer activates the user turn, the
+document replicates to the machine with no deadline, and the machine's watcher
+finds the pending turn. On the accelerated route, the renderer checks whether
+Iroh is ready and, if so, calls it with an 800 millisecond budget; if no
+verified acknowledgement arrives, it appends the same envelope to Loro Streams
+and waits another 800 milliseconds. The machine then verifies the intent from
+the turn row, authorizes each project, and tries to claim the agent start in the
+execution journal. If claimed, it runs the turn and finishes it as settled. If
+uncertain or completed, it does not run. If denied, it records the refusal on
+the turn. If evidence is pending, it defers and checks again later.
 
 ```mermaid
 sequenceDiagram
@@ -516,7 +577,24 @@ sequenceDiagram
     end
 ```
 
+_Figure 2: The durable route running in parallel with the Iroh and Streams
+attempts._
+
 ### Feature read with a paged response
+
+For screen readers: the following sequence diagram shows the renderer asking the
+personal host to prepare a feature request. The host checks membership, resolves
+the target signer, splits the request into parts sealed under one deadline, and
+retains the packed frames. The renderer appends each frame under the same
+identifier, and the machine receiver authenticates each part and checks the
+deadline window. The receiver reassembles the request, checks its scope,
+reserves a read slot, authorizes the read for the signer, retains the request,
+and looks for retained result pages. If there are none, it invokes the read
+handler within 45 seconds or the remaining deadline, seals the result as
+progress pages and a final success, and retains all pages in one transaction. It
+authorizes again, then for each page rechecks state, authority, and deadline,
+and appends the page to the response stream. The host verifies and retains each
+page, and returns the decoded response when the last page arrives.
 
 ```mermaid
 sequenceDiagram
@@ -558,6 +636,8 @@ sequenceDiagram
     Host-->>UI: decoded response on the completing page
 ```
 
+_Figure 3: A feature read with a paged response._
+
 ## Deadlines and replay constraints
 
 | Channel | Signed `expiresAt` | Admission rule at the receiver | Work bound | Replay constraint | Basis |
@@ -565,6 +645,8 @@ sequenceDiagram
 | Dispatch | `0`, meaning no deadline | Only `0` is accepted; any other value fails `e2ee_rpc_expiry` | None | Request-ID receipt row, then the `agent-start` claim; no time window | **Impl** [E-X9](evidence.md#e-x9) [E-X35](evidence.md#e-x35) |
 | Feature read | Sender `now` + 11 min (60 s + 10 min skew) | `now < expiresAt <= now + 21 min` | `min(45 s, expiresAt - now)` | Retained request and result pages; no claim | **Impl** [E-X20](evidence.md#e-x20) [E-X19](evidence.md#e-x19) [E-X70](evidence.md#e-x70) |
 | Feature write | Sender `now` + 25 min (900 s + 10 min skew) | `now < expiresAt <= now + 35 min` | None on the handler | Request-ID row claimed and finished in the receipt journal | **Impl** [E-X20](evidence.md#e-x20) [E-X19](evidence.md#e-x19) [E-X72](evidence.md#e-x72) |
+
+_Table 16: Deadlines and replay constraints by channel._
 
 Further constraints:
 
@@ -576,6 +658,8 @@ Further constraints:
 | Retry after expiry | A stored feature original keeps its deadline, and preparing again with the same request ID returns the stored, possibly expired, frames. A retry after expiry therefore needs a new request ID; for a write that is a new claim identity, and the channel has no business-level key that links the two attempts | **Infer** from [E-X21](evidence.md#e-x21) [E-X72](evidence.md#e-x72) |
 | Journal expiry clock (wired) | The receipt journal applies its expiry clock only to rows whose `expiresAt` is not 0: to feature writes, never to dispatch or `agent-start` rows. A claim returns `expired` once the local clock reaches the deadline | **Impl** [E-X62](evidence.md#e-x62) |
 | Journal trusted-clock skew check (not wired) | The journal class can compare the local clock with a caller-supplied trusted reference and reject a claim when the local clock or the retained floor is more than 600,000 ms ahead (`clock_skew`). Both production constructions pass only `Date.now` and no reference, so the check exists in the class and is tested in isolation but is inactive in the shipped wiring | **Impl** [E-X62](evidence.md#e-x62) [E-X54](evidence.md#e-x54) [E-X55](evidence.md#e-x55); **Test** "rejects a local clock over ten minutes ahead of trusted time without advancing the floor" [E-X107](evidence.md#e-x107); the specification describes both branches, **Intent** [E-X93](evidence.md#e-x93) |
+
+_Table 17: Further constraints on deadlines and replay._
 
 Ordinary RPC deadlines are a different mechanism; see
 [protocol.md](protocol.md#deadlines-and-cancellation).
@@ -589,6 +673,8 @@ Ordinary RPC deadlines are a different mechanism; see
 | Receiver, before retaining anything | Method-specific authorizer (below) | The machine's own authenticated latest-ledger read, cached for 15 minutes; sharing policies | **Impl** [E-X11](evidence.md#e-x11) [E-X71](evidence.md#e-x71) [E-X68](evidence.md#e-x68) |
 | Receiver, before publication | Authorizer again; request reopened; for `session/history-read` the authorizer again before each page | As above | **Impl** [E-X73](evidence.md#e-x73) |
 | Machine, immediately before a turn starts | Signed intent verified against the content that will run; signer a current non-recovery member device; execution authorized for every local project the turn reaches | Document turn row or retained original; ledger; per-project policy | **Impl** [E-X66](evidence.md#e-x66) [E-X59](evidence.md#e-x59) |
+
+_Table 18: Authorization checks and when each runs._
 
 The machine's authorizer needs the machine's own device to be a member. Read
 access requires the signer to be a current non-recovery member device; every
@@ -609,6 +695,9 @@ session-sharing policy); any other access is denied with
 | `session/fork` | Execution for every project the source session reaches | Yes at prepare and at the machine; see the defect below | **Impl** [E-X69](evidence.md#e-x69) [E-X21](evidence.md#e-x21) |
 | Every other feature write | Owned execution | No | **Impl** [E-X69](evidence.md#e-x69) [E-X68](evidence.md#e-x68) |
 
+_Table 19: Authorizers by request, and whether each may target another member's
+machine._
+
 ### The README contradiction and the fork reply
 
 The package README says that `session/history-read` "also permits requests to
@@ -621,7 +710,7 @@ two ways:
   records that fork joined the channel on 2026-11-13 with shared-member access.
   **Impl** [E-X9](evidence.md#e-x9) [E-X21](evidence.md#e-x21); **Intent**
   [E-X96](evidence.md#e-x96)
-- Feature *response acceptance* resolves the target signer with the shared flag
+- Feature _response acceptance_ resolves the target signer with the shared flag
   set only when the method is `session/history-read`. **Impl**
   [E-X24](evidence.md#e-x24)
 
@@ -663,6 +752,8 @@ and the device's signing key, plus an originals store on each requesting host.
 | Receipt journal | `rpc-receipts.sqlite`, `RealtimeJournal` | One row per request ID: dispatch receipt rows and their ACK; feature-write rows, pages and outcome | Streams and Iroh receivers |
 | Execution journal | `execution.sqlite`, `RealtimeJournal` | `agent-start:<userTurnId>` rows | Every route, including the durable one |
 
+_Table 20: Persistent stores, their contents, and what shares them._
+
 ### Originals store
 
 The port is `E2eeRpcStore`: `read`, `retain`, `readResponse`, `retainResponse`,
@@ -686,6 +777,8 @@ file so that a missing database after first use is an error
 | `responses` | `feature:<requestId>`, page | Sender's retained pages | As above | **Impl** [E-X22](evidence.md#e-x22) |
 | `responses` | `feature-response:<hex SHA-256 of packed request>`, page | Machine's sealed result pages, all in one transaction | As above; the whole batch rolls back | **Impl** [E-X23](evidence.md#e-x23) [E-X78](evidence.md#e-x78) |
 
+_Table 21: Keys and writers in the originals store._
+
 ### Receipt and execution journals
 
 Both files use the `RealtimeJournal` class with schema version 3 and no
@@ -699,6 +792,8 @@ migration. **Impl** [E-X63](evidence.md#e-x63)
 | `finish`, `retainResponse` | The first outcome is kept (`outcome_conflict` for a different one); retained responses must be contiguous from position 0 (`response_gap`) and are immutable (`response_conflict`) | **Impl** [E-X65](evidence.md#e-x65) |
 | Reset | A separate control file records retired identities. An explicit reset (`lody e2ee journal reset --file <journal>`) retires every current identity into it and archives the journal file by renaming it; nothing is deleted | **Impl** [E-X65](evidence.md#e-x65) |
 | Provisioning | The execution journal is created lazily, and only when neither it nor its control file exists; a missing main file after use is treated as a fault | **Impl** [E-X60](evidence.md#e-x60) |
+
+_Table 22: Elements of the receipt and execution journals._
 
 ### Client originals store
 
@@ -750,6 +845,9 @@ incomplete multi-part requests within 32 MiB, 32 active reads, 32 active writes,
 | Pending calls, part sets, pending ACKs and results, live write owners | Memory | Request ID based | None | No | Bounded as above | Scope close |
 | RPC turn stash | Memory | Turn | None | No | 10 minutes | Dispatch watcher |
 | Authorization grant | Memory | Requester device | None | No | 15 minutes | Authorizer |
+
+_Table 23: State involved in encrypted RPC, where it lives, and whether it
+survives a restart._
 
 Basis for the table: **Impl** [E-X78](evidence.md#e-x78)
 [E-X63](evidence.md#e-x63) [E-X61](evidence.md#e-x61) [E-X59](evidence.md#e-x59)
@@ -809,7 +907,9 @@ from then on. The turn still arrives by the durable route. **Infer** from
 | Outcomes | `claimed` runs the turn and then finishes the row as settled (a failed finish only warns; execution is never repeated to repair it). `uncertain` and `completed` do not run. `denied` records a refusal on the turn. `pending-evidence` defers. An input cancelled before it started is retired so that it never starts later | **Impl** [E-X59](evidence.md#e-x59) [E-X60](evidence.md#e-x60) [E-X67](evidence.md#e-x67) |
 | Source of the intent | The document turn row when it exists; otherwise the retained received original, which the code calls "Only an accelerator". An unknown signer is refused only after an authenticated latest-ledger read; without one the input waits | **Impl** [E-X66](evidence.md#e-x66) |
 
-This is at-most-once admission of a *start* per message ID on one machine
+_Table 24: The actual-start claim._
+
+This is at-most-once admission of a _start_ per message ID on one machine
 identity. `uncertain` may mean that the agent never ran. **Impl**
 [E-X61](evidence.md#e-x61) [E-X58](evidence.md#e-x58); **Test** "starts a
 message once whatever the clock says, and never a retired one", "refuses other
@@ -817,7 +917,7 @@ content under a message ID that already started" [E-X108](evidence.md#e-x108)
 
 ### Feature-write claims
 
-Feature writes use the *receipt* journal as their only claim, keyed by request
+Feature writes use the _receipt_ journal as their only claim, keyed by request
 ID, and the row is both claimed and finished. **Impl**
 [E-X72](evidence.md#e-x72)
 
@@ -847,6 +947,8 @@ encrypted uncertain error for a write claimed before restart without replay"
 | Feature read | None | Retained request and result pages by request digest | Not applicable | Retained pages; the handler is not rerun once pages exist | None |
 | Feature write | Receipt row | Request ID | Yes, with the page count | Journal pages, or `e2ee_outcome_uncertain` | None |
 
+_Table 25: Durable claims and replay behaviour by method class._
+
 Do not carry the dispatch guarantees over to feature writes: a feature write has
 no message-level identity, no durable fallback and a deadline. Do not carry the
 feature-write guarantees over to reads: reads have no claim. **Impl**
@@ -870,6 +972,8 @@ Route selection on the sender:
 | Streams then waits 800 ms for a dispatch ACK, or the request timeout for a feature | **Impl** [E-X6](evidence.md#e-x6) [E-X48](evidence.md#e-x48) |
 | For dispatch the durable activation is written without waiting for the send and is never cancelled by its outcome; a preparation that answers late still sends if the turn is still pending | **Impl** [E-X51](evidence.md#e-x51) |
 | A feature request has no durable fallback: after Iroh and Streams it ends as a timeout result | **Impl** [E-X48](evidence.md#e-x48) |
+
+_Table 26: Rules by which the sender selects a route._
 
 The worst case for a dispatch send is therefore about 100 ms + 800 ms + 800 ms
 before it reports `null`, while the durable route proceeds on its own schedule.
@@ -896,6 +1000,8 @@ authority". A malformed or failed Iroh request simply finishes its stream.
 | Reply path | The request's own stream | The requester's response stream | None |
 | Deadline | None for dispatch; signed for features | Same | None |
 
+_Table 27: What the three routes share, and where they differ._
+
 Basis: **Impl** [E-X53](evidence.md#e-x53) [E-X75](evidence.md#e-x75)
 [E-X56](evidence.md#e-x56) [E-X66](evidence.md#e-x66) [E-X58](evidence.md#e-x58)
 [E-X50](evidence.md#e-x50)
@@ -909,6 +1015,9 @@ Basis: **Impl** [E-X53](evidence.md#e-x53) [E-X75](evidence.md#e-x75)
 | Feature write on both transports | The second joins the live owner and publishes the same journal pages | **Impl** [E-X72](evidence.md#e-x72); **Test** [E-X101](evidence.md#e-x101) |
 | Feature read on both transports | Active-ID sets are per receiver, so each may find no retained pages and run the handler; sealing is serialized and keyed by request digest, so the second caller receives the first retained pages. Work is duplicated, stored results are not; reads are declared to make no machine writes | **Infer** from [E-X12](evidence.md#e-x12) [E-X70](evidence.md#e-x70) [E-X23](evidence.md#e-x23) |
 | RPC and durable routes for one turn | The offer only stashes and enqueues the same per-session dispatch check as the document path; the `agent-start` claim is the hard gate | **Impl** [E-X57](evidence.md#e-x57) [E-X58](evidence.md#e-x58); **Test** "lets simultaneous durable/realtime execution paths claim the same business turn once, including after restart" [E-X99](evidence.md#e-x99) |
+
+_Table 28: Situations that could duplicate side effects, and what prevents
+each._
 
 ### What does not prevent them
 
@@ -936,6 +1045,9 @@ Basis: **Impl** [E-X53](evidence.md#e-x53) [E-X75](evidence.md#e-x75)
 | Same `userTurnId`, different content (an edit signed again) | A new original with a new request ID, so the receipt layer may acknowledge it; at the start, a row that already started, finished or was retired returns `uncertain` or `completed` and nothing runs; a `received` row with another digest or signer fails with `identity_conflict` | **Impl** [E-X37](evidence.md#e-x37) [E-X58](evidence.md#e-x58) [E-X59](evidence.md#e-x59); **Test** "refuses other content under a message ID that already started" [E-X108](evidence.md#e-x108) |
 | Different response bytes for one key and sequence on the sender | `e2ee_rpc_response_conflict` (SQLite) or `conflict` (IndexedDB); the first page stands | **Impl** [E-X78](evidence.md#e-x78) [E-X80](evidence.md#e-x80) |
 
+_Table 29: Results of different bytes arriving under the same identity across
+routes._
+
 ## Method coverage
 
 The encrypted set is closed. It is one hard-coded dispatch method plus two
@@ -956,6 +1068,8 @@ read list first. **Impl** [E-X12](evidence.md#e-x12) [E-X74](evidence.md#e-x74)
 | `session/edit-and-resend` | Feature write | 25 min | Owned execution | As fork | None |
 | `machine/acp-interaction` | Feature write | 25 min | Owned execution with revocable authority | As fork | None |
 | `code-collab/*` not listed as reads (saves, diffs, blobs, directory initialization, file index), `session/preview-create`, `session/preview-revoke`, `session/preview-status`, `sorbet/credentials-list`, `sorbet/credentials-logout`, `sorbet/providers-list`, `sorbet/providers-create`, `sorbet/providers-delete` | Feature write | 25 min | Owned execution | As fork | None |
+
+_Table 30: Method coverage by channel, deadline, authority, and claim._
 
 Basis: **Impl** [E-X42](evidence.md#e-x42) [E-X20](evidence.md#e-x20)
 [E-X12](evidence.md#e-x12) [E-X69](evidence.md#e-x69) [E-X71](evidence.md#e-x71)
@@ -1037,7 +1151,9 @@ result.
 | Response verification failure at the sender (wrong signer, epoch, digest, kind, sequence or page) | The reply worker treats it as no result; the waiter is neither resolved nor rejected. On Iroh the outcome is `unverified` and the same original goes to Streams | Not applicable | Next route, then timeout | Sender originals unchanged | Timeout | **Impl** [E-X6](evidence.md#e-x6) [E-X47](evidence.md#e-x47); **Test** "rejects validly signed replies bound to another request/digest/kind/sequence" [E-X105](evidence.md#e-x105) |
 | Key rotation mid-exchange | Receiver rejects an old-epoch request (after one catch-up attempt when it is the one behind); the machine cannot seal a response for an epoch that is no longer current; the sender cannot reopen an old-epoch original | No | A stored dispatch original is not sealed again; a feature needs a new request ID | Old-epoch originals remain | Dispatch: timeout, durable route delivers. Feature: timeout | **Infer** from [E-X33](evidence.md#e-x33) [E-X41](evidence.md#e-x41) [E-X9](evidence.md#e-x9) |
 | Capacity exhausted (queues, 32-slot limits, 128 pending calls) | Dropped or refused silently | No | Caller may retry | None | Timeout, or immediate `null` from `send` | **Impl** [E-X6](evidence.md#e-x6) [E-X12](evidence.md#e-x12) [E-X7](evidence.md#e-x7) |
-| Scope close | Client: pending waiters are interrupted, the reader fiber is interrupted, raw reads are aborted and awaited, and only then is the token client closed. Machine: listener fibers are interrupted, raw handler promises are aborted and awaited | No | None | Stores are closed, not cleared | Pending calls end | **Impl** [E-X8](evidence.md#e-x8) [E-X49](evidence.md#e-x49) [E-X70](evidence.md#e-x70); **Test** "routes ciphertext-only Streams ACKs, falls back on timeout, then replays the exact original safely" asserts that no raw read remains after the scope closes [E-X99](evidence.md#e-x99) |
+| Scope close | Client: pending waiters are interrupted, the reader fibre is interrupted, raw reads are aborted and awaited, and only then is the token client closed. Machine: listener fibres are interrupted, raw handler promises are aborted and awaited | No | None | Stores are closed, not cleared | Pending calls end | **Impl** [E-X8](evidence.md#e-x8) [E-X49](evidence.md#e-x49) [E-X70](evidence.md#e-x70); **Test** "routes ciphertext-only Streams ACKs, falls back on timeout, then replays the exact original safely" asserts that no raw read remains after the scope closes [E-X99](evidence.md#e-x99) |
+
+_Table 31: Failure cases for encrypted RPC._
 
 ## Contradictions and validation limits
 
@@ -1052,6 +1168,9 @@ result.
 | Request ID origin | Specification: host-generated 16 random bytes [E-X91](evidence.md#e-x91) | True for dispatch; feature IDs come from the renderer as a UUID in hexadecimal [E-X9](evidence.md#e-x9) [E-X10](evidence.md#e-x10) | Receivers must accept any 32 lowercase hexadecimal characters and must not assume 128 random bits |
 | Journal clock check | Specification describes rejection when the local clock is more than 10 minutes ahead of an authenticated reference [E-X93](evidence.md#e-x93) | The class implements it; production passes no reference [E-X62](evidence.md#e-x62) [E-X54](evidence.md#e-x54) | Lody's daemon does not reject on clock skew at claim time; only the feature admission window applies |
 | Status of the byte layout | Specification calls the body layout "evidence of candidate bytes" in the same section that records owner approval of the frame limit and resource encoding [E-X92](evidence.md#e-x92) | The codec comment also says "Candidate M5 profile" [E-X15](evidence.md#e-x15) | Treat the layout as recorded but pre-production; the specification states that the format has no compatibility path [E-X94](evidence.md#e-x94) |
+
+_Table 32: Contradictions between code, tests, specification, READMEs, and
+notes._
 
 All rows are **Impl** for the code column and **Intent** for the documents.
 
@@ -1098,3 +1217,5 @@ All rows are **Impl** for the code column and **Intent** for the documents.
 | 13 | What framing limits does the native Iroh transport enforce? | Read the native transport crate, or send an oversized request through it |
 | 14 | Does the Electron main-process host add checks beyond the shared client? | Read the main-process E2EE services |
 | 15 | Does the composition of an `rpc:` resource, a request body and a sealed frame match an independent implementation? | Seal one request with Lody's fixture keys and open it with an independent implementation; no such vector exists today |
+
+_Table 33: Unknowns, each with the smallest experiment that would resolve it._

@@ -27,12 +27,23 @@ gateway, one token and, on the daemon, one event loop.
 | Loro and Flock document synchronization | `loro-repo`, `@loro-dev/streams-crdt`, the daemon's watchers | Replicated session and machine state; durable commands as document rows | Synchronous replies |
 | Agent Client Protocol (ACP) | The daemon and each hosted agent process, over the agent's standard input and output | Prompt, cancel and permission traffic between daemon and agent | Any presence on the RPC wire |
 
+_Table 1: The five layers, what each provides, and what it does not._
+
 A Streams client is therefore not an implementation of Lody RPC, and neither
 is the Loro software development kit (SDK), an ACP SDK or Iroh. The daemon is
 the only ACP client; no machine RPC schema carries an ACP message, and the
 `machine/acp-*` methods manage agent binaries, capabilities and
 authentication, not session traffic (**Impl**, **Infer**;
 [E-D16](evidence.md#e-d16)).
+
+For screen readers: the following flowchart shows three kinds of caller (a web
+or desktop client, a one-shot command-line caller, and a mobile client)
+appending requests to a request stream on the Loro Durable Streams gateway. The
+daemon's machine RPC server reads that stream and passes requests to handlers,
+which append responses to a response stream that the caller reads. Separately,
+clients and the daemon's dispatch watcher synchronize documents through document
+and Flock streams, the watcher drives the agent process over ACP, and the daemon
+sends heartbeats to a presence stream.
 
 ```mermaid
 flowchart LR
@@ -67,6 +78,9 @@ flowchart LR
   Daemon -->|heartbeat| Pres
 ```
 
+_Figure 1: Callers, gateway streams, and daemon components involved in a machine
+RPC._
+
 ## Transport
 
 ### Addressing and credentials
@@ -83,6 +97,9 @@ through `encodeURIComponent`, so the colons in a stream identifier travel as
 | Streams token | `POST {site}/api/loro-streams/token` with the user's session credential | Same endpoint with the CLI login token from `credentials.json` | **Impl** [E-T7](evidence.md#e-t7), [E-T8](evidence.md#e-t8), [E-T42](evidence.md#e-t42) |
 | Workspace identity | The workspace of the runtime | One per-workspace runtime per listed workspace | **Impl** [E-T36](evidence.md#e-t36) |
 | Machine identity | Argument when a machine client is created; the target is chosen from the machine document | `machine-id` file or `credentials.json` | **Impl** [E-T15](evidence.md#e-t15) |
+
+_Table 2: Where the caller and the daemon obtain the gateway address and
+credentials._
 
 The token request body is `{ workspaceId, rejectedToken? }` and the response is
 `{ token, expiresIn, gatewayBaseUrl?, shardHostSuffix? }`, with `expiresIn` in
@@ -112,6 +129,8 @@ token provider and was not observed end to end (**Unknown**).
 | Request | `<workspaceId>:rpc:req:<machineId>` | Daemon, at start and again after a 404 on read | **Impl** [E-T1](evidence.md#e-t1), [E-T38](evidence.md#e-t38) |
 | Response, shared | `<workspaceId>:rpc:res:<uuid>` | The reading client after a 404, or the daemon when a response append returns 404 | **Impl** [E-T2](evidence.md#e-t2), [E-T28](evidence.md#e-t28), [E-S12](evidence.md#e-s12) |
 | Response, legacy | `<workspaceId>:rpc:res:<machineId>:<uuid>` | As above; the mobile client creates it before sending | **Impl** [E-T3](evidence.md#e-t3), [E-K7](evidence.md#e-k7) |
+
+_Table 3: Stream names and which side creates each._
 
 The shared form is used when one `LoroStreamsRpcResponseDispatcher` serves
 every machine client of a workspace runtime, as the web and desktop clients
@@ -168,6 +187,8 @@ daemon's next read returns 404, and it recreates the stream (**Infer**;
 | Offset gone (410) | Reset offset to `-1`, re-read with no delay | Same | **Impl**, **Test** "resumes request streaming from the retained head after cursor expiration" |
 | Stream closed | Reader sees end of stream and re-reads at once; writer gets 409 | Same | **Infer**; not tested |
 | Response stream missing on append | Not applicable | Create it with 24-hour retention, append once more | **Impl** [E-S12](evidence.md#e-s12) |
+
+_Table 4: Stream lifecycle events and how each side reacts._
 
 ### Append
 
@@ -255,6 +276,8 @@ whether the production gateway does is **Unknown**.
 | ------ | -------------- | ------- | --------- |
 | Daemon request loop | `-1` | Memory | No |
 | Client response dispatcher | `-1` | Memory | No |
+
+_Table 5: Read offsets held by each reader._
 
 The offset advances as soon as a batch is received, before the batch handler
 runs (**Impl**; [E-T21](evidence.md#e-t21), [E-S1](evidence.md#e-s1)). Lody
@@ -349,6 +372,8 @@ with 52 members, each a strict object (**Impl**; [E-W1](evidence.md#e-w1),
 | `expiresAt` | number | Yes | Finite, greater than zero | Absolute deadline in milliseconds since the Unix epoch |
 | `params` | object | Yes | Strict per-method schema | Method input |
 
+_Table 6: Fields of the request envelope._
+
 The following rules were confirmed against the real validators (**Probe**
 P-1):
 
@@ -388,6 +413,8 @@ Success and error share `LoroStreamsRpcResponseSchema`, a strict object
 | `machineId` | string | Yes | Trimmed, non-empty | The responding machine; not compared by the client |
 | `result` | any | One of | Unconstrained here; validated per method afterwards | Success payload |
 | `error` | object | One of | `{ code, message, data? }`, strict | Failure |
+
+_Table 7: Fields of the response envelope._
 
 Exactly one of `result` and `error` must be present. A response with both,
 with neither, with an extra key, with a numeric error code or with an unknown
@@ -448,6 +475,9 @@ mismatch that produces a response.
 | `rpcVersion` differs | Error `rpc_version_mismatch` | Method-shaped failure | **Impl**, **Test**, **Probe** P-7 |
 | Declared method, optional handler absent | Error `method_unavailable` for most methods; four other variants exist, listed in [methods](methods.md). Omitting the required `machine/status` handler yields `internal_error` with the text of a JavaScript type error | Method-shaped failure | **Impl**, **Probe** P-7 |
 
+_Table 8: Conditions on a request, the daemon's response to each, and what the
+caller observes._
+
 There is no `method_not_found` code. `unsupported_protocol` is a result code
 inside the file preview and download results, not an envelope error.
 
@@ -482,6 +512,8 @@ daemon emits many more.
 | `session_metadata_pending`, `session_owner_mismatch`, `session_unavailable`, `session_identity_mismatch`, `session_backend_mismatch` | Daemon | History preconditions | **Impl** |
 | `permission_denied` and other Code Collab and file preview codes | Daemon | Owner mismatch and feature errors; `error.data` carries a typed object | **Impl**, **Test** |
 | `invalid_result`, `response_timeout`, `request_failed`, `machine_rpc_unavailable` | Client only | Never on the wire | **Impl** [E-C5](evidence.md#e-c5) |
+
+_Table 9: Error codes, which side produces each, and when._
 
 Because `internal_error` carries raw error text, schema validation messages
 and other internal strings can reach the caller (**Infer**;
@@ -582,6 +614,8 @@ the caller.
 | Key order | The history identity is the JSON text of the parsed request, whose keys follow schema order, not arrival order | **Probe** P-1; [E-S7](evidence.md#e-s7) |
 | Encodings | Content and secret envelopes use base64url without padding; key identifiers and digests use lower-case hexadecimal | **Impl** [E-W18](evidence.md#e-w18) |
 
+_Table 10: Interoperability traps in the wire contract._
+
 ## Request lifecycle and acknowledgements
 
 ### Caller side
@@ -608,6 +642,15 @@ clients' responses. The client does not check the response's `method` or
 
 ### Daemon side
 
+For screen readers: the following sequence diagram shows a caller posting a
+request to the request stream and the gateway confirming the append. The
+daemon's read loop receives the event, saves the offset in memory, classifies
+and admits the request, and spawns a task without awaiting it. The task acquires
+a lane permit, validates the schema, target, expiry, and version, and invokes
+the handler. It then posts the response to the reply stream, with up to three
+attempts, and releases the permit. The caller's live read delivers the response,
+which the caller matches by identifier, validates, and settles.
+
 ```mermaid
 sequenceDiagram
   participant C as Caller
@@ -630,6 +673,9 @@ sequenceDiagram
   C->>C: Match by id, validate result, settle
 ```
 
+_Figure 2: A request's path through the daemon, from append to settled
+response._
+
 Each step is detailed in [scheduling](#scheduling-and-backpressure). The
 validation order after the lane permit is acquired is: schema, then target
 machine and workspace, then expiry, then version, then, for history methods
@@ -649,6 +695,9 @@ only, deduplication (**Impl**; [E-W12](evidence.md#e-w12)).
 | Progress response | Daemon | A progress response arrives | In the response stream | Failed progress appends are discarded |
 | Terminal result | Daemon | The response arrives | In the response stream | Lost if both the result append and the fallback error append fail |
 | Caller observation | Caller | The call settles | No | A caller that stopped never observes it |
+
+_Table 11: Milestones of a request, their owners, and the evidence each gives
+the caller._
 
 ### What an acknowledgement proves
 
@@ -696,6 +745,8 @@ Everything else is delegated to handlers, and differs by method
 | Requester token | `requesterUserId` and `requestToken`, verified with the cloud | In the handler; upgrade is checked again before the switch | `machine/restart`, `machine/upgrade`, `machine/bug-report` |
 | Machine access | Requester, machine and project, checked locally for the owner and with the cloud for other members | At actual turn dispatch, not at request receipt | Turn dispatch |
 | None visible | No identity in the parameters | Not applicable | `session/cancel`, `session/terminate`, `machine/ping`, `machine/status`, `session/live-status` and the ACP management methods |
+
+_Table 12: Forms of authorization that exist, and when each is applied._
 
 The owner-session and history checks are in the server
 (**Impl**; [E-S15](evidence.md#e-s15), [E-S10](evidence.md#e-s10),
@@ -746,6 +797,9 @@ These clocks are independent. None implies another.
 | Read idle watchdog | Stream client and Lody | 45 to 60 seconds upstream; 120 seconds in Lody | The read is renewed from the saved offset | **Impl** |
 | Process shutdown | Daemon | 7 seconds | Forced exit | **Impl**, **Test** [E-D6](evidence.md#e-d6) |
 
+_Table 13: The independent clocks that bound a request, and the effect when each
+expires._
+
 The points at which the daemon tests `expiresAt` are: on the overload path
 before sending the capacity error; after the lane wait for every method; and,
 for history methods only, after owner verification, after the watch wait,
@@ -784,6 +838,8 @@ to completion once started (**Impl**; [E-S22](evidence.md#e-s22)).
 | One request's responses | Progress responses in emission order, then the final response; a failed progress append leaves a gap | **Impl**, **Test** |
 | Response reader | Responses for different requests interleave in completion order; the client matches by `id` | **Impl** [E-C3](evidence.md#e-c3) |
 
+_Table 14: Ordering that holds at each scope._
+
 Execution order can differ from arrival order in four ways: the priority sort
 within a batch; concurrency within each lane; a history watch's follow-up read
 queuing behind ordinary requests; and overload refusals being sent from a
@@ -804,6 +860,8 @@ from an append that timed out on the caller but was committed.
 | History in-flight join | `id`; identity is the JSON text of the parsed request | Memory map | While the first task runs | One server instance, history methods | Error `rpc_request_identity_mismatch` to the newcomer's `replyTo` |
 | History refusal and claim store | `(workspaceId, machineId, id)`; fingerprint is SHA-256 of the same JSON text | SQLite file `session-history-rpc-rejections.sqlite3` | Until the later of request expiry and the supplied retention; pruned on each save | One installation, history methods | Error `rpc_request_identity_mismatch` |
 | Method-specific identities | Input identifier, user turn identifier, cancel identifier and others | Method-specific | Method-specific | Method-specific | See [methods](methods.md) |
+
+_Table 15: Deduplication mechanisms, and their identity, storage, and scope._
 
 (**Impl**; [E-S7](evidence.md#e-s7), [E-S8](evidence.md#e-s8),
 [E-S9](evidence.md#e-s9), [E-S11](evidence.md#e-s11); **Test** "joins
@@ -852,6 +910,9 @@ The narrow guarantees are these:
 | Client pending entries and response offset | Memory | `id` | None | No | Until settled | Dispatcher |
 | Streams token | Memory; browser also local storage | Endpoint, workspace, credential | Not applicable | Browser only | To expiry less 30 seconds | Token provider |
 
+_Table 16: State involved in RPC, where it lives, and whether it survives a
+restart._
+
 (**Impl**; [E-S4](evidence.md#e-s4), [E-S11](evidence.md#e-s11),
 [E-T30](evidence.md#e-t30); rows for the turn stash and turn pointers are
 detailed in [methods](methods.md).)
@@ -865,6 +926,8 @@ detailed in [methods](methods.md).)
 | After the claim was saved, before the write | Not applicable | Not applicable | Replay is refused with `session_history_write_already_claimed` although the write never ran |
 | After a side effect, before the response append | Replayed if unexpired: the handler runs a second time | Read again and answered | Replay refused; the outcome is uncertain to the caller |
 | After the response append | Replayed again if unexpired: a second run and a second response | A second read and a second response | Replay refused: an error response follows the earlier success under the same `id` |
+
+_Table 17: Daemon crash points and their outcome for each class of method._
 
 (**Infer** from [E-T30](evidence.md#e-t30), [E-W12](evidence.md#e-w12),
 [E-S10](evidence.md#e-s10). The last row of the first column was observed
@@ -911,6 +974,18 @@ starting the shutdown ([methods](methods.md);
 
 ### Intake path
 
+For screen readers: the following flowchart shows the daemon's intake path. Each
+event from the stream is parsed, its offset is saved in memory, and it is
+classified by method name and sorted into one of four sets, each capped at 128
+tasks: control, history write, ordinary, and history watch. When the control or
+history write set is full, intake waits. When the ordinary or watch set is full,
+the request goes to an overload pool that runs four at a time and is capped at
+128; when that is also full, the request is dropped with a warning. Each set
+feeds a semaphore: four permits for control, four for history write, sixteen for
+ordinary, and 128 for watch, which then also takes an ordinary permit. A task
+holding a permit validates the request, runs the handler, and appends the
+response.
+
 ```mermaid
 flowchart TD
   A[SSE data and control events] --> B[Parse JSON payload]
@@ -935,6 +1010,8 @@ flowchart TD
   P2 --> V
   P3 --> V
 ```
+
+_Figure 3: The daemon's intake path, admission sets, and lane semaphores._
 
 1. The read loop parses the payload and calls the batch handler, which it
    awaits (**Impl**; [E-T21](evidence.md#e-t21)).
@@ -967,6 +1044,8 @@ flowchart TD
 | Handler run time | None | Time | Not applicable | **Impl** (absence) |
 | Progress appends per request | None | Appends | Chained one after another | **Impl** |
 | Refusal store rows | None | Rows | Expired rows pruned on each save | **Impl** [E-S11](evidence.md#e-s11) |
+
+_Table 18: Scheduling limits, what each counts, and what happens at the limit._
 
 The daemon passes no pool sizes, so these package defaults are the values in
 production (**Impl**; [E-S18](evidence.md#e-s18)).
@@ -1032,6 +1111,8 @@ here.
 | Code Collab scans and diffs; Roost history | Worker threads | **Intent** |
 | Agent work | Child processes | **Impl** |
 
+_Table 19: Work that runs on paths shared with other requests._
+
 ### Related incident notes
 
 The repository's notes record several stalls of the daemon's event loop. They
@@ -1047,6 +1128,8 @@ the note's own and carries the note's stated limits.
 | One-shot status probe ([E-N5](evidence.md#e-n5)) | A `machine/status` timeout was misread as the machine being offline while presence showed it online | Presence, not RPC, now decides liveness |
 | Presence channel budget ([E-N6](evidence.md#e-n6)) | A busy presence writer delayed the heartbeat past its TTL; never reproduced under instrumentation | Bounds on writers are present |
 
+_Table 20: Related incident notes and their state at this commit._
+
 ## Liveness mechanisms
 
 Four mechanisms are easily confused. They are separate.
@@ -1057,6 +1140,8 @@ Four mechanisms are easily confused. They are separate.
 | Presence renewal | Daemon presence owner | Heartbeat every 30 seconds; entries expire after 90 seconds | An ephemeral entry on the workspace's presence stream; not a document write and not an RPC | The machine is online, to readers |
 | `machine/ping`, `machine/status` | RPC handlers | Caller timeout 30 seconds | Request and response streams | The daemon answered this request |
 | Internal watchdogs | Daemon and supervisor | Event-loop lag check every second, warning at five seconds; supervisor probe every second with an 800-millisecond timeout | Local only | Diagnostics |
+
+_Table 21: The four liveness mechanisms, and what each one means._
 
 (**Impl**; [E-D2](evidence.md#e-d2), [E-D3](evidence.md#e-d3),
 [E-D4](evidence.md#e-d4), [E-D5](evidence.md#e-d5),

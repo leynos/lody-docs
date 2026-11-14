@@ -45,6 +45,8 @@ or in a table column named "Basis".
 | **Infer** | An inference from code that was read; not directly implemented or asserted as stated. |
 | **Unknown** | Not determinable from the checkout. |
 
+_Table 1: Basis tags used in this file._
+
 Evidence links such as [E-M11](evidence.md#e-m11) point into
 [evidence.md](evidence.md), which gives the file, line range and what the lines
 establish. File names are abbreviated as follows.
@@ -64,6 +66,8 @@ establish. File names are abbreviated as follows.
 | `cwr` | `packages/components/src/providers/create-workspace-runtime.ts` |
 | `roost.test` | `apps/cli/tests/roost-session-backend-contract.test.ts` |
 | `watcher.test` | `apps/cli/tests/session-dispatch-watcher.test.ts` |
+
+_Table 2: Abbreviations for source file names._
 
 Request schemas named `Loro…RpcRequestSchema` are defined in `rpc.ts`. Result
 schemas are imported from `packages/shared` and applied by the client in
@@ -160,6 +164,9 @@ the claim that no other caller exists.
 | `sorbet/providers-list`, `sorbet/providers-create`, `sorbet/providers-delete` | no | none | no | feature | not applicable | web/desktop |
 | `ios-simulator/agent-control`, `android-emulator/agent-control`, `mcp/list-tools`, `mcp/authentication`, `session/call-tool`, `session/get-active-invocation-context` | no | none | no | no | not applicable | local IPC only |
 
+_Table 3: Every method, reconciled across declaration, helper, registration,
+lane, and callers._
+
 Notes on the table:
 
 - `machine/acp-authenticate` is scheduled on the control lane when
@@ -252,6 +259,8 @@ dependencies, so these variants exist for embedders and tests that omit them.
 | Cannot be absent (required dependency) | `machine/status`, `machine/acp-capabilities-refresh` | **Impl** |
 | No reply by design | `machine/acp-capabilities-refresh-cancel` | **Impl** [E-M21](evidence.md#e-m21) |
 
+_Table 4: Answers given for unknown and unregistered methods._
+
 With the CLI's actual wiring, every optional handler is supplied except the two
 automation handlers and, in the encrypted server instance, the directory listing
 handler [E-M24](evidence.md#e-m24) [E-M25](evidence.md#e-m25). Consequently, on
@@ -339,6 +348,9 @@ field to a daemon that does not know it has its request dropped without a reply
 | `sorbetCredentials`, `sorbetProviders` (1); `sorbetCredentialsRemote`, `sorbetProvidersRemote` (1) | `sorbet/*` over local IPC; over the encrypted channel | handler present; remote keys also need encryption [E-M38](evidence.md#e-m38) | `facade` |
 | machine metadata `supportsLocalProjectHistoryRpc` (boolean) | history sub-types of `local-project/control` | when the Streams server exists | project history client |
 
+_Table 5: Capability keys, the methods each gates, and where each is advertised
+and checked._
+
 Rows without an evidence link in the "Checked" column rest on the investigation
 notes and were not re-read for this file; treat the check location as **Infer**.
 
@@ -422,6 +434,8 @@ are library defaults in `rpc.ts`. **Impl**
 | `project/probe-local-member`, `local-project/git-state` | 30 000 | |
 | `local-project/control` | 120 000 | |
 
+_Table 6: Default timeouts by method._
+
 ## Method families
 
 ### Defaults for every entry
@@ -465,6 +479,8 @@ it is wired to in `mh`.
 | `machine/upgrade` | `LoroMachineUpgradeRpcRequestSchema` | `MachineUpgradeResponseSchema` | `upgradeMachine` → `prepareMachineUpgrade` [E-L75](evidence.md#e-l75) | machine owner only, capability, backend verification [E-L76](evidence.md#e-l76) | `accepted` records a persisted managed operation and intent to switch; it does not prove an upgrade |
 | `machine/bug-report` | `LoroMachineBugReportRpcRequestSchema` | `MachineBugReportResponseSchema` | `submitBugReport` → cloud bug report port [E-M65](evidence.md#e-m65) | `reporterUserId` and `requestToken` forwarded to the cloud port; verification there is **Unknown** | The report was submitted, or `success: false` |
 
+_Table 7: Machine status, ping, and lifecycle methods._
+
 Details and exceptions:
 
 - `machine/ping` answers `success: true` with message `pong`
@@ -500,6 +516,8 @@ authentication. They do not carry ACP session traffic. **Impl**
 | `machine/provider-rate-limits-refresh` | `LoroMachineProviderRateLimitsRefreshRpcRequestSchema` | `MachineProviderRateLimitsRefreshResponseSchema` | `refreshMachineProviderRateLimits` → `ses` | none visible | none |
 | `machine/pi-extensions` | `LoroMachinePiExtensionsRpcRequestSchema` | `MachinePiExtensionsResponseSchema` | `listMachinePiExtensions` → `ses` | none visible | Capability advertised only on a supported host |
 | `machine/memory` | `LoroMemoryProviderRpcRequestSchema` | `MemoryProviderResponseSchema` | `memoryProvider` → `handleMemoryProviderRequest` | none visible | none |
+
+_Table 8: Agent Client Protocol (ACP) management methods._
 
 Details and exceptions:
 
@@ -543,6 +561,8 @@ Details and exceptions:
 | `session/fork` | `LoroSessionForkRpcRequestSchema` | `SessionForkResponseSchema` | `forkSession` → `forkSessionWithAccessCheck` [E-M61](evidence.md#e-m61) | `verifySessionMachineAccess(sourceSessionId, requestedByUserId)`; denial is the in-band code `MACHINE_ACCESS_DENIED` | The fork completed, needs confirmation, or failed with an in-band error code |
 | `session/edit-and-resend` | `LoroSessionEditAndResendRpcRequestSchema` | `SessionEditAndResendResponseSchema` | `editAndResendSession` → `editAndResendSessionWithAccessCheck` [E-M61](evidence.md#e-m61) | `verifySessionMachineAccess(sessionId, requestedByUserId)` | The turn was replaced and re-dispatched, or an in-band error |
 | `session/prepare`, `session/prepare-cancel` | `LoroSessionPrepareRpcRequestSchema`, `LoroSessionPrepareCancelRpcRequestSchema` | `SessionPrepareResponseSchema`, `SessionPrepareCancelResponseSchema` | `declineSessionPreparation`, `declineSessionPreparationCancel` [E-M48](evidence.md#e-m48) | none | Nothing; fixed answers |
+
+_Table 9: Session control methods._
 
 Details and exceptions (dispatch-turn, cancel, steer, terminate and the
 preparation pair are traced under [Detailed lifecycles](#detailed-lifecycles)):
@@ -600,6 +620,8 @@ described under [History read, watch and write](#history-read-watch-and-write).
 | `session/history-watch` | `LoroSessionHistoryWatchRpcRequestSchema` | same; `query.kind` must be `watchChanges` [E-M88](evidence.md#e-m88) | `SessionHistoryReadResponseSchema` | `waitForSessionHistoryChanges` [E-L51](evidence.md#e-l51), then the read handler | as read, re-admitted after the wait [E-L48](evidence.md#e-l48) |
 | `session/history-write` | `LoroSessionHistoryWriteRpcRequestSchema` | `SessionHistoryWriteRpcPayloadSchema` | `SessionHistoryWriteResponseSchema` | `writeSessionHistory` → `writeSessionHistoryForRpc` [E-L59](evidence.md#e-l59) | owner readiness, then `writeProof` bound to the request ID and intent digest [E-L57](evidence.md#e-l57) |
 
+_Table 10: History methods._
+
 Exceptions to the defaults:
 
 - **Deduplication.** Identical concurrent requests share one handler and one
@@ -651,6 +673,8 @@ wired to the Code Collab service in
 | `code-collab/init-directory` | `CodeCollabV2InitDirectoryRequestSchema` | `CodeCollabV2RpcResponseSchema` | |
 | `code-collab/lsp-definition`, `code-collab/lsp-references` | `CodeCollabV2LspRpcParamsSchema` | `CodeCollabV2RpcResponseSchema` | Language Server Protocol (LSP) lookups; the declared handler result type is `CodeCollabV2LspUnsupported`; encrypted read queries |
 
+_Table 11: Code Collab methods._
+
 Details and exceptions:
 
 - **Authorization.** The owner-session check only [E-M34](evidence.md#e-m34); no
@@ -683,6 +707,8 @@ Details and exceptions:
 | `file/download-chunk` | `LoroFileDownloadRpcRequestSchema` | `FileDownloadRequestSchema` | `FileDownloadResponseSchema` | `downloadFileChunk` → file preview service | An `attachment` reference for another machine is refused with `invalid_path`; encrypted read query |
 | `file/list-dir` | `LoroFileListDirRpcRequestSchema` | `SessionDirectoryListRequestSchema` | `SessionDirectoryListResponseSchema` | `listSessionDirectory` → session directory listing | Ordinary workspaces only [E-M25](evidence.md#e-m25) |
 
+_Table 12: File methods._
+
 Details and exceptions:
 
 - **Authorization.** The owner-session check only [E-M34](evidence.md#e-m34).
@@ -714,6 +740,8 @@ Details and exceptions:
 | `android-emulator/control` | `LoroAndroidEmulatorRpcRequestSchema` | `AndroidEmulatorRemoteResponseSchema` | `controlAndroidEmulator` → device preview service | as iOS |
 | `machine/automation-control` | `LoroMachineAutomationControlRpcRequestSchema` | `remoteAutomationHandshakeSchema` | `getAutomationControl` → remote automation handshake [E-M24](evidence.md#e-m24) | none visible |
 | `session/automation-control` | `LoroSessionAutomationControlRpcRequestSchema` (inner `LoroSessionAutomationControlPayloadSchema`) | `remoteAutomationEncryptedResponseSchema` | `controlAutomation` → remote automation control [E-M24](evidence.md#e-m24) | owner envelope; owner session must equal `params.sessionId` [E-M15](evidence.md#e-m15); operation-bound proof by stated intent |
+
+_Table 13: Preview, automation, and device control methods._
 
 Details and exceptions:
 
@@ -749,6 +777,8 @@ Details and exceptions:
 | `project/probe-local-member` | `LoroProjectProbeLocalMemberRpcRequestSchema` | `ProjectProbeLocalMemberResultSchema` | `probeLocalProjectMember` → `probeProjectLocalMember` | machine access for `requestedByUserId` and the local project; denial is thrown and answered as `internal_error` [E-M69](evidence.md#e-m69) |
 | `local-project/git-state` | `LoroLocalProjectGitStateRpcRequestSchema` | `LoroLocalProjectGitStateRpcResponseSchema` | `getLocalProjectGitState` → `getLocalProjectGitStateForRpc` | same primitive; failures are in-band: `access_check_failed`, `access_denied`, `local_project_not_found`, `git_state_failed` [E-M70](evidence.md#e-m70) |
 | `local-project/control` | `LoroLocalProjectControlRpcRequestSchema` | `LocalProjectControlResponseSchema` | `dispatchLocalProjectControl` → `dispatchLocalProjectControlViaRpc` [E-M71](evidence.md#e-m71) | depends on the sub-type |
+
+_Table 14: Project methods._
 
 Details and exceptions:
 
@@ -787,6 +817,8 @@ IPC, except where noted.
 | `sorbet/credentials-list`, `sorbet/credentials-logout` | members of `LocalMachineRpcRequestSchema` [E-M3](evidence.md#e-m3) | local dispatcher [E-M95](evidence.md#e-m95) | a credentials handler, a feature context, and a built-in Sorbet agent configuration on this machine [E-M73](evidence.md#e-m73) | owned-execution authority |
 | `sorbet/providers-list`, `sorbet/providers-create`, `sorbet/providers-delete` | members of `LocalMachineRpcRequestSchema` | local dispatcher | a credentials handler and a built-in Sorbet agent configuration on this machine [E-M73](evidence.md#e-m73) | owned-execution authority |
 | `code-collab/get-file-index` | member of `LocalMachineRpcRequestSchema` | local dispatcher | admitted by the `code-collab/` prefix [E-M4](evidence.md#e-m4) | owned-execution authority |
+
+_Table 15: Methods that exist only in encrypted workspaces._
 
 Details:
 
@@ -830,6 +862,9 @@ consumer, the dispatch watcher's per-session check followed by
 | Session metadata activation (`latestUserMsgId`) plus a history row | document synchronization | yes |
 | `session/history-write` with operation `accept_input_and_dispatch` | Machine RPC to owner history, then activation and a local wake | yes |
 | `session/dispatch-turn` | Machine RPC to an in-memory stash, then a wake | no |
+
+_Table 16: Producers of a turn dispatch, the carrier each uses, and whether it
+is durable._
 
 No response to a dispatch-like method proves that the agent started. **Impl**
 
@@ -879,6 +914,8 @@ Milestones, in order:
 | After the Inbox execution claim | Startup retires the input as failed; later attempts fail the turn. See [The dispatcher and the execution claim](#the-dispatcher-and-the-execution-claim). | **Impl** |
 | After the response append | No daemon-side effect. | **Impl** |
 
+_Table 17: Crash points in the `session/dispatch-turn` accelerator._
+
 **Restart.** The stash does not survive. The session document is the durable
 source: the watcher comment says that RPC loss falls back to the document
 sources [E-L10](evidence.md#e-l10). **Intent**
@@ -919,6 +956,17 @@ and write](#history-read-watch-and-write). Milestones, in order:
 11. **Later, asynchronously.** Machine access, the Inbox execution claim, the
     `processing` status and the ACP prompt; see the next subsection.
 
+For screen readers: the following sequence diagram shows a client appending a
+`session/history-write` request, which the server receives by live read. The
+server looks up a stored refusal, waits up to ten seconds for owner metadata,
+verifies the write proof and intent digest with the backend, and stores the
+admission claim. It then records the human input receipt, accepts the input if
+there is no prior receipt, publishes the activation, enqueues a session check
+without awaiting it, flushes local writes, and appends the result, which the
+client receives as an accepted receipt with a turn identifier. Afterwards the
+watcher verifies machine access for the turn's user, claims the turn in the
+Inbox, and sends the ACP prompt to the agent.
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -946,6 +994,8 @@ sequenceDiagram
     Watcher->>Backend: verify machine access for the turn user
     Watcher->>Agent: Inbox claim then ACP prompt
 ```
+
+_Figure 1: A history write that accepts input and dispatches a turn._
 
 **What the response proves.**
 
@@ -987,6 +1037,9 @@ response read once, 2 000 ms after the append, without re-appending the request
 | Input ID (the user turn ID) | owner history receipt | documented as immutable; the SDK's error is not visible | **Intent** [E-L65](evidence.md#e-l65), **Unknown** |
 | `humanInputReceipts[inputId].userId` | session control document | `input_identity_conflict` | **Impl** [E-L60](evidence.md#e-l60) |
 
+_Table 18: Deduplication keys for the write operations, and the effect of
+reusing one with different content._
+
 A replay of the same request ID is refused by the claim and never runs the write
 again. A retry must use a new request ID, and hence a new proof, with the same
 input ID and content. Convergence comes from the input receipt, not from the
@@ -1004,6 +1057,8 @@ Crash windows for `accept_input_and_dispatch`:
 | After activation, before the execution claim | receipt, row and pointer | The startup scan sees a pending activation and dispatches through the normal path [E-L22](evidence.md#e-l22). The response may never have been sent; the lookup answers `accepted`. | **Impl**, **Infer** |
 | After agent start, before the response | Inbox slot held | Startup retires the input as failed and does not retry it. The sender sees a timeout; the lookup answers `accepted`. The agent may have partly run. | **Impl**, **Infer** |
 | After the response append | none | A replayed request ID answers `session_history_write_already_claimed`. | **Impl** |
+
+_Table 19: Crash points for `accept_input_and_dispatch`._
 
 Whether the human receipt and the activation pointer are durable at the instant
 of a crash depends on the document persistence layer, which was not traced.
@@ -1116,6 +1171,17 @@ input again [E-L31](evidence.md#e-l31). **Impl**, **Intent** The web/desktop
 caller treats the RPC as fire-and-forget and the document request as
 authoritative. **Impl** (from the investigation notes).
 
+For screen readers: the following sequence diagram shows a client appending a
+`session/cancel` request and, separately, writing a durable cancel request with
+the same cancel identifier to the session document. The server receives the
+request on the control lane and asks the execution service to cancel the exact
+turn. The execution service pauses the Inbox, stores the Stop receipt, sends an
+ACP cancel to the agent in the background, and reports success, which the server
+appends and the client receives before the agent has stopped. Later the agent's
+prompt returns or a five-second drain expires. The watcher then observes the
+cancel marker in the document and calls the execution service again with the
+same identifier.
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -1140,6 +1206,8 @@ sequenceDiagram
     Watcher->>Execution: cancelSession again with the same cancelId
 ```
 
+_Figure 2: A cancel delivered both by RPC and through the session document._
+
 - **What the response proves.** `success: true` proves that the stop was
   recorded or applied to daemon state for that exact turn, or that the turn was
   not current. It does not prove that the agent has stopped, nor that a turn
@@ -1161,6 +1229,8 @@ sequenceDiagram
 | Before the handler runs | No effect from the RPC. The document cancel request, if written, is processed after restart. | **Infer** |
 | After the Stop receipt, before the ACP cancel | The receipt persists. The interrupted execution is retired as failed at startup. | **Impl**, **Infer** |
 | After the ACP cancel, before the response | The agent process ends with the daemon. The caller sees a timeout; the document path converges. | **Infer** |
+
+_Table 20: Crash points for cancel._
 
 **Restart.** The in-memory record of seen cancel markers is lost, so an
 unprocessed marker causes `cancelSession` to run again; the exact-turn match and
@@ -1217,6 +1287,8 @@ Milestones, in order:
 | After the record is marked submitted, before the provider answers | The record stays at unknown delivery. A replay is refused as `delivery-unknown`. The input is not dispatched automatically. | **Impl**, **Intent** |
 | After the provider confirms | The record is applied. A replay answers applied without a second provider call. | **Impl** |
 
+_Table 21: Crash points for steer._
+
 **Restart.** The documentation says that after restart an abandoned applied
 processing record becomes cancelled and is never an ordinary replay. **Intent**
 
@@ -1255,6 +1327,8 @@ These three methods read state and change nothing.
 | `machine/ping` | none | The daemon's request loop read the request, a control-lane slot ran, and the response append succeeded. Nothing about sessions or agents. | **Impl** [E-L38](evidence.md#e-l38) |
 | `machine/status` | none | A point-in-time snapshot. With `includeDaemonUpdate`, it is also the result query for an upgrade; see [Restart and upgrade](#restart-and-upgrade). | **Impl** [E-L39](evidence.md#e-l39) [E-L40](evidence.md#e-l40) |
 | `session/live-status` | none visible | The in-process view of one session: presence, execution snapshot and pending dispatch, at `observedAtMs`. | **Impl** [E-M60](evidence.md#e-m60) |
+
+_Table 22: Ping, status, and live status, and what each response proves._
 
 - **Relation to presence.** Ping and status call nothing in the presence
   subsystem, and live status reads the presence controller without renewing it.
@@ -1327,6 +1401,14 @@ Milestones after the preconditions:
    send attempt [E-L47](evidence.md#e-l47).
 5. **Response.** The result is encrypted to the owner session and appended.
 
+For screen readers: the following sequence diagram shows a client appending a
+`session/history-read` request that carries a read proof. The server receives
+it, looks up a stored refusal, waits up to ten seconds for owner metadata, and
+verifies the proof with the backend. It flushes, reads, and flushes the history,
+which returns a result with the history revision and count. The server checks
+admission again before sending, appends the encrypted result to the reply
+stream, and the client receives it.
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -1347,6 +1429,8 @@ sequenceDiagram
     Server->>Streams: append the encrypted result to replyTo
     Streams->>Client: result
 ```
+
+_Figure 3: A history read, from request to encrypted result._
 
 - **What the response proves.** A coherent owner-local observation at the
   returned `historyRevision` and `historyCount`. It does not prove that any
@@ -1375,6 +1459,8 @@ sequenceDiagram
 | During the readiness wait | No refusal stored. A replay starts again. | **Infer** |
 | After a refusal is stored | The replay answers the stored refusal. | **Test** [E-L71](evidence.md#e-l71) |
 | After the read, before the append | No effect. A replay reads again. | **Infer** |
+
+_Table 23: Crash points for history read and watch._
 
 #### Write
 
@@ -1418,6 +1504,8 @@ Milestones after the preconditions:
 | After the claim, before the write | claim only | `session_history_write_already_claimed`; outcome uncertain to the caller; retry with a new request ID. | **Impl** |
 | After the write, before the append | claim and the write | Same error; the write stands. For input operations the `inputAcceptance` query resolves the uncertainty. | **Impl**, **Infer** |
 | After the append | claim, write and response | Same error after an earlier success, with the same ID on the same reply stream. | **Infer** |
+
+_Table 24: Crash points for history write._
 
 ### Restart and upgrade
 
@@ -1464,6 +1552,15 @@ Milestones for `machine/restart`, in order:
   switch may expire or be refused at re-verification, in which case the old
   daemon keeps running [E-L80](evidence.md#e-l80).
 
+For screen readers: the following sequence diagram shows a client appending a
+`machine/restart` request that carries a request token. The server receives it
+on the control lane and asks the handler to prepare the restart; the handler
+verifies the lifecycle request with the backend and accepts. The server appends
+the accepted response, waits at most five seconds for it to be delivered, and
+tells the handler the response has settled. The handler triggers the restart
+once, the process exits with code 42, the supervisor respawns the worker, and
+the new process reads the request stream from the start.
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -1486,6 +1583,8 @@ sequenceDiagram
     Supervisor->>Process: respawn the worker
     Process->>Streams: new process reads the request stream from the start
 ```
+
+_Figure 4: An accepted restart, from request to the respawned worker._
 
 - **What the response proves.** `accepted: true` proves that the capability was
   present, no lifecycle action was pending in that handler, backend verification
@@ -1516,6 +1615,8 @@ sequenceDiagram
 | After acceptance, before the response append | The pending action is lost with the process. The supervisor's handling of an unplanned exit is outside this file. | The managed operation persists in the supervisor. | **Infer** |
 | After the append, before exit | As above. | As above. | **Infer** |
 
+_Table 25: Crash points for restart and upgrade._
+
 - **Replay after restart.** The restart request stays in the request stream. A
   new process reads from the start of the retained stream
   [E-L1](evidence.md#e-l1) and, if the request is unexpired, runs
@@ -1544,6 +1645,9 @@ sequenceDiagram
 | The five-second budget, and late completion not invoking the callback again | Matches. | **Impl** [E-L78](evidence.md#e-l78); **Test** [E-L85](evidence.md#e-l85) |
 | "Rejected operations never trigger a lifecycle exit." | Matches. | **Impl** [E-L79](evidence.md#e-l79); **Test** [E-L85](evidence.md#e-l85) |
 | "durable request-ID replay rejection" for managed updates; "ordinary restart does not acquire those update guarantees" | Matches: the supervisor rejects finished operations; restart has none. | **Impl** [E-L82](evidence.md#e-l82) |
+
+_Table 26: Specification statements about restart and upgrade, compared with the
+code at this commit._
 
 ### Prepare and prepare-cancel
 

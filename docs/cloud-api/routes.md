@@ -1,6 +1,8 @@
 # HTTP route index
 
-Generated from the OpenAPI document. Consult each operation for its credential, payload and evidence limits. `backend` means <https://backend.lody.ai>; `worker` means <https://api.lody.ai>; `convex` means <https://convex.lody.ai>.
+Generated from the OpenAPI document. Consult each operation for its credential,
+payload, and evidence limits. `backend` means <https://backend.lody.ai>;
+`worker` means <https://api.lody.ai>; `convex` means <https://convex.lody.ai>.
 
 | Method | Path | Origin | Operation |
 | --- | --- | --- | --- |
@@ -64,8 +66,10 @@ Generated from the OpenAPI document. Consult each operation for its credential, 
 | GET | `/api/community/wechat-qr` | worker | Read the legacy community QR image |
 | GET | `/api/cli/latest-version` | backend | Read the latest CLI package version |
 | GET | `/api/runtimes/{distribution}/channels/{platform}/{channel}.json` | worker | Read a managed daemon channel manifest |
-| GET | `/api/runtimes/{distribution}/{version}/{platform}/{fileName}` | worker | Download a versioned runtime artifact |
+| GET | `/api/runtimes/{distribution}/{version}/{platform}/{fileName}` | worker | Download a versioned runtime artefact |
 | POST | `/api/auth/organization/update` | backend | Update the organization name or logo |
 | POST | `/api/query` | convex | Call a public Convex query |
 | POST | `/api/mutation` | convex | Call a public Convex mutation |
 | POST | `/api/action` | convex | Call a public Convex action |
+
+_Table 1: Every documented HTTP route, with its origin and operation._

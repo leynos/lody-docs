@@ -1,8 +1,14 @@
 # Convex operation reference
 
-Generated from the public `CloudApi` type. See [the guide](README.md) for transport and authentication, and [OpenAPI](openapi.yaml) for JSON Schemas. A query reads data, a mutation changes database state, and an action may perform external I/O. These labels do not imply that every action is safe to retry.
+Generated from the public `CloudApi` type. See [the guide](README.md) for
+transport and authentication, and [OpenAPI](openapi.yaml) for JSON Schemas. A
+query reads data, a mutation changes database state, and an action may perform
+external I/O. These labels do not imply that every action is safe to retry.
 
-Request fields marked `?` are optional; `null` is an explicit value. Type names link to the pinned source; complete expanded schemas are in OpenAPI. Types marked `x-unresolved` in OpenAPI remain unconstrained and require the source definition.
+Request fields marked `?` are optional; `null` is an explicit value. Type names
+link to the pinned source; complete expanded schemas are in OpenAPI. Types
+marked `x-unresolved` in OpenAPI remain unconstrained and require the source
+definition.
 
 ## e2eeMachineSharing
 
@@ -10,7 +16,9 @@ Public client-facing cloud operations.
 
 ### e2eeMachineSharing:listVersions
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L441) · schemas: `e2eeMachineSharing_listVersions_Args`, `e2eeMachineSharing_listVersions_Result`
+**QUERY** · schemas: `e2eeMachineSharing_listVersions_Args`,
+`e2eeMachineSharing_listVersions_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L441)
 
 Untrusted invalidation hints, never policy authority or content.
 
@@ -32,7 +40,9 @@ Array<{
 
 ### e2eeMachineSharing:readHead
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L450) · schemas: `e2eeMachineSharing_readHead_Args`, `e2eeMachineSharing_readHead_Result`
+**ACTION** · schemas: `e2eeMachineSharing_readHead_Args`,
+`e2eeMachineSharing_readHead_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L450)
 
 Arguments:
 
@@ -48,7 +58,9 @@ E2eeMachineSharingReplies['readHead']
 
 ### e2eeMachineSharing:readVersion
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L451) · schemas: `e2eeMachineSharing_readVersion_Args`, `e2eeMachineSharing_readVersion_Result`
+**ACTION** · schemas: `e2eeMachineSharing_readVersion_Args`,
+`e2eeMachineSharing_readVersion_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L451)
 
 Arguments:
 
@@ -64,7 +76,9 @@ E2eeMachineSharingReplies['readVersion']
 
 ### e2eeMachineSharing:readRequest
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L455) · schemas: `e2eeMachineSharing_readRequest_Args`, `e2eeMachineSharing_readRequest_Result`
+**ACTION** · schemas: `e2eeMachineSharing_readRequest_Args`,
+`e2eeMachineSharing_readRequest_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L455)
 
 Arguments:
 
@@ -80,7 +94,9 @@ E2eeMachineSharingReplies['readRequest']
 
 ### e2eeMachineSharing:commit
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L459) · schemas: `e2eeMachineSharing_commit_Args`, `e2eeMachineSharing_commit_Result`
+**ACTION** · schemas: `e2eeMachineSharing_commit_Args`,
+`e2eeMachineSharing_commit_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L459)
 
 Arguments:
 
@@ -100,7 +116,9 @@ Public client-facing cloud operations.
 
 ### e2eeMembers:workspaces
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L462) · schemas: `e2eeMembers_workspaces_Args`, `e2eeMembers_workspaces_Result`
+**QUERY** · schemas: `e2eeMembers_workspaces_Args`,
+`e2eeMembers_workspaces_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L462)
 
 Arguments:
 
@@ -116,7 +134,9 @@ import('./e2ee-members').E2eeMemberWorkspace[]
 
 ### e2eeMembers:createInvitation
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L463) · schemas: `e2eeMembers_createInvitation_Args`, `e2eeMembers_createInvitation_Result`
+**MUTATION** · schemas: `e2eeMembers_createInvitation_Args`,
+`e2eeMembers_createInvitation_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L463)
 
 Arguments:
 
@@ -132,7 +152,8 @@ E2eeMemberReplies['createInvitation']
 
 ### e2eeMembers:preview
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L467) · schemas: `e2eeMembers_preview_Args`, `e2eeMembers_preview_Result`
+**QUERY** · schemas: `e2eeMembers_preview_Args`, `e2eeMembers_preview_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L467)
 
 Arguments:
 
@@ -148,7 +169,8 @@ E2eeMemberReplies['preview']
 
 ### e2eeMembers:submit
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L468) · schemas: `e2eeMembers_submit_Args`, `e2eeMembers_submit_Result`
+**MUTATION** · schemas: `e2eeMembers_submit_Args`, `e2eeMembers_submit_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L468)
 
 Arguments:
 
@@ -164,7 +186,8 @@ E2eeMemberReplies['submit']
 
 ### e2eeMembers:retire
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L469) · schemas: `e2eeMembers_retire_Args`, `e2eeMembers_retire_Result`
+**MUTATION** · schemas: `e2eeMembers_retire_Args`, `e2eeMembers_retire_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L469)
 
 Arguments:
 
@@ -180,7 +203,8 @@ E2eeMemberReplies['retire']
 
 ### e2eeMembers:pending
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L470) · schemas: `e2eeMembers_pending_Args`, `e2eeMembers_pending_Result`
+**QUERY** · schemas: `e2eeMembers_pending_Args`, `e2eeMembers_pending_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L470)
 
 Arguments:
 
@@ -196,7 +220,8 @@ E2eeMemberReplies['pending']
 
 ### e2eeMembers:read
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L471) · schemas: `e2eeMembers_read_Args`, `e2eeMembers_read_Result`
+**QUERY** · schemas: `e2eeMembers_read_Args`, `e2eeMembers_read_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L471)
 
 Arguments:
 
@@ -212,7 +237,8 @@ E2eeMemberReplies['read']
 
 ### e2eeMembers:reject
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L472) · schemas: `e2eeMembers_reject_Args`, `e2eeMembers_reject_Result`
+**MUTATION** · schemas: `e2eeMembers_reject_Args`, `e2eeMembers_reject_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L472)
 
 Arguments:
 
@@ -228,7 +254,8 @@ E2eeMemberReplies['reject']
 
 ### e2eeMembers:revoke
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L473) · schemas: `e2eeMembers_revoke_Args`, `e2eeMembers_revoke_Result`
+**MUTATION** · schemas: `e2eeMembers_revoke_Args`, `e2eeMembers_revoke_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L473)
 
 Arguments:
 
@@ -244,7 +271,8 @@ E2eeMemberReplies['revoke']
 
 ### e2eeMembers:claim
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L474) · schemas: `e2eeMembers_claim_Args`, `e2eeMembers_claim_Result`
+**QUERY** · schemas: `e2eeMembers_claim_Args`, `e2eeMembers_claim_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L474)
 
 Arguments:
 
@@ -264,7 +292,9 @@ Optional developer-only E2EE control plane; does not authorize content access.
 
 ### e2eeContent:contentStreamsToken
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L477) · schemas: `e2eeContent_contentStreamsToken_Args`, `e2eeContent_contentStreamsToken_Result`
+**ACTION** · schemas: `e2eeContent_contentStreamsToken_Args`,
+`e2eeContent_contentStreamsToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L477)
 
 Arguments:
 
@@ -284,7 +314,9 @@ Public client-facing cloud operations.
 
 ### e2eeJoinMailbox:begin
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L479) · schemas: `e2eeJoinMailbox_begin_Args`, `e2eeJoinMailbox_begin_Result`
+**MUTATION** · schemas: `e2eeJoinMailbox_begin_Args`,
+`e2eeJoinMailbox_begin_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L479)
 
 Arguments:
 
@@ -300,7 +332,9 @@ E2eeJoinReplies['begin']
 
 ### e2eeJoinMailbox:status
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L480) · schemas: `e2eeJoinMailbox_status_Args`, `e2eeJoinMailbox_status_Result`
+**QUERY** · schemas: `e2eeJoinMailbox_status_Args`,
+`e2eeJoinMailbox_status_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L480)
 
 Arguments:
 
@@ -316,7 +350,9 @@ E2eeJoinReplies['status']
 
 ### e2eeJoinMailbox:readRequest
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L481) · schemas: `e2eeJoinMailbox_readRequest_Args`, `e2eeJoinMailbox_readRequest_Result`
+**QUERY** · schemas: `e2eeJoinMailbox_readRequest_Args`,
+`e2eeJoinMailbox_readRequest_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L481)
 
 Arguments:
 
@@ -332,7 +368,9 @@ E2eeJoinReplies['readRequest']
 
 ### e2eeJoinMailbox:cancel
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L482) · schemas: `e2eeJoinMailbox_cancel_Args`, `e2eeJoinMailbox_cancel_Result`
+**MUTATION** · schemas: `e2eeJoinMailbox_cancel_Args`,
+`e2eeJoinMailbox_cancel_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L482)
 
 Arguments:
 
@@ -348,7 +386,9 @@ E2eeJoinReplies['cancel']
 
 ### e2eeJoinMailbox:publish
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L483) · schemas: `e2eeJoinMailbox_publish_Args`, `e2eeJoinMailbox_publish_Result`
+**MUTATION** · schemas: `e2eeJoinMailbox_publish_Args`,
+`e2eeJoinMailbox_publish_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L483)
 
 Arguments:
 
@@ -364,7 +404,9 @@ E2eeJoinReplies['publish']
 
 ### e2eeJoinMailbox:claim
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L484) · schemas: `e2eeJoinMailbox_claim_Args`, `e2eeJoinMailbox_claim_Result`
+**QUERY** · schemas: `e2eeJoinMailbox_claim_Args`,
+`e2eeJoinMailbox_claim_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L484)
 
 Arguments:
 
@@ -384,7 +426,9 @@ Account-wide personal device pairing relay; relays and notifies, never approves.
 
 ### e2eeAutomaticPairing:pending
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L488) · schemas: `e2eeAutomaticPairing_pending_Args`, `e2eeAutomaticPairing_pending_Result`
+**QUERY** · schemas: `e2eeAutomaticPairing_pending_Args`,
+`e2eeAutomaticPairing_pending_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L488)
 
 Arguments:
 
@@ -400,7 +444,9 @@ E2eeAutomaticPairingRecord[]
 
 ### e2eeAutomaticPairing:read
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L489) · schemas: `e2eeAutomaticPairing_read_Args`, `e2eeAutomaticPairing_read_Result`
+**QUERY** · schemas: `e2eeAutomaticPairing_read_Args`,
+`e2eeAutomaticPairing_read_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L489)
 
 Arguments:
 
@@ -416,7 +462,9 @@ E2eeAutomaticPairingRecord | null
 
 ### e2eeAutomaticPairing:exchange
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L490) · schemas: `e2eeAutomaticPairing_exchange_Args`, `e2eeAutomaticPairing_exchange_Result`
+**MUTATION** · schemas: `e2eeAutomaticPairing_exchange_Args`,
+`e2eeAutomaticPairing_exchange_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L490)
 
 Arguments:
 
@@ -436,7 +484,9 @@ Public client-facing cloud operations.
 
 ### e2eeAccountPairing:submit
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L493) · schemas: `e2eeAccountPairing_submit_Args`, `e2eeAccountPairing_submit_Result`
+**MUTATION** · schemas: `e2eeAccountPairing_submit_Args`,
+`e2eeAccountPairing_submit_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L493)
 
 Arguments:
 
@@ -452,7 +502,9 @@ E2eeAccountPairingReplies['submit']
 
 ### e2eeAccountPairing:pending
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L494) · schemas: `e2eeAccountPairing_pending_Args`, `e2eeAccountPairing_pending_Result`
+**QUERY** · schemas: `e2eeAccountPairing_pending_Args`,
+`e2eeAccountPairing_pending_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L494)
 
 Arguments:
 
@@ -468,7 +520,9 @@ E2eeAccountPairingReplies['pending']
 
 ### e2eeAccountPairing:read
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L495) · schemas: `e2eeAccountPairing_read_Args`, `e2eeAccountPairing_read_Result`
+**QUERY** · schemas: `e2eeAccountPairing_read_Args`,
+`e2eeAccountPairing_read_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L495)
 
 Arguments:
 
@@ -484,7 +538,9 @@ E2eeAccountPairingReplies['read']
 
 ### e2eeAccountPairing:decline
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L496) · schemas: `e2eeAccountPairing_decline_Args`, `e2eeAccountPairing_decline_Result`
+**MUTATION** · schemas: `e2eeAccountPairing_decline_Args`,
+`e2eeAccountPairing_decline_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L496)
 
 Arguments:
 
@@ -500,7 +556,9 @@ E2eeAccountPairingReplies['decline']
 
 ### e2eeAccountPairing:publish
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L497) · schemas: `e2eeAccountPairing_publish_Args`, `e2eeAccountPairing_publish_Result`
+**MUTATION** · schemas: `e2eeAccountPairing_publish_Args`,
+`e2eeAccountPairing_publish_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L497)
 
 Arguments:
 
@@ -516,7 +574,9 @@ E2eeAccountPairingReplies['publish']
 
 ### e2eeAccountPairing:claim
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L498) · schemas: `e2eeAccountPairing_claim_Args`, `e2eeAccountPairing_claim_Result`
+**QUERY** · schemas: `e2eeAccountPairing_claim_Args`,
+`e2eeAccountPairing_claim_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L498)
 
 Arguments:
 
@@ -536,7 +596,8 @@ Public client-facing cloud operations.
 
 ### e2eeMailbox:put
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L501) · schemas: `e2eeMailbox_put_Args`, `e2eeMailbox_put_Result`
+**MUTATION** · schemas: `e2eeMailbox_put_Args`, `e2eeMailbox_put_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L501)
 
 Arguments:
 
@@ -552,7 +613,8 @@ E2eeMailboxReplies['put']
 
 ### e2eeMailbox:read
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L502) · schemas: `e2eeMailbox_read_Args`, `e2eeMailbox_read_Result`
+**QUERY** · schemas: `e2eeMailbox_read_Args`, `e2eeMailbox_read_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L502)
 
 Arguments:
 
@@ -568,7 +630,8 @@ E2eeMailboxReplies['read']
 
 ### e2eeMailbox:fetch
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L503) · schemas: `e2eeMailbox_fetch_Args`, `e2eeMailbox_fetch_Result`
+**QUERY** · schemas: `e2eeMailbox_fetch_Args`, `e2eeMailbox_fetch_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L503)
 
 Arguments:
 
@@ -584,7 +647,8 @@ E2eeMailboxReplies['fetch']
 
 ### e2eeMailbox:status
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L504) · schemas: `e2eeMailbox_status_Args`, `e2eeMailbox_status_Result`
+**QUERY** · schemas: `e2eeMailbox_status_Args`, `e2eeMailbox_status_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L504)
 
 Arguments:
 
@@ -600,7 +664,8 @@ E2eeMailboxReplies['status']
 
 ### e2eeMailbox:report
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L505) · schemas: `e2eeMailbox_report_Args`, `e2eeMailbox_report_Result`
+**MUTATION** · schemas: `e2eeMailbox_report_Args`, `e2eeMailbox_report_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L505)
 
 Arguments:
 
@@ -616,7 +681,8 @@ E2eeMailboxReplies['report']
 
 ### e2eeMailbox:repair
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L506) · schemas: `e2eeMailbox_repair_Args`, `e2eeMailbox_repair_Result`
+**MUTATION** · schemas: `e2eeMailbox_repair_Args`, `e2eeMailbox_repair_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L506)
 
 Arguments:
 
@@ -636,7 +702,9 @@ Public client-facing cloud operations.
 
 ### e2eeMachinePairing:begin
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L509) · schemas: `e2eeMachinePairing_begin_Args`, `e2eeMachinePairing_begin_Result`
+**MUTATION** · schemas: `e2eeMachinePairing_begin_Args`,
+`e2eeMachinePairing_begin_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L509)
 
 Arguments:
 
@@ -652,7 +720,9 @@ E2eeMachinePairingStatus
 
 ### e2eeMachinePairing:inspect
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L510) · schemas: `e2eeMachinePairing_inspect_Args`, `e2eeMachinePairing_inspect_Result`
+**QUERY** · schemas: `e2eeMachinePairing_inspect_Args`,
+`e2eeMachinePairing_inspect_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L510)
 
 Arguments:
 
@@ -668,7 +738,9 @@ E2eeMachinePairingStatus
 
 ### e2eeMachinePairing:cancel
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L511) · schemas: `e2eeMachinePairing_cancel_Args`, `e2eeMachinePairing_cancel_Result`
+**MUTATION** · schemas: `e2eeMachinePairing_cancel_Args`,
+`e2eeMachinePairing_cancel_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L511)
 
 Arguments:
 
@@ -684,7 +756,9 @@ E2eeMachinePairingStatus
 
 ### e2eeMachinePairing:authorizeExisting
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L512) · schemas: `e2eeMachinePairing_authorizeExisting_Args`, `e2eeMachinePairing_authorizeExisting_Result`
+**MUTATION** · schemas: `e2eeMachinePairing_authorizeExisting_Args`,
+`e2eeMachinePairing_authorizeExisting_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L512)
 
 Arguments:
 
@@ -700,7 +774,9 @@ E2eeMachinePairingStatus
 
 ### e2eeMachinePairing:bootstrap
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L513) · schemas: `e2eeMachinePairing_bootstrap_Args`, `e2eeMachinePairing_bootstrap_Result`
+**QUERY** · schemas: `e2eeMachinePairing_bootstrap_Args`,
+`e2eeMachinePairing_bootstrap_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L513)
 
 Arguments:
 
@@ -721,7 +797,9 @@ Result:
 
 ### e2eeMachinePairing:workspaceEntitlement
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L523) · schemas: `e2eeMachinePairing_workspaceEntitlement_Args`, `e2eeMachinePairing_workspaceEntitlement_Result`
+**QUERY** · schemas: `e2eeMachinePairing_workspaceEntitlement_Args`,
+`e2eeMachinePairing_workspaceEntitlement_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L523)
 
 The paired machine's own workspace plan, authenticated by its device credential.
 
@@ -740,7 +818,9 @@ Result:
 
 ### e2eeMachinePairing:complete
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L528) · schemas: `e2eeMachinePairing_complete_Args`, `e2eeMachinePairing_complete_Result`
+**MUTATION** · schemas: `e2eeMachinePairing_complete_Args`,
+`e2eeMachinePairing_complete_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L528)
 
 Arguments:
 
@@ -760,7 +840,9 @@ Public client-facing cloud operations.
 
 ### e2eeWorkspaces:ledgerHead
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L531) · schemas: `e2eeWorkspaces_ledgerHead_Args`, `e2eeWorkspaces_ledgerHead_Result`
+**QUERY** · schemas: `e2eeWorkspaces_ledgerHead_Args`,
+`e2eeWorkspaces_ledgerHead_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L531)
 
 Arguments:
 
@@ -776,7 +858,9 @@ E2eeWorkspaceLedgerHead
 
 ### e2eeWorkspaces:appendRecord
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L532) · schemas: `e2eeWorkspaces_appendRecord_Args`, `e2eeWorkspaces_appendRecord_Result`
+**ACTION** · schemas: `e2eeWorkspaces_appendRecord_Args`,
+`e2eeWorkspaces_appendRecord_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L532)
 
 Arguments:
 
@@ -792,7 +876,9 @@ E2eeAppendRecordReply
 
 ### e2eeWorkspaces:create
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L533) · schemas: `e2eeWorkspaces_create_Args`, `e2eeWorkspaces_create_Result`
+**ACTION** · schemas: `e2eeWorkspaces_create_Args`,
+`e2eeWorkspaces_create_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L533)
 
 Arguments:
 
@@ -808,7 +894,9 @@ E2eeWorkspaceCreateResult
 
 ### e2eeWorkspaces:describe
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L534) · schemas: `e2eeWorkspaces_describe_Args`, `e2eeWorkspaces_describe_Result`
+**QUERY** · schemas: `e2eeWorkspaces_describe_Args`,
+`e2eeWorkspaces_describe_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L534)
 
 Arguments:
 
@@ -824,7 +912,9 @@ WorkspaceAdmissionDescriptor
 
 ### e2eeWorkspaces:reportDeviceProfile
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L535) · schemas: `e2eeWorkspaces_reportDeviceProfile_Args`, `e2eeWorkspaces_reportDeviceProfile_Result`
+**MUTATION** · schemas: `e2eeWorkspaces_reportDeviceProfile_Args`,
+`e2eeWorkspaces_reportDeviceProfile_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L535)
 
 Arguments:
 
@@ -841,7 +931,9 @@ null
 
 ### e2eeWorkspaces:memberProfiles
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L540) · schemas: `e2eeWorkspaces_memberProfiles_Args`, `e2eeWorkspaces_memberProfiles_Result`
+**QUERY** · schemas: `e2eeWorkspaces_memberProfiles_Args`,
+`e2eeWorkspaces_memberProfiles_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L540)
 
 Arguments:
 
@@ -857,7 +949,9 @@ E2eeWorkspaceMemberProfiles
 
 ### e2eeWorkspaces:history
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L541) · schemas: `e2eeWorkspaces_history_Args`, `e2eeWorkspaces_history_Result`
+**ACTION** · schemas: `e2eeWorkspaces_history_Args`,
+`e2eeWorkspaces_history_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L541)
 
 Arguments:
 
@@ -877,7 +971,9 @@ Optional E2EE ciphertext staging. No ordinary/local product constructs it.
 
 ### accountSecurityEvents:list
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L545) · schemas: `accountSecurityEvents_list_Args`, `accountSecurityEvents_list_Result`
+**QUERY** · schemas: `accountSecurityEvents_list_Args`,
+`accountSecurityEvents_list_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L545)
 
 Arguments:
 
@@ -897,7 +993,9 @@ Public client-facing cloud operations.
 
 ### e2eeRecoveryVault:hasAccountVault
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L551) · schemas: `e2eeRecoveryVault_hasAccountVault_Args`, `e2eeRecoveryVault_hasAccountVault_Result`
+**QUERY** · schemas: `e2eeRecoveryVault_hasAccountVault_Args`,
+`e2eeRecoveryVault_hasAccountVault_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L551)
 
 Arguments:
 
@@ -913,7 +1011,9 @@ Result:
 
 ### e2eeRecoveryVault:replacementState
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L552) · schemas: `e2eeRecoveryVault_replacementState_Args`, `e2eeRecoveryVault_replacementState_Result`
+**QUERY** · schemas: `e2eeRecoveryVault_replacementState_Args`,
+`e2eeRecoveryVault_replacementState_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L552)
 
 Arguments:
 
@@ -929,7 +1029,9 @@ Result:
 
 ### e2eeRecoveryVault:reserveReplacementVault
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L556) · schemas: `e2eeRecoveryVault_reserveReplacementVault_Args`, `e2eeRecoveryVault_reserveReplacementVault_Result`
+**MUTATION** · schemas: `e2eeRecoveryVault_reserveReplacementVault_Args`,
+`e2eeRecoveryVault_reserveReplacementVault_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L556)
 
 Arguments:
 
@@ -945,7 +1047,9 @@ Result:
 
 ### e2eeRecoveryVault:finishReplacement
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L557) · schemas: `e2eeRecoveryVault_finishReplacement_Args`, `e2eeRecoveryVault_finishReplacement_Result`
+**MUTATION** · schemas: `e2eeRecoveryVault_finishReplacement_Args`,
+`e2eeRecoveryVault_finishReplacement_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L557)
 
 Arguments:
 
@@ -961,7 +1065,9 @@ Result:
 
 ### e2eeRecoveryVault:abandonReplacement
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L558) · schemas: `e2eeRecoveryVault_abandonReplacement_Args`, `e2eeRecoveryVault_abandonReplacement_Result`
+**MUTATION** · schemas: `e2eeRecoveryVault_abandonReplacement_Args`,
+`e2eeRecoveryVault_abandonReplacement_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L558)
 
 Arguments:
 
@@ -977,7 +1083,9 @@ Result:
 
 ### e2eeRecoveryVault:putImmutable
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L559) · schemas: `e2eeRecoveryVault_putImmutable_Args`, `e2eeRecoveryVault_putImmutable_Result`
+**MUTATION** · schemas: `e2eeRecoveryVault_putImmutable_Args`,
+`e2eeRecoveryVault_putImmutable_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L559)
 
 Arguments:
 
@@ -993,7 +1101,9 @@ Result:
 
 ### e2eeRecoveryVault:readEntry
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L560) · schemas: `e2eeRecoveryVault_readEntry_Args`, `e2eeRecoveryVault_readEntry_Result`
+**QUERY** · schemas: `e2eeRecoveryVault_readEntry_Args`,
+`e2eeRecoveryVault_readEntry_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L560)
 
 Arguments:
 
@@ -1009,7 +1119,9 @@ RecoveryVaultCiphertextDto | null
 
 ### e2eeRecoveryVault:readIndex
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L561) · schemas: `e2eeRecoveryVault_readIndex_Args`, `e2eeRecoveryVault_readIndex_Result`
+**QUERY** · schemas: `e2eeRecoveryVault_readIndex_Args`,
+`e2eeRecoveryVault_readIndex_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L561)
 
 Arguments:
 
@@ -1025,7 +1137,9 @@ RecoveryVaultCiphertextDto | null
 
 ### e2eeRecoveryVault:compareAndSwapIndex
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L562) · schemas: `e2eeRecoveryVault_compareAndSwapIndex_Args`, `e2eeRecoveryVault_compareAndSwapIndex_Result`
+**MUTATION** · schemas: `e2eeRecoveryVault_compareAndSwapIndex_Args`,
+`e2eeRecoveryVault_compareAndSwapIndex_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L562)
 
 Arguments:
 
@@ -1041,7 +1155,9 @@ RecoveryVaultIndexCasReply
 
 ### e2eeRecoveryVault:deleteUnreferenced
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L563) · schemas: `e2eeRecoveryVault_deleteUnreferenced_Args`, `e2eeRecoveryVault_deleteUnreferenced_Result`
+**MUTATION** · schemas: `e2eeRecoveryVault_deleteUnreferenced_Args`,
+`e2eeRecoveryVault_deleteUnreferenced_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L563)
 
 Arguments:
 
@@ -1061,7 +1177,9 @@ Public client-facing cloud operations.
 
 ### e2eeEpochStaging:stageGroup
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L566) · schemas: `e2eeEpochStaging_stageGroup_Args`, `e2eeEpochStaging_stageGroup_Result`
+**MUTATION** · schemas: `e2eeEpochStaging_stageGroup_Args`,
+`e2eeEpochStaging_stageGroup_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L566)
 
 Arguments:
 
@@ -1077,7 +1195,9 @@ StageEpochGroupReply
 
 ### e2eeEpochStaging:readGroup
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L567) · schemas: `e2eeEpochStaging_readGroup_Args`, `e2eeEpochStaging_readGroup_Result`
+**QUERY** · schemas: `e2eeEpochStaging_readGroup_Args`,
+`e2eeEpochStaging_readGroup_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L567)
 
 Arguments:
 
@@ -1093,7 +1213,9 @@ EpochStagedGroupDto | null
 
 ### e2eeEpochStaging:deleteGroup
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L568) · schemas: `e2eeEpochStaging_deleteGroup_Args`, `e2eeEpochStaging_deleteGroup_Result`
+**MUTATION** · schemas: `e2eeEpochStaging_deleteGroup_Args`,
+`e2eeEpochStaging_deleteGroup_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L568)
 
 Arguments:
 
@@ -1113,7 +1235,9 @@ Public client-facing cloud operations.
 
 ### promptShortcuts:stageDocument
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L571) · schemas: `promptShortcuts_stageDocument_Args`, `promptShortcuts_stageDocument_Result`
+**MUTATION** · schemas: `promptShortcuts_stageDocument_Args`,
+`promptShortcuts_stageDocument_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L571)
 
 Arguments:
 
@@ -1135,7 +1259,9 @@ Result:
 
 ### promptShortcuts:activateDocument
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L581) · schemas: `promptShortcuts_activateDocument_Args`, `promptShortcuts_activateDocument_Result`
+**MUTATION** · schemas: `promptShortcuts_activateDocument_Args`,
+`promptShortcuts_activateDocument_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L581)
 
 Arguments:
 
@@ -1159,7 +1285,9 @@ null
 
 ### promptShortcuts:settleDocument
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L593) · schemas: `promptShortcuts_settleDocument_Args`, `promptShortcuts_settleDocument_Result`
+**MUTATION** · schemas: `promptShortcuts_settleDocument_Args`,
+`promptShortcuts_settleDocument_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L593)
 
 Arguments:
 
@@ -1180,7 +1308,9 @@ Result:
 
 ### promptShortcuts:revokeShortcut
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L602) · schemas: `promptShortcuts_revokeShortcut_Args`, `promptShortcuts_revokeShortcut_Result`
+**MUTATION** · schemas: `promptShortcuts_revokeShortcut_Args`,
+`promptShortcuts_revokeShortcut_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L602)
 
 Arguments:
 
@@ -1201,7 +1331,9 @@ null
 
 ### promptShortcuts:listAccessibleDocuments
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L611) · schemas: `promptShortcuts_listAccessibleDocuments_Args`, `promptShortcuts_listAccessibleDocuments_Result`
+**QUERY** · schemas: `promptShortcuts_listAccessibleDocuments_Args`,
+`promptShortcuts_listAccessibleDocuments_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L611)
 
 Arguments:
 
@@ -1224,7 +1356,9 @@ Array<{
 
 ### promptShortcuts:getStreamToken
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L622) · schemas: `promptShortcuts_getStreamToken_Args`, `promptShortcuts_getStreamToken_Result`
+**ACTION** · schemas: `promptShortcuts_getStreamToken_Args`,
+`promptShortcuts_getStreamToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L622)
 
 Arguments:
 
@@ -1250,7 +1384,9 @@ Public client-facing cloud operations.
 
 ### sessionSharing:requestFromCli
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L634) · schemas: `sessionSharing_requestFromCli_Args`, `sessionSharing_requestFromCli_Result`
+**MUTATION** · schemas: `sessionSharing_requestFromCli_Args`,
+`sessionSharing_requestFromCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L634)
 
 Arguments:
 
@@ -1266,7 +1402,9 @@ SessionShareRequestResult
 
 ### sessionSharing:listRequests
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L638) · schemas: `sessionSharing_listRequests_Args`, `sessionSharing_listRequests_Result`
+**QUERY** · schemas: `sessionSharing_listRequests_Args`,
+`sessionSharing_listRequests_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L638)
 
 Arguments:
 
@@ -1282,7 +1420,9 @@ SessionShareRequest[]
 
 ### sessionSharing:getRequestResultFromCli
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L639) · schemas: `sessionSharing_getRequestResultFromCli_Args`, `sessionSharing_getRequestResultFromCli_Result`
+**QUERY** · schemas: `sessionSharing_getRequestResultFromCli_Args`,
+`sessionSharing_getRequestResultFromCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L639)
 
 Arguments:
 
@@ -1305,7 +1445,9 @@ SessionShareRequestResult
 
 ### sessionSharing:cancelRequest
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L650) · schemas: `sessionSharing_cancelRequest_Args`, `sessionSharing_cancelRequest_Result`
+**MUTATION** · schemas: `sessionSharing_cancelRequest_Args`,
+`sessionSharing_cancelRequest_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L650)
 
 Arguments:
 
@@ -1321,7 +1463,8 @@ void
 
 ### sessionSharing:list
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L651) · schemas: `sessionSharing_list_Args`, `sessionSharing_list_Result`
+**QUERY** · schemas: `sessionSharing_list_Args`, `sessionSharing_list_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L651)
 
 Arguments:
 
@@ -1337,7 +1480,9 @@ PublishedSessionSharePage
 
 ### sessionSharing:getManagement
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L655) · schemas: `sessionSharing_getManagement_Args`, `sessionSharing_getManagement_Result`
+**QUERY** · schemas: `sessionSharing_getManagement_Args`,
+`sessionSharing_getManagement_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L655)
 
 Arguments:
 
@@ -1353,7 +1498,9 @@ SessionShareManagement
 
 ### sessionSharing:beginDeployment
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L659) · schemas: `sessionSharing_beginDeployment_Args`, `sessionSharing_beginDeployment_Result`
+**MUTATION** · schemas: `sessionSharing_beginDeployment_Args`,
+`sessionSharing_beginDeployment_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L659)
 
 Arguments:
 
@@ -1369,7 +1516,9 @@ SessionShareView & { deploymentId: string }
 
 ### sessionSharing:publishDeployment
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L660) · schemas: `sessionSharing_publishDeployment_Args`, `sessionSharing_publishDeployment_Result`
+**MUTATION** · schemas: `sessionSharing_publishDeployment_Args`,
+`sessionSharing_publishDeployment_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L660)
 
 Arguments:
 
@@ -1385,7 +1534,9 @@ SessionShareView
 
 ### sessionSharing:resetCredential
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L661) · schemas: `sessionSharing_resetCredential_Args`, `sessionSharing_resetCredential_Result`
+**MUTATION** · schemas: `sessionSharing_resetCredential_Args`,
+`sessionSharing_resetCredential_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L661)
 
 Arguments:
 
@@ -1401,7 +1552,9 @@ SessionShareView
 
 ### sessionSharing:revoke
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L665) · schemas: `sessionSharing_revoke_Args`, `sessionSharing_revoke_Result`
+**MUTATION** · schemas: `sessionSharing_revoke_Args`,
+`sessionSharing_revoke_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L665)
 
 Arguments:
 
@@ -1421,7 +1574,9 @@ Public client-facing cloud operations.
 
 ### activity:recordMyWorkspaceDailyActiveUser
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L668) · schemas: `activity_recordMyWorkspaceDailyActiveUser_Args`, `activity_recordMyWorkspaceDailyActiveUser_Result`
+**MUTATION** · schemas: `activity_recordMyWorkspaceDailyActiveUser_Args`,
+`activity_recordMyWorkspaceDailyActiveUser_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L668)
 
 Arguments:
 
@@ -1441,7 +1596,9 @@ Public client-facing cloud operations.
 
 ### workspaceMembers:list
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L674) · schemas: `workspaceMembers_list_Args`, `workspaceMembers_list_Result`
+**QUERY** · schemas: `workspaceMembers_list_Args`,
+`workspaceMembers_list_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L674)
 
 Arguments:
 
@@ -1461,7 +1618,9 @@ Public client-facing cloud operations.
 
 ### auth:transferWorkspaceOwnership
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L677) · schemas: `auth_transferWorkspaceOwnership_Args`, `auth_transferWorkspaceOwnership_Result`
+**MUTATION** · schemas: `auth_transferWorkspaceOwnership_Args`,
+`auth_transferWorkspaceOwnership_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L677)
 
 Arguments:
 
@@ -1477,7 +1636,9 @@ null
 
 ### auth:getMyWorkspaceMembershipFingerprint
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L678) · schemas: `auth_getMyWorkspaceMembershipFingerprint_Args`, `auth_getMyWorkspaceMembershipFingerprint_Result`
+**QUERY** · schemas: `auth_getMyWorkspaceMembershipFingerprint_Args`,
+`auth_getMyWorkspaceMembershipFingerprint_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L678)
 
 Arguments:
 
@@ -1493,7 +1654,8 @@ string | null
 
 ### auth:getUserById
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L679) · schemas: `auth_getUserById_Args`, `auth_getUserById_Result`
+**QUERY** · schemas: `auth_getUserById_Args`, `auth_getUserById_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L679)
 
 Arguments:
 
@@ -1509,7 +1671,9 @@ Result:
 
 ### auth:getWorkspaceAccessBySlug
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L683) · schemas: `auth_getWorkspaceAccessBySlug_Args`, `auth_getWorkspaceAccessBySlug_Result`
+**QUERY** · schemas: `auth_getWorkspaceAccessBySlug_Args`,
+`auth_getWorkspaceAccessBySlug_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L683)
 
 Arguments:
 
@@ -1525,7 +1689,9 @@ WorkspaceAccess
 
 ### auth:isWorkspaceSlugAvailable
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L684) · schemas: `auth_isWorkspaceSlugAvailable_Args`, `auth_isWorkspaceSlugAvailable_Result`
+**QUERY** · schemas: `auth_isWorkspaceSlugAvailable_Args`,
+`auth_isWorkspaceSlugAvailable_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L684)
 
 Arguments:
 
@@ -1541,7 +1707,9 @@ Result:
 
 ### auth:getWorkspaceUserProfileForCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L685) · schemas: `auth_getWorkspaceUserProfileForCliToken_Args`, `auth_getWorkspaceUserProfileForCliToken_Result`
+**QUERY** · schemas: `auth_getWorkspaceUserProfileForCliToken_Args`,
+`auth_getWorkspaceUserProfileForCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L685)
 
 Arguments:
 
@@ -1567,7 +1735,9 @@ Public client-facing cloud operations.
 
 ### referrals:createLink
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L697) · schemas: `referrals_createLink_Args`, `referrals_createLink_Result`
+**MUTATION** · schemas: `referrals_createLink_Args`,
+`referrals_createLink_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L697)
 
 Arguments:
 
@@ -1583,7 +1753,9 @@ Result:
 
 ### referrals:getOverview
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L698) · schemas: `referrals_getOverview_Args`, `referrals_getOverview_Result`
+**QUERY** · schemas: `referrals_getOverview_Args`,
+`referrals_getOverview_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L698)
 
 Arguments:
 
@@ -1599,7 +1771,9 @@ ReferralOverview | null
 
 ### referrals:listLedger
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L699) · schemas: `referrals_listLedger_Args`, `referrals_listLedger_Result`
+**QUERY** · schemas: `referrals_listLedger_Args`, `referrals_listLedger_Result`
+·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L699)
 
 Arguments:
 
@@ -1615,7 +1789,9 @@ Result:
 
 ### referrals:getCheckoutOffer
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L704) · schemas: `referrals_getCheckoutOffer_Args`, `referrals_getCheckoutOffer_Result`
+**QUERY** · schemas: `referrals_getCheckoutOffer_Args`,
+`referrals_getCheckoutOffer_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L704)
 
 Without `workspaceId`, previews a workspace the caller is about to create.
 
@@ -1633,7 +1809,9 @@ ReferralCheckoutOffer
 
 ### referrals:attachLead
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L709) · schemas: `referrals_attachLead_Args`, `referrals_attachLead_Result`
+**MUTATION** · schemas: `referrals_attachLead_Args`,
+`referrals_attachLead_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L709)
 
 Remember the referral link the signed-in person followed, across devices.
 
@@ -1651,7 +1829,9 @@ Result:
 
 ### referrals:dismissLead
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L714) · schemas: `referrals_dismissLead_Args`, `referrals_dismissLead_Result`
+**MUTATION** · schemas: `referrals_dismissLead_Args`,
+`referrals_dismissLead_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L714)
 
 The person declined the referral discount.
 
@@ -1673,7 +1853,9 @@ Public client-facing cloud operations.
 
 ### billing:createBillingPortalSession
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L717) · schemas: `billing_createBillingPortalSession_Args`, `billing_createBillingPortalSession_Result`
+**ACTION** · schemas: `billing_createBillingPortalSession_Args`,
+`billing_createBillingPortalSession_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L717)
 
 Arguments:
 
@@ -1689,7 +1871,9 @@ Result:
 
 ### billing:createCheckoutSession
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L721) · schemas: `billing_createCheckoutSession_Args`, `billing_createCheckoutSession_Result`
+**ACTION** · schemas: `billing_createCheckoutSession_Args`,
+`billing_createCheckoutSession_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L721)
 
 Arguments:
 
@@ -1705,7 +1889,9 @@ Result:
 
 ### billing:createPaidWorkspaceCheckout
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L725) · schemas: `billing_createPaidWorkspaceCheckout_Args`, `billing_createPaidWorkspaceCheckout_Result`
+**ACTION** · schemas: `billing_createPaidWorkspaceCheckout_Args`,
+`billing_createPaidWorkspaceCheckout_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L725)
 
 Arguments:
 
@@ -1726,7 +1912,9 @@ Result:
 
 ### billing:getBillingOverview
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L734) · schemas: `billing_getBillingOverview_Args`, `billing_getBillingOverview_Result`
+**QUERY** · schemas: `billing_getBillingOverview_Args`,
+`billing_getBillingOverview_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L734)
 
 Arguments:
 
@@ -1742,7 +1930,9 @@ BillingOverview | null
 
 ### billing:getMyNewWorkspacePricing
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L735) · schemas: `billing_getMyNewWorkspacePricing_Args`, `billing_getMyNewWorkspacePricing_Result`
+**QUERY** · schemas: `billing_getMyNewWorkspacePricing_Args`,
+`billing_getMyNewWorkspacePricing_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L735)
 
 Arguments:
 
@@ -1758,7 +1948,9 @@ Pricing | null
 
 ### billing:getMyPaidWorkspacePlanTiers
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L736) · schemas: `billing_getMyPaidWorkspacePlanTiers_Args`, `billing_getMyPaidWorkspacePlanTiers_Result`
+**QUERY** · schemas: `billing_getMyPaidWorkspacePlanTiers_Args`,
+`billing_getMyPaidWorkspacePlanTiers_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L736)
 
 Arguments:
 
@@ -1774,7 +1966,9 @@ Array<{ workspaceId: string; planTier: Exclude<PlanTier, 'free'> }>
 
 ### billing:getWorkspaceBillingEntitlement
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L740) · schemas: `billing_getWorkspaceBillingEntitlement_Args`, `billing_getWorkspaceBillingEntitlement_Result`
+**QUERY** · schemas: `billing_getWorkspaceBillingEntitlement_Args`,
+`billing_getWorkspaceBillingEntitlement_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L740)
 
 Arguments:
 
@@ -1796,7 +1990,9 @@ Result:
 
 ### billing:getWorkspaceCreationAvailability
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L750) · schemas: `billing_getWorkspaceCreationAvailability_Args`, `billing_getWorkspaceCreationAvailability_Result`
+**QUERY** · schemas: `billing_getWorkspaceCreationAvailability_Args`,
+`billing_getWorkspaceCreationAvailability_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L750)
 
 Arguments:
 
@@ -1817,7 +2013,9 @@ Result:
 
 ### billing:getWorkspaceMemberLimitState
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L759) · schemas: `billing_getWorkspaceMemberLimitState_Args`, `billing_getWorkspaceMemberLimitState_Result`
+**QUERY** · schemas: `billing_getWorkspaceMemberLimitState_Args`,
+`billing_getWorkspaceMemberLimitState_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L759)
 
 Arguments:
 
@@ -1839,7 +2037,9 @@ Result:
 
 ### billing:getWorkspaceSeatInvitePreview
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L769) · schemas: `billing_getWorkspaceSeatInvitePreview_Args`, `billing_getWorkspaceSeatInvitePreview_Result`
+**QUERY** · schemas: `billing_getWorkspaceSeatInvitePreview_Args`,
+`billing_getWorkspaceSeatInvitePreview_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L769)
 
 Arguments:
 
@@ -1855,7 +2055,9 @@ SeatInvitePreview | null
 
 ### billing:listDeletedWorkspaceBillingAccounts
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L773) · schemas: `billing_listDeletedWorkspaceBillingAccounts_Args`, `billing_listDeletedWorkspaceBillingAccounts_Result`
+**QUERY** · schemas: `billing_listDeletedWorkspaceBillingAccounts_Args`,
+`billing_listDeletedWorkspaceBillingAccounts_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L773)
 
 Arguments:
 
@@ -1871,7 +2073,9 @@ Array<{ workspaceId: string; name: string }>
 
 ### billing:listBillingInvoices
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L777) · schemas: `billing_listBillingInvoices_Args`, `billing_listBillingInvoices_Result`
+**ACTION** · schemas: `billing_listBillingInvoices_Args`,
+`billing_listBillingInvoices_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L777)
 
 Arguments:
 
@@ -1887,7 +2091,9 @@ Result:
 
 ### billing:purchaseWorkspaceMemberSeat
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L781) · schemas: `billing_purchaseWorkspaceMemberSeat_Args`, `billing_purchaseWorkspaceMemberSeat_Result`
+**ACTION** · schemas: `billing_purchaseWorkspaceMemberSeat_Args`,
+`billing_purchaseWorkspaceMemberSeat_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L781)
 
 Arguments:
 
@@ -1903,7 +2109,9 @@ Result:
 
 ### billing:getBillingInvoice
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L782) · schemas: `billing_getBillingInvoice_Args`, `billing_getBillingInvoice_Result`
+**ACTION** · schemas: `billing_getBillingInvoice_Args`,
+`billing_getBillingInvoice_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L782)
 
 Arguments:
 
@@ -1919,7 +2127,9 @@ BillingInvoiceDetail
 
 ### billing:cancelPendingSeatInvoice
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L783) · schemas: `billing_cancelPendingSeatInvoice_Args`, `billing_cancelPendingSeatInvoice_Result`
+**ACTION** · schemas: `billing_cancelPendingSeatInvoice_Args`,
+`billing_cancelPendingSeatInvoice_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L783)
 
 Arguments:
 
@@ -1935,7 +2145,9 @@ Result:
 
 ### billing:previewSubscriptionIntervalChange
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L787) · schemas: `billing_previewSubscriptionIntervalChange_Args`, `billing_previewSubscriptionIntervalChange_Result`
+**ACTION** · schemas: `billing_previewSubscriptionIntervalChange_Args`,
+`billing_previewSubscriptionIntervalChange_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L787)
 
 Arguments:
 
@@ -1970,7 +2182,9 @@ Result:
 
 ### billing:reconcileWorkspaceCheckout
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L810) · schemas: `billing_reconcileWorkspaceCheckout_Args`, `billing_reconcileWorkspaceCheckout_Result`
+**ACTION** · schemas: `billing_reconcileWorkspaceCheckout_Args`,
+`billing_reconcileWorkspaceCheckout_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L810)
 
 Arguments:
 
@@ -1986,7 +2200,9 @@ Result:
 
 ### billing:redeemStripePromotionCode
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L814) · schemas: `billing_redeemStripePromotionCode_Args`, `billing_redeemStripePromotionCode_Result`
+**ACTION** · schemas: `billing_redeemStripePromotionCode_Args`,
+`billing_redeemStripePromotionCode_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L814)
 
 Arguments:
 
@@ -2013,7 +2229,9 @@ Result:
 
 ### billing:setSubscriptionCancelAtPeriodEnd
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L829) · schemas: `billing_setSubscriptionCancelAtPeriodEnd_Args`, `billing_setSubscriptionCancelAtPeriodEnd_Result`
+**ACTION** · schemas: `billing_setSubscriptionCancelAtPeriodEnd_Args`,
+`billing_setSubscriptionCancelAtPeriodEnd_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L829)
 
 Arguments:
 
@@ -2029,7 +2247,9 @@ Result:
 
 ### billing:getSubscriptionPaymentStatus
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L833) · schemas: `billing_getSubscriptionPaymentStatus_Args`, `billing_getSubscriptionPaymentStatus_Result`
+**ACTION** · schemas: `billing_getSubscriptionPaymentStatus_Args`,
+`billing_getSubscriptionPaymentStatus_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L833)
 
 Arguments:
 
@@ -2045,7 +2265,9 @@ SubscriptionPaymentStatus
 
 ### billing:setSubscriptionInterval
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L834) · schemas: `billing_setSubscriptionInterval_Args`, `billing_setSubscriptionInterval_Result`
+**ACTION** · schemas: `billing_setSubscriptionInterval_Args`,
+`billing_setSubscriptionInterval_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L834)
 
 Arguments:
 
@@ -2065,7 +2287,9 @@ Public client-facing cloud operations.
 
 ### githubPersonalAuthorization:begin
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L840) · schemas: `githubPersonalAuthorization_begin_Args`, `githubPersonalAuthorization_begin_Result`
+**ACTION** · schemas: `githubPersonalAuthorization_begin_Args`,
+`githubPersonalAuthorization_begin_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L840)
 
 Arguments:
 
@@ -2081,7 +2305,9 @@ Result:
 
 ### githubPersonalAuthorization:complete
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L844) · schemas: `githubPersonalAuthorization_complete_Args`, `githubPersonalAuthorization_complete_Result`
+**ACTION** · schemas: `githubPersonalAuthorization_complete_Args`,
+`githubPersonalAuthorization_complete_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L844)
 
 Arguments:
 
@@ -2101,7 +2327,9 @@ Public client-facing cloud operations.
 
 ### github:createGitHubInstallState
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L850) · schemas: `github_createGitHubInstallState_Args`, `github_createGitHubInstallState_Result`
+**ACTION** · schemas: `github_createGitHubInstallState_Args`,
+`github_createGitHubInstallState_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L850)
 
 Arguments:
 
@@ -2117,7 +2345,9 @@ Result:
 
 ### github:getPersonalOperationSettings
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L854) · schemas: `github_getPersonalOperationSettings_Args`, `github_getPersonalOperationSettings_Result`
+**QUERY** · schemas: `github_getPersonalOperationSettings_Args`,
+`github_getPersonalOperationSettings_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L854)
 
 Arguments:
 
@@ -2133,7 +2363,9 @@ PersonalOperationSettings
 
 ### github:resolveLegacyPrRepositoryIdentity
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L855) · schemas: `github_resolveLegacyPrRepositoryIdentity_Args`, `github_resolveLegacyPrRepositoryIdentity_Result`
+**MUTATION** · schemas: `github_resolveLegacyPrRepositoryIdentity_Args`,
+`github_resolveLegacyPrRepositoryIdentity_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L855)
 
 Arguments:
 
@@ -2149,7 +2381,9 @@ Result:
 
 ### github:getPrCacheVersions
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L859) · schemas: `github_getPrCacheVersions_Args`, `github_getPrCacheVersions_Result`
+**QUERY** · schemas: `github_getPrCacheVersions_Args`,
+`github_getPrCacheVersions_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L859)
 
 Arguments:
 
@@ -2175,7 +2409,9 @@ Result:
 
 ### github:getWorkspaceRepositories
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L873) · schemas: `github_getWorkspaceRepositories_Args`, `github_getWorkspaceRepositories_Result`
+**QUERY** · schemas: `github_getWorkspaceRepositories_Args`,
+`github_getWorkspaceRepositories_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L873)
 
 Arguments:
 
@@ -2191,7 +2427,9 @@ WorkspaceRepository[] | null
 
 ### github:listWorkspaceReposWithStatus
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L874) · schemas: `github_listWorkspaceReposWithStatus_Args`, `github_listWorkspaceReposWithStatus_Result`
+**QUERY** · schemas: `github_listWorkspaceReposWithStatus_Args`,
+`github_listWorkspaceReposWithStatus_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L874)
 
 Arguments:
 
@@ -2215,7 +2453,9 @@ Array<{
 
 ### github:refreshPersonalGitHubProfile
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L886) · schemas: `github_refreshPersonalGitHubProfile_Args`, `github_refreshPersonalGitHubProfile_Result`
+**ACTION** · schemas: `github_refreshPersonalGitHubProfile_Args`,
+`github_refreshPersonalGitHubProfile_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L886)
 
 Arguments:
 
@@ -2231,7 +2471,9 @@ Result:
 
 ### github:removeRepoFromWorkspace
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L887) · schemas: `github_removeRepoFromWorkspace_Args`, `github_removeRepoFromWorkspace_Result`
+**MUTATION** · schemas: `github_removeRepoFromWorkspace_Args`,
+`github_removeRepoFromWorkspace_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L887)
 
 Arguments:
 
@@ -2247,7 +2489,9 @@ Result:
 
 ### github:setPersonalOperationPreference
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L891) · schemas: `github_setPersonalOperationPreference_Args`, `github_setPersonalOperationPreference_Result`
+**MUTATION** · schemas: `github_setPersonalOperationPreference_Args`,
+`github_setPersonalOperationPreference_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L891)
 
 Arguments:
 
@@ -2263,7 +2507,9 @@ null
 
 ### github:setRepoEnabled
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L892) · schemas: `github_setRepoEnabled_Args`, `github_setRepoEnabled_Result`
+**MUTATION** · schemas: `github_setRepoEnabled_Args`,
+`github_setRepoEnabled_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L892)
 
 Arguments:
 
@@ -2279,7 +2525,9 @@ Result:
 
 ### github:setRepoWorktreeCleanup
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L896) · schemas: `github_setRepoWorktreeCleanup_Args`, `github_setRepoWorktreeCleanup_Result`
+**MUTATION** · schemas: `github_setRepoWorktreeCleanup_Args`,
+`github_setRepoWorktreeCleanup_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L896)
 
 Arguments:
 
@@ -2295,7 +2543,9 @@ Result:
 
 ### github:setRepoWorktreeSetup
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L900) · schemas: `github_setRepoWorktreeSetup_Args`, `github_setRepoWorktreeSetup_Result`
+**MUTATION** · schemas: `github_setRepoWorktreeSetup_Args`,
+`github_setRepoWorktreeSetup_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L900)
 
 Arguments:
 
@@ -2311,7 +2561,9 @@ Result:
 
 ### github:getAccessTokenByRepoNameForClient
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L904) · schemas: `github_getAccessTokenByRepoNameForClient_Args`, `github_getAccessTokenByRepoNameForClient_Result`
+**ACTION** · schemas: `github_getAccessTokenByRepoNameForClient_Args`,
+`github_getAccessTokenByRepoNameForClient_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L904)
 
 Arguments:
 
@@ -2327,7 +2579,9 @@ BasicGitHubTokenResult
 
 ### github:getOperationAccessTokenByRepoNameForClient
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L908) · schemas: `github_getOperationAccessTokenByRepoNameForClient_Args`, `github_getOperationAccessTokenByRepoNameForClient_Result`
+**ACTION** · schemas: `github_getOperationAccessTokenByRepoNameForClient_Args`,
+`github_getOperationAccessTokenByRepoNameForClient_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L908)
 
 Arguments:
 
@@ -2349,7 +2603,9 @@ OperationGitHubTokenResult
 
 ### github:getAccessTokenByRepoNameForCli
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L918) · schemas: `github_getAccessTokenByRepoNameForCli_Args`, `github_getAccessTokenByRepoNameForCli_Result`
+**ACTION** · schemas: `github_getAccessTokenByRepoNameForCli_Args`,
+`github_getAccessTokenByRepoNameForCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L918)
 
 Arguments:
 
@@ -2365,7 +2621,9 @@ BasicGitHubTokenResult
 
 ### github:getCredentialPolicyForCli
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L922) · schemas: `github_getCredentialPolicyForCli_Args`, `github_getCredentialPolicyForCli_Result`
+**ACTION** · schemas: `github_getCredentialPolicyForCli_Args`,
+`github_getCredentialPolicyForCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L922)
 
 Arguments:
 
@@ -2381,7 +2639,9 @@ Result:
 
 ### github:getOperationAccessTokenByRepoNameForCli
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L926) · schemas: `github_getOperationAccessTokenByRepoNameForCli_Args`, `github_getOperationAccessTokenByRepoNameForCli_Result`
+**ACTION** · schemas: `github_getOperationAccessTokenByRepoNameForCli_Args`,
+`github_getOperationAccessTokenByRepoNameForCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L926)
 
 Arguments:
 
@@ -2407,7 +2667,9 @@ OperationGitHubTokenResult
 
 ### github:listWorkspaceRepositoriesForCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L940) · schemas: `github_listWorkspaceRepositoriesForCliToken_Args`, `github_listWorkspaceRepositoriesForCliToken_Result`
+**QUERY** · schemas: `github_listWorkspaceRepositoriesForCliToken_Args`,
+`github_listWorkspaceRepositoriesForCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L940)
 
 Arguments:
 
@@ -2433,7 +2695,9 @@ Public client-facing cloud operations.
 
 ### localProjects:listVisibleLocalProjects
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L952) · schemas: `localProjects_listVisibleLocalProjects_Args`, `localProjects_listVisibleLocalProjects_Result`
+**QUERY** · schemas: `localProjects_listVisibleLocalProjects_Args`,
+`localProjects_listVisibleLocalProjects_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L952)
 
 Arguments:
 
@@ -2455,7 +2719,9 @@ Array<{
 
 ### localProjects:setLocalProjectSharedWithTeam
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L962) · schemas: `localProjects_setLocalProjectSharedWithTeam_Args`, `localProjects_setLocalProjectSharedWithTeam_Result`
+**MUTATION** · schemas: `localProjects_setLocalProjectSharedWithTeam_Args`,
+`localProjects_setLocalProjectSharedWithTeam_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L962)
 
 Arguments:
 
@@ -2480,7 +2746,9 @@ Public client-facing cloud operations.
 
 ### machineCredentials:getMachineCredentialState
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L973) · schemas: `machineCredentials_getMachineCredentialState_Args`, `machineCredentials_getMachineCredentialState_Result`
+**QUERY** · schemas: `machineCredentials_getMachineCredentialState_Args`,
+`machineCredentials_getMachineCredentialState_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L973)
 
 Arguments:
 
@@ -2496,7 +2764,9 @@ Result:
 
 ### machineCredentials:revokeMachineCredentials
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L977) · schemas: `machineCredentials_revokeMachineCredentials_Args`, `machineCredentials_revokeMachineCredentials_Result`
+**MUTATION** · schemas: `machineCredentials_revokeMachineCredentials_Args`,
+`machineCredentials_revokeMachineCredentials_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L977)
 
 Arguments:
 
@@ -2516,7 +2786,9 @@ Public client-facing cloud operations.
 
 ### machinePairing:cancelRequest
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L983) · schemas: `machinePairing_cancelRequest_Args`, `machinePairing_cancelRequest_Result`
+**MUTATION** · schemas: `machinePairing_cancelRequest_Args`,
+`machinePairing_cancelRequest_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L983)
 
 Arguments:
 
@@ -2532,7 +2804,9 @@ Result:
 
 ### machinePairing:claimFromDesktop
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L984) · schemas: `machinePairing_claimFromDesktop_Args`, `machinePairing_claimFromDesktop_Result`
+**MUTATION** · schemas: `machinePairing_claimFromDesktop_Args`,
+`machinePairing_claimFromDesktop_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L984)
 
 Arguments:
 
@@ -2548,7 +2822,9 @@ MachinePairingView
 
 ### machinePairing:getRequest
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L988) · schemas: `machinePairing_getRequest_Args`, `machinePairing_getRequest_Result`
+**QUERY** · schemas: `machinePairing_getRequest_Args`,
+`machinePairing_getRequest_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L988)
 
 Arguments:
 
@@ -2568,7 +2844,9 @@ Public client-facing cloud operations.
 
 ### machines:listSessionAccess
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L992) · schemas: `machines_listSessionAccess_Args`, `machines_listSessionAccess_Result`
+**QUERY** · schemas: `machines_listSessionAccess_Args`,
+`machines_listSessionAccess_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L992)
 
 Account-member directory of grants only; this never grants machine execution.
 
@@ -2591,7 +2869,9 @@ Array<{
 
 ### machines:setSessionReadSharedWithTeam
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1001) · schemas: `machines_setSessionReadSharedWithTeam_Args`, `machines_setSessionReadSharedWithTeam_Result`
+**MUTATION** · schemas: `machines_setSessionReadSharedWithTeam_Args`,
+`machines_setSessionReadSharedWithTeam_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1001)
 
 Arguments:
 
@@ -2613,7 +2893,9 @@ Result:
 
 ### machines:listVisibleMachines
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1012) · schemas: `machines_listVisibleMachines_Args`, `machines_listVisibleMachines_Result`
+**QUERY** · schemas: `machines_listVisibleMachines_Args`,
+`machines_listVisibleMachines_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1012)
 
 Arguments:
 
@@ -2634,7 +2916,9 @@ Array<{
 
 ### machines:setMachineSharedWithTeam
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1021) · schemas: `machines_setMachineSharedWithTeam_Args`, `machines_setMachineSharedWithTeam_Result`
+**MUTATION** · schemas: `machines_setMachineSharedWithTeam_Args`,
+`machines_setMachineSharedWithTeam_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1021)
 
 Arguments:
 
@@ -2650,7 +2934,9 @@ Result:
 
 ### machines:upsertMachineRegistrationFromCliToken
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1025) · schemas: `machines_upsertMachineRegistrationFromCliToken_Args`, `machines_upsertMachineRegistrationFromCliToken_Result`
+**MUTATION** · schemas: `machines_upsertMachineRegistrationFromCliToken_Args`,
+`machines_upsertMachineRegistrationFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1025)
 
 Arguments:
 
@@ -2666,7 +2952,9 @@ Result:
 
 ### machines:canUseMachineFromCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1029) · schemas: `machines_canUseMachineFromCliToken_Args`, `machines_canUseMachineFromCliToken_Result`
+**QUERY** · schemas: `machines_canUseMachineFromCliToken_Args`,
+`machines_canUseMachineFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1029)
 
 Arguments:
 
@@ -2696,7 +2984,9 @@ Result:
 
 ### machines:canDelegateMachineUseFromCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1048) · schemas: `machines_canDelegateMachineUseFromCliToken_Args`, `machines_canDelegateMachineUseFromCliToken_Result`
+**QUERY** · schemas: `machines_canDelegateMachineUseFromCliToken_Args`,
+`machines_canDelegateMachineUseFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1048)
 
 Both the token user and `requesterUserId` must be able to use the target.
 
@@ -2728,7 +3018,9 @@ Result:
 
 ### machines:canRequestSessionReadFromCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1066) · schemas: `machines_canRequestSessionReadFromCliToken_Args`, `machines_canRequestSessionReadFromCliToken_Result`
+**QUERY** · schemas: `machines_canRequestSessionReadFromCliToken_Args`,
+`machines_canRequestSessionReadFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1066)
 
 Arguments:
 
@@ -2753,7 +3045,9 @@ Result:
 
 ### machines:canRequestMachineFromCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1079) · schemas: `machines_canRequestMachineFromCliToken_Args`, `machines_canRequestMachineFromCliToken_Result`
+**QUERY** · schemas: `machines_canRequestMachineFromCliToken_Args`,
+`machines_canRequestMachineFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1079)
 
 Arguments:
 
@@ -2782,7 +3076,9 @@ Public client-facing cloud operations.
 
 ### usage:getWorkspaceUsageSummary
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1094) · schemas: `usage_getWorkspaceUsageSummary_Args`, `usage_getWorkspaceUsageSummary_Result`
+**QUERY** · schemas: `usage_getWorkspaceUsageSummary_Args`,
+`usage_getWorkspaceUsageSummary_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1094)
 
 Arguments:
 
@@ -2798,7 +3094,9 @@ UsageSummary
 
 ### usage:getWorkspaceUsageTimeline
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1095) · schemas: `usage_getWorkspaceUsageTimeline_Args`, `usage_getWorkspaceUsageTimeline_Result`
+**QUERY** · schemas: `usage_getWorkspaceUsageTimeline_Args`,
+`usage_getWorkspaceUsageTimeline_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1095)
 
 Arguments:
 
@@ -2814,7 +3112,9 @@ UsageTimeline
 
 ### usage:getWorkspaceUsageCalendar
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1099) · schemas: `usage_getWorkspaceUsageCalendar_Args`, `usage_getWorkspaceUsageCalendar_Result`
+**QUERY** · schemas: `usage_getWorkspaceUsageCalendar_Args`,
+`usage_getWorkspaceUsageCalendar_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1099)
 
 Arguments:
 
@@ -2830,7 +3130,9 @@ UsageCalendar
 
 ### usage:getWorkspaceUsageDay
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1100) · schemas: `usage_getWorkspaceUsageDay_Args`, `usage_getWorkspaceUsageDay_Result`
+**QUERY** · schemas: `usage_getWorkspaceUsageDay_Args`,
+`usage_getWorkspaceUsageDay_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1100)
 
 Arguments:
 
@@ -2846,7 +3148,9 @@ UsageDay
 
 ### usage:getWorkspaceUsageSummaryBundleFromCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1101) · schemas: `usage_getWorkspaceUsageSummaryBundleFromCliToken_Args`, `usage_getWorkspaceUsageSummaryBundleFromCliToken_Result`
+**QUERY** · schemas: `usage_getWorkspaceUsageSummaryBundleFromCliToken_Args`,
+`usage_getWorkspaceUsageSummaryBundleFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1101)
 
 Arguments:
 
@@ -2869,7 +3173,9 @@ Result:
 
 ### usage:getWorkspaceUsageTimelineFromCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1112) · schemas: `usage_getWorkspaceUsageTimelineFromCliToken_Args`, `usage_getWorkspaceUsageTimelineFromCliToken_Result`
+**QUERY** · schemas: `usage_getWorkspaceUsageTimelineFromCliToken_Args`,
+`usage_getWorkspaceUsageTimelineFromCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1112)
 
 Arguments:
 
@@ -2885,7 +3191,9 @@ UsageTimeline
 
 ### usage:upsertSessionUsageFromCli
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1116) · schemas: `usage_upsertSessionUsageFromCli_Args`, `usage_upsertSessionUsageFromCli_Result`
+**MUTATION** · schemas: `usage_upsertSessionUsageFromCli_Args`,
+`usage_upsertSessionUsageFromCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1116)
 
 Arguments:
 
@@ -2934,7 +3242,9 @@ Public client-facing cloud operations.
 
 ### deviceAuth:listMyWorkspacesForCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1151) · schemas: `deviceAuth_listMyWorkspacesForCliToken_Args`, `deviceAuth_listMyWorkspacesForCliToken_Result`
+**QUERY** · schemas: `deviceAuth_listMyWorkspacesForCliToken_Args`,
+`deviceAuth_listMyWorkspacesForCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1151)
 
 Arguments:
 
@@ -2951,7 +3261,10 @@ Result:
 
 ### deviceAuth:getWorkspaceBillingEntitlementForCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1156) · schemas: `deviceAuth_getWorkspaceBillingEntitlementForCliToken_Args`, `deviceAuth_getWorkspaceBillingEntitlementForCliToken_Result`
+**QUERY** · schemas:
+`deviceAuth_getWorkspaceBillingEntitlementForCliToken_Args`,
+`deviceAuth_getWorkspaceBillingEntitlementForCliToken_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1156)
 
 Arguments:
 
@@ -2971,7 +3284,9 @@ Public client-facing cloud operations.
 
 ### agentFeedback:submitFromCli
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1162) · schemas: `agentFeedback_submitFromCli_Args`, `agentFeedback_submitFromCli_Result`
+**MUTATION** · schemas: `agentFeedback_submitFromCli_Args`,
+`agentFeedback_submitFromCli_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1162)
 
 Arguments:
 
@@ -2996,7 +3311,9 @@ Public client-facing cloud operations.
 
 ### notifications:notifySessionCompleted
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1173) · schemas: `notifications_notifySessionCompleted_Args`, `notifications_notifySessionCompleted_Result`
+**ACTION** · schemas: `notifications_notifySessionCompleted_Args`,
+`notifications_notifySessionCompleted_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1173)
 
 Arguments:
 
@@ -3023,7 +3340,9 @@ null
 
 ### notifications:notifyPermissionRequested
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1188) · schemas: `notifications_notifyPermissionRequested_Args`, `notifications_notifyPermissionRequested_Result`
+**ACTION** · schemas: `notifications_notifyPermissionRequested_Args`,
+`notifications_notifyPermissionRequested_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1188)
 
 Arguments:
 
@@ -3053,7 +3372,9 @@ null
 
 ### notifications:recordPermissionRequested
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1206) · schemas: `notifications_recordPermissionRequested_Args`, `notifications_recordPermissionRequested_Result`
+**ACTION** · schemas: `notifications_recordPermissionRequested_Args`,
+`notifications_recordPermissionRequested_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1206)
 
 Arguments:
 
@@ -3081,7 +3402,9 @@ Result:
 
 ### notifications:resolvePermissionRequested
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1222) · schemas: `notifications_resolvePermissionRequested_Args`, `notifications_resolvePermissionRequested_Result`
+**ACTION** · schemas: `notifications_resolvePermissionRequested_Args`,
+`notifications_resolvePermissionRequested_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1222)
 
 Arguments:
 
@@ -3104,7 +3427,9 @@ Result:
 
 ### notifications:syncLiveActivitySummary
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1233) · schemas: `notifications_syncLiveActivitySummary_Args`, `notifications_syncLiveActivitySummary_Result`
+**ACTION** · schemas: `notifications_syncLiveActivitySummary_Args`,
+`notifications_syncLiveActivitySummary_Result` ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/cloud-api/src/index.ts#L1233)
 
 Arguments:
 
@@ -3147,13 +3472,17 @@ Result:
 
 ## Additional observed operations
 
-These calls occur outside the exported CloudApi type. The schemas retain only what the callers establish.
+These calls occur outside the exported `CloudApi` type. The schemas retain only
+what the callers establish.
 
 ### deviceAuth:validateCliToken
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/auth.ts#L802)
+**QUERY** ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/auth.ts#L802)
 
-Observed CLI call to backend ingress /api/query without a bearer header; token is in args. This function is absent from the public CloudApi type. User fields reflect the local response parser.
+Observed CLI call to backend ingress /api/query without a bearer header; token
+is in args. This function is absent from the public CloudApi type. User fields
+reflect the local response parser.
 
 Arguments:
 
@@ -3175,9 +3504,12 @@ Result schema: `deviceAuth_validateCliToken_Result`.
 
 ### github:associatePullRequestForCli
 
-**ACTION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/cloud-pr-association.ts#L52)
+**ACTION** ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/cloud-pr-association.ts#L52)
 
-Observed CLI call to backend ingress /api/action without a bearer header. Client treats any successful HTTP response as acknowledgement and does not parse a result body; result remains unspecified. This function is absent from CloudApi.
+Observed CLI call to backend ingress /api/action without a bearer header. Client
+treats any successful HTTP response as acknowledgement and does not parse a
+result body; result remains unspecified. This function is absent from CloudApi.
 
 Arguments:
 
@@ -3227,9 +3559,11 @@ Result schema: `github_associatePullRequestForCli_Result`.
 
 ### pushSubscriptions:configuration
 
-**QUERY** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift)
+**QUERY** ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift)
 
-Native clients obtain an account Convex JWT, then query push registration configuration. No subscription message transport is established here.
+Native clients obtain an account Convex JWT, then query push registration
+configuration. No subscription message transport is established here.
 
 Arguments:
 
@@ -3244,9 +3578,12 @@ Result schema: `pushSubscriptions_configuration_Result`.
 
 ### pushSubscriptions:register
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift)
+**MUTATION** ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift)
 
-Registers native push credentials with an account Convex JWT. iOS includes bundleId; Android does not. Caller ignores the result after the success envelope. Timeout leaves remote commit unknown.
+Registers native push credentials with an account Convex JWT. iOS includes
+bundleId; Android does not. Caller ignores the result after the success
+envelope. Timeout leaves remote commit unknown.
 
 Arguments:
 
@@ -3319,9 +3656,11 @@ Result schema: `pushSubscriptions_register_Result`.
 
 ### pushSubscriptions:unregister
 
-**MUTATION** · [source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift)
+**MUTATION** ·
+[source](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift)
 
-Removes this installation registration using the original account credential/JWT. Caller ignores the result after the success envelope.
+Removes this installation registration using the original account
+credential/JWT. Caller ignores the result after the success envelope.
 
 Arguments:
 

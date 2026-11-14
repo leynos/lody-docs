@@ -2,8 +2,9 @@
 
 This directory documents how the Lody daemon uses **Flock**, the Loro team's
 replicated key-value store, to share machine state and to accept durable
-commands from other devices. It pairs a prose description of the protocol with
-a TLA+ model that TLC checks, and it cites the source for every claim.
+commands from other devices. It pairs a prose description of the protocol with a
+model in TLA+, the Temporal Logic of Actions specification language, that the
+TLC model checker checks, and it cites the source for every claim.
 
 "Flock" here is the conflict-free replicated data type (CRDT) published as
 `@loro-dev/flock-wasm`. It has nothing to do with the POSIX advisory file lock
@@ -13,7 +14,8 @@ replicas.
 ## Scope
 
 The documents describe Lody [[36]](references.md#ref-36) at commit
-[`61bd9701a`][lody-commit] (14 November 2026) with these pinned libraries ([E-U0](evidence.md#e-u0)):
+[`61bd9701a`][lody-commit] (14 November 2026) with these pinned libraries
+([E-U0](evidence.md#e-u0)):
 
 | Library                  | Version | Role                                   |
 | ------------------------ | ------- | -------------------------------------- |
@@ -21,19 +23,21 @@ The documents describe Lody [[36]](references.md#ref-36) at commit
 | `loro-repo`              | 0.25.0  | Document host, persistence, transports |
 | `@loro-dev/streams-crdt` | 0.20.0  | Cloud stream client                    |
 
+_Table 1: Pinned library versions that the Flock documents describe._
+
 The subject is the **Machine Flock**: one Flock document per machine per
 workspace, named `<workspaceId>:mf:<machineId>` ([E-K1](evidence.md#e-k1)). The
 daemon also reads a per-workspace catalogue Flock and publishes code
 collaboration index Flocks; those share the replication layer described here
 but carry no commands, and are covered only where they clarify a boundary.
 
-Two neighbouring subjects have their own document sets. Requests that need
-an immediate reply travel by [RPC over Loro Streams](../lody-streams-rpc/README.md),
-not by Flock rows. The token that admits a replica to the cloud stream is
-issued by the cloud services described in the
+Two neighbouring subjects have their own document sets. Requests that need an
+immediate reply travel by
+[remote procedure call (RPC) over Loro Streams](../lody-streams-rpc/README.md),
+not by Flock rows. The token that admits a replica to the cloud stream is issued
+by the cloud services described in the
 [cloud API guide](../cloud-api/README.md). The
-[documentation contents](../contents.md) list every document in the
-repository.
+[documentation contents](../contents.md) list every document in the repository.
 
 ## What the protocol is, in one page
 
@@ -63,7 +67,7 @@ repository.
 ## Guarantees and their evidence
 
 The [formal model](formal-model.md) states these as TLA+ properties. TLC checks
-each one, and for each mechanism it also checks an *ablation*: the same model
+each one, and for each mechanism it also checks an _ablation_: the same model
 with the mechanism removed, which must produce a counterexample.
 
 | Id | Guarantee | Mechanism | Checked by |
@@ -78,6 +82,9 @@ with the mechanism removed, which must produce a counterexample.
 | L1 | A cancellation eventually removes both the setup and any published configuration, everywhere | Permanent cancellation row and daemon reconciliation | `ProviderSetup` |
 | D1 | A delete request never removes a project registered after it | `createdAtMs` guard | `LocalProjectDelete` |
 | L1 | Every command row eventually drains | Scan-based draining | `LocalProjectDelete` |
+
+_Table 2: Guarantees of the protocol, the mechanism behind each, and the model
+that checks it._
 
 The model also records what the protocol does **not** guarantee. The clearest
 case: a client that rewrites a project row while the daemon is removing it can
@@ -96,6 +103,8 @@ bring the registration back. See [observations](observations.md).
 | [Evidence index](evidence.md) | Every cited source location, with a permalink |
 | [References](references.md) | Literature and upstream documentation |
 
+_Table 3: Documents in the Flock protocol set._
+
 The TLA+ sources live in [`tla/`](../../tla/). `make tlc` runs the safety and
 ablation models; `make tlc-liveness` runs the slower liveness models.
 
@@ -111,7 +120,7 @@ ablation models; `make tlc-liveness` runs the slower liveness models.
   replica: the desktop renderer, a web tab or a mobile app.
 - Statements about upstream libraries come from the published npm packages.
   The upstream repositories were not publicly readable when this was written,
-  so anything that could not be read from a package is marked *unverified*.
+  so anything that could not be read from a package is marked _unverified_.
 
 [flock2]: https://man7.org/linux/man-pages/man2/flock.2.html
 [lody-commit]: https://github.com/LodyAI/Lody/tree/61bd9701a5ed6899a9f42787df682acfc3fd7d4b

@@ -4350,7 +4350,7 @@
       "get": {
         "operationId": "getRuntimeChannel",
         "summary": "Read a managed daemon channel manifest",
-        "description": "stable, next and nightly are observed channel names. Manifest is bounded to 131072 bytes; client validates product, platform and channel and verifies artifacts before activation. See daemon release schema in source.",
+        "description": "stable, next and nightly are observed channel names. Manifest is bounded to 131072 bytes; client validates product, platform and channel and verifies artefacts before activation. See daemon release schema in source.",
         "tags": ["Runtime downloads"],
         "x-source": "apps/cli/src/lib/managed-daemon-release.ts",
         "responses": {
@@ -4417,7 +4417,7 @@
     "/api/runtimes/{distribution}/{version}/{platform}/{fileName}": {
       "get": {
         "operationId": "downloadRuntimeArtifact",
-        "summary": "Download a versioned runtime artifact",
+        "summary": "Download a versioned runtime artefact",
         "description": "Distribution-specific runtime names, platforms, filenames and SHA-256 digests come from pinned client manifests. fileName=manifest.json retrieves the versioned daemon manifest as JSON; other files are binary. This public channel is permitted in local-only OSS builds. An operator may configure a mirror.",
         "tags": ["Runtime downloads"],
         "x-source": [

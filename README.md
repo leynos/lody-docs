@@ -9,7 +9,7 @@ overview.
 
 | Document set | Subject | Start here |
 | ------------ | ------- | ---------- |
-| Flock protocol | How the daemon replicates machine state and accepts durable commands through Flock, the Loro team's last-writer-wins key-value store; checked by TLA+ models | [Overview](docs/flock-protocol/README.md) |
+| Flock protocol | How the daemon replicates machine state and accepts durable commands through Flock, the Loro team's last-writer-wins key-value store; checked by models written in TLA+, the Temporal Logic of Actions specification language | [Overview](docs/flock-protocol/README.md) |
 | Streams RPC | The remote procedure call (RPC) protocol the daemon serves over Loro Durable Streams, for ordinary and end-to-end encrypted workspaces | [Overview](docs/lody-streams-rpc/README.md) |
 | Cloud API | The optional cloud services: HTTP routes, cloud functions, credentials, attachments, and shares, with an OpenAPI 3.1.1 description | [Guide](docs/cloud-api/README.md) |
 

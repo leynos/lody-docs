@@ -6,9 +6,9 @@ evidence; defects that a compatible implementation has to take a position on;
 and, in a separate final part, what all of it implies for the Rust
 implementation.
 
-Everything before [implications for the Rust implementation](#implications-for-the-rust-implementation)
-describes Lody at commit `61bd9701a`. Nothing in that part is a
-recommendation.
+Everything before
+[implications for the Rust implementation](#implications-for-the-rust-implementation)
+describes Lody at commit `61bd9701a`. Nothing in that part is a recommendation.
 
 ## Contradictions
 
@@ -39,6 +39,8 @@ interoperability. Contradictions specific to encrypted workspaces are in
 | CT-18 | `specs/machine-lifecycle-ack.md` is a draft that also describes durable replay rejection for managed updates ([E-N10](evidence.md#e-n10)) | The server implements only the response-delivery part ([E-S13](evidence.md#e-s13)) | A replayed restart request is dispatched again by the server; see [methods](methods.md) |
 | CT-19 | Mobile client: callers wait longer than the `expiresAt` they send, and stamp it from the device clock ([E-K7](evidence.md#e-k7)) | The daemon drops a request at `expiresAt` by its own calibrated clock ([E-W12](evidence.md#e-w12)) | A mobile caller can wait for a request the daemon has already dropped |
 
+_Table 1: Contradictions between sources, and the consequence of each._
+
 ## Evidence gaps
 
 | Gap | Effect on these documents |
@@ -52,6 +54,8 @@ interoperability. Contradictions specific to encrypted workspaces are in
 | Parts of `message-handler.ts` and the execution service were read in ranges, not in full | "No identity check visible" is not proof that none exists deeper in a handler |
 | The Electron main-process host and the Rust core of Iroh were not read | The desktop's local path and Iroh internals are described only at their boundary |
 | Rows in the [evidence index](evidence.md) marked "Reported" | The cited lines were located by a research pass and not checked mechanically |
+
+_Table 2: Evidence gaps and their effect on these documents._
 
 No file in the Lody checkout was dirty, so every citation is pinned to the
 commit.
@@ -82,6 +86,8 @@ These follow from the source. None is a measured performance result.
 | KD-18 | A workspace's RPC server keeps running after the workspace is revoked | [E-D13](evidence.md#e-d13) | Requests may still be handled until cloud checks refuse them; **Unknown** |
 | KD-19 | Progress is recognized by the shape of `result`, not by method | [E-W9](evidence.md#e-w9) | A final result shaped like progress would never settle the call |
 | KD-20 | In an encrypted workspace, a `session/fork` sent to another member's machine is prepared and executed, but the sender verifies the reply as if the machine were its own | [Encrypted RPC](encrypted-rpc.md) | The fork is created and the caller sees a timeout; **Infer** from the code, not run |
+
+_Table 3: Known defects and hazards, and what a client or daemon observes._
 
 ## Implications for the Rust implementation
 
@@ -156,6 +162,8 @@ Neither the Loro SDK, an ACP SDK nor Iroh supplies any of the list above.
 | KD-10 raw error text | Send a fixed message with `internal_error` | Clients display the message but do not match it |
 | KD-15 no drain | Drain within a bound before exit | Not observable except as fewer lost responses |
 | KD-16 fleet-wide authentication failure | Scope the failure to the workspace | A behaviour change that clients cannot observe directly |
+
+_Table 4: Compatibility decisions to make explicitly for each defect._
 
 ### Execution isolation and bounds
 

@@ -35,8 +35,8 @@ The watcher's rule is that reconnect correctness is scan-based:
 > consumers rescan their queues. Events only provide low-latency wakeups
 > while the room is healthy. ([E-C1](evidence.md#e-c1))
 
-This is level-triggered reconciliation: act on the state you observe, not on
-the transitions you happened to witness. A missed or duplicated event then
+This is level-triggered reconciliation: act on the state observed, not on the
+transitions that happened to be witnessed. A missed or duplicated event then
 costs latency, never correctness [[15]](references.md#ref-15)
 [[28]](references.md#ref-28).
 
@@ -78,6 +78,9 @@ there is no remote to wait for ([E-C5](evidence.md#e-c5),
 | Delete local project | Always |
 | Provider setup | Only if `authoritative` |
 
+_Table 1: Command families and the condition under which the watcher drains
+each._
+
 The model checks what the gate buys as **P3**. Without it, a daemon that
 restarts holding a stale setup row publishes a provider whose cancellation was
 already in the stream ([ablation](formal-model.md#ablations)). With or without
@@ -99,12 +102,22 @@ restart resumes it and any device can cancel it ([E-P12](evidence.md#e-p12)).
 | `['providerSetupCancellation', id]` | A permanent marker that this id is cancelled |
 | `['agentConfig', id]` | The published, usable provider |
 
+_Table 2: Rows that take part in provider setup._
+
 `status` is one of `queued`, `preparing-runtime`, `verifying`,
 `awaiting-auth` or `failed` ([E-K10](evidence.md#e-k10)). The first three are
-*resumable*: the daemon picks them up on its own. The last two are dormant
+_resumable_: the daemon picks them up on its own. The last two are dormant
 until something external requeues the task ([E-P1](evidence.md#e-p1)).
 
 ### Sequence
+
+For screen readers: the following sequence diagram shows a client writing a
+queued provider setup row to the Machine Flock. Once its command room is
+authoritative, the daemon advances the row through preparing the runtime and
+verifying, and runs a live probe. On success it writes the agent configuration
+and deletes the setup row in one commit. Otherwise it records that
+authentication is awaited, or that the setup failed. The client observes each
+row change.
 
 ```mermaid
 sequenceDiagram
@@ -128,6 +141,9 @@ sequenceDiagram
     end
     F-->>C: rows observed
 ```
+
+_Figure 1: A provider setup, from the client's request to publication or
+failure._
 
 ### The drain
 
@@ -169,6 +185,9 @@ configuration in one scan, then takes exactly one branch
 | Configuration already present | Delete the setup row |
 | Otherwise | One commit: put `agentConfig`, delete `providerSetup` |
 
+_Table 3: Conditions the daemon checks at publication, in order, and the action
+each leads to._
+
 ### Dormant states and resumption
 
 `awaiting-auth` and `failed` rows stay put. A client retries by rewriting the
@@ -198,6 +217,14 @@ if present, in one commit, using a timestamp no earlier than `cancelledAt`
 ([E-K12](evidence.md#e-k12), [E-P8](evidence.md#e-p8)). It runs at the start
 of every drain and inside publication.
 
+For screen readers: the following sequence diagram shows a client and a daemon
+that both hold a setup row in the verifying state. Concurrently, the client
+writes a cancellation marker and deletes the setup, while the daemon's probe
+succeeds and it publishes the agent configuration. After they merge, both hold
+the marker and the configuration. At its next drain the daemon sees the marker
+and deletes the configuration, and after a further merge both hold the marker
+only.
+
 ```mermaid
 sequenceDiagram
     participant C as Client
@@ -217,9 +244,12 @@ sequenceDiagram
     Note over C,D: Converged: marker only
 ```
 
+_Figure 2: A cancellation racing a publication, and its convergence on the
+marker alone._
+
 The daemon's own test drives exactly this interleaving on two Flock replicas
 and asserts the final state ([E-P15](evidence.md#e-p15)). The model checks it
-for every interleaving as liveness property **L1** (*cancellation wins*), and
+for every interleaving as liveness property **L1** (_cancellation wins_), and
 checks that the daemon never publishes while it can see the marker (**P4**).
 
 ## Delete local project
@@ -235,10 +265,21 @@ clean up worktrees on disk.
 | `['localProject', id]` | The registration, including `createdAtMs` |
 | `['cmd', 'deleteLocalProject', id]` | The command, including `requestedAt` and, once finished, `status: 'completed'` with a `cleanupResult` |
 
+_Table 4: Rows that take part in local project removal._
+
 The value types are in [E-K11](evidence.md#e-k11). Both timestamps are
 server-synchronized on the desktop ([E-K14](evidence.md#e-k14)).
 
 ### Sequence
+
+For screen readers: the following sequence diagram shows a client writing a
+delete command with a request time, and hiding the project while the command row
+exists. When the row reaches the daemon, one of three things happens. If the
+project was created after the request, the daemon deletes the command as stale.
+If the project is still referenced, the daemon unlinks it and deletes the
+command. Otherwise the daemon archives sessions, cleans worktrees, and deletes
+the project row; it then either deletes the command, or writes a completed row
+with a clean-up result that the client shows and acknowledges by deleting it.
 
 ```mermaid
 sequenceDiagram
@@ -265,6 +306,9 @@ sequenceDiagram
         end
     end
 ```
+
+_Figure 3: Removal of a local project, from the client's command to its
+acknowledgement._
 
 **Request.** The client writes the command row with `requestedAt` and returns;
 it starts a background resync and does not wait
@@ -317,5 +361,5 @@ discards both families at start-up so that they do not accumulate
 ([E-D11](evidence.md#e-d11)).
 
 This is the same shift the rest of the protocol makes, taken to its end: the
-desired state *is* the request, so there is no queue to drain and no
+desired state _is_ the request, so there is no queue to drain and no
 acknowledgement to lose.

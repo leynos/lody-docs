@@ -595,27 +595,48 @@ const manifest = {
 };
 document.info.version = `source-${revision.slice(0, 12)}`;
 document['x-source-revision'] = revision;
+/**
+ * Wrap prose at 80 columns, paragraph by paragraph. A word longer than the
+ * width, such as a link, stays on a line of its own.
+ * @param {string} text
+ */
+function wrap(text) {
+  return text
+    .split('\n\n')
+    .map((paragraph) => {
+      if (/^\s*([-*] |[|#>]|\d+\. |\x60\x60\x60)/m.test(paragraph)) return paragraph;
+      const lines = [];
+      let line = '';
+      for (const word of paragraph.split(/\s+/).filter(Boolean)) {
+        if (line && line.length + 1 + word.length > 80) {
+          lines.push(line);
+          line = word;
+        } else line = line ? `${line} ${word}` : word;
+      }
+      if (line) lines.push(line);
+      return lines.join('\n');
+    })
+    .join('\n\n');
+}
 const intro =
   '# Convex operation reference\n\nGenerated from the public `CloudApi` type. See [the guide](README.md) for transport and authentication, and [OpenAPI](openapi.yaml) for JSON Schemas. A query reads data, a mutation changes database state, and an action may perform external I/O. These labels do not imply that every action is safe to retry.\n\nRequest fields marked `?` are optional; `null` is an explicit value. Type names link to the pinned source; complete expanded schemas are in OpenAPI. Types marked `x-unresolved` in OpenAPI remain unconstrained and require the source definition.\n';
-let markdown = intro;
+let markdown = `${wrap(intro)}\n`;
 for (const group of contract.type.members) {
   const groupName = group.name.text;
-  markdown += `\n## ${groupName}\n\n${comment(group) || 'Public client-facing cloud operations.'}\n`;
+  markdown += `\n## ${groupName}\n\n${wrap(comment(group) || 'Public client-facing cloud operations.')}\n`;
   for (const op of operations.filter(
     (o) => !o.supplemental && o.name.startsWith(`${groupName}:`),
   )) {
     const [file, line] = op.source.split(':');
-    markdown += `\n### ${op.name}\n\n**${op.kind.toUpperCase()}** · [source](https://github.com/LodyAI/Lody/blob/${revision}/${file}#L${line}) · schemas: \`${op.name.replace(':', '_')}_Args\`, \`${op.name.replace(':', '_')}_Result\`\n\n${op.description ? `${op.description}\n\n` : ''}Arguments:\n\n\x60\x60\x60ts\n${op.typescript.args}\n\x60\x60\x60\n\nResult:\n\n\x60\x60\x60ts\n${op.typescript.result}\n\x60\x60\x60\n`;
+    markdown += `\n### ${op.name}\n\n${wrap(`**${op.kind.toUpperCase()}** · schemas: \`${op.name.replace(':', '_')}_Args\`, \`${op.name.replace(':', '_')}_Result\` ·`)}\n[source](https://github.com/LodyAI/Lody/blob/${revision}/${file}#L${line})\n\n${op.description ? `${wrap(op.description)}\n\n` : ''}Arguments:\n\n\x60\x60\x60ts\n${op.typescript.args}\n\x60\x60\x60\n\nResult:\n\n\x60\x60\x60ts\n${op.typescript.result}\n\x60\x60\x60\n`;
   }
 }
-markdown +=
-  '\n## Additional observed operations\n\nThese calls occur outside the exported CloudApi type. The schemas retain only what the callers establish.\n';
+markdown += `\n## Additional observed operations\n\n${wrap('These calls occur outside the exported `CloudApi` type. The schemas retain only what the callers establish.')}\n`;
 for (const op of operations.filter((o) => o.supplemental)) {
   const [file, line] = op.source.split(':');
-  markdown += `\n### ${op.name}\n\n**${op.kind.toUpperCase()}** · [source](https://github.com/LodyAI/Lody/blob/${revision}/${file}${line ? `#L${line}` : ''})\n\n${op.description}\n\nArguments:\n\n\x60\x60\x60json\n${JSON.stringify(schemas[`${op.name.replace(':', '_')}_Args`], null, 2)}\n\x60\x60\x60\n\nResult schema: \x60${op.name.replace(':', '_')}_Result\x60.\n`;
+  markdown += `\n### ${op.name}\n\n**${op.kind.toUpperCase()}** ·\n[source](https://github.com/LodyAI/Lody/blob/${revision}/${file}${line ? `#L${line}` : ''})\n\n${wrap(op.description)}\n\nArguments:\n\n\x60\x60\x60json\n${JSON.stringify(schemas[`${op.name.replace(':', '_')}_Args`], null, 2)}\n\x60\x60\x60\n\nResult schema: \x60${op.name.replace(':', '_')}_Result\x60.\n`;
 }
-let routes =
-  '# HTTP route index\n\nGenerated from the OpenAPI document. Consult each operation for its credential, payload and evidence limits. `backend` means <https://backend.lody.ai>; `worker` means <https://api.lody.ai>; `convex` means <https://convex.lody.ai>.\n\n| Method | Path | Origin | Operation |\n| --- | --- | --- | --- |\n';
+let routes = `${wrap('# HTTP route index\n\nGenerated from the OpenAPI document. Consult each operation for its credential, payload, and evidence limits. `backend` means <https://backend.lody.ai>; `worker` means <https://api.lody.ai>; `convex` means <https://convex.lody.ai>.')}\n\n| Method | Path | Origin | Operation |\n| --- | --- | --- | --- |\n`;
 for (const [route, item] of Object.entries(document.paths))
   for (const [method, op] of Object.entries(item)) {
     const origin = op.servers?.[0]?.url ?? 'https://backend.lody.ai';
@@ -629,6 +650,7 @@ for (const [route, item] of Object.entries(document.paths))
             : 'command-pinned ingress';
     routes += `| ${method.toUpperCase()} | \x60${route}\x60 | ${label} | ${op.summary} |\n`;
   }
+routes += '\n_Table 1: Every documented HTTP route, with its origin and operation._\n';
 for (const [file, data] of [
   ['docs/cloud-api/routes.md', routes],
   [

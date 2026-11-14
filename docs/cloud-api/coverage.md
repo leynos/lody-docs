@@ -20,42 +20,47 @@ used. The reference documents what the public clients expose and expect.
 | Remote encrypted-machine claim | CLI `lib/e2ee/remote-pairing.ts`, transport and shared pairing schemas | HTTP claim, prepared material and status DTOs |
 | Images, files, multipart transfer and avatars | Shared helpers, component upload clients and iOS attachment client | HTTP routes, headers, payloads and limits |
 | Static share objects, resolution and agent links | `packages/shared/src/session-share-client.ts` and manifest schemas | HTTP data plane plus authenticated cloud publication operations |
-| Public runtime artifacts and daemon channel manifests | CLI runtime/release clients, shared daemon schema and platform default | Versioned downloads and manifest schemas |
+| Public runtime artefacts and daemon channel manifests | CLI runtime/release clients, shared daemon schema and platform default | Versioned downloads and manifest schemas |
 | Time and retained community QR | Shared time/community contracts | Public HTTP routes |
 
+_Table 1: Contracts included in the reference, with their evidence and
+representation._
+
 The [source manifest](sources.json) hashes the specific source files consumed by
-the extractor and authored route evidence. It records the complete operation count
-and expressions requiring further interpretation. It is a provenance record,
-not proof that the hosted service matches those bytes.
+the extractor and authored route evidence. It records the complete operation
+count and expressions requiring further interpretation. It is a provenance
+record, not proof that the hosted service matches those bytes.
 
 ## Known discrepancies
 
 ### Multipart abort URL
 
-`packages/shared/src/session-file.ts:getSessionFileMultipartAbortApiPath` builds:
+`packages/shared/src/session-file.ts:getSessionFileMultipartAbortApiPath`
+builds:
 
-```text
+```plaintext
 DELETE /api/workspaces/{workspaceId}/session-files/multipart/{uploadId}
 ```
 
 `apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift`
 instead appends `/abort`. Both observed URLs appear in OpenAPI with an explicit
-discrepancy note. The TypeScript client uses the shared helper. The public source
-cannot establish which URL the private worker accepts. Verify the handler before
-using multipart cleanup in a new client.
+discrepancy note. The TypeScript client uses the shared helper. The public
+source cannot establish which URL the private worker accepts. Verify the handler
+before using multipart cleanup in a new client.
 
 ### Convex ingress and JSON encoding
 
 Ordinary native functions target `convex.lody.ai`, while CLI key validation and
 PR association explicitly target the configured auth/site origin. The latter
-calls pass credentials in their arguments. Both origins occur in OpenAPI's generic
-transport server list, with the limitation attached to the backend entry.
+calls pass credentials in their arguments. Both origins occur in OpenAPI's
+generic transport server list, with the limitation attached to the backend
+entry.
 
-Public upstream HTTP documentation specifies named arguments with `format: "json"`.
-Native clients send `format: "convex_encoded_json"` and a one-element argument
-array. The guide records this observation separately; OpenAPI models the public
-JSON form. Deployment compatibility for SDK encodings requires the matched
-Convex client/service versions.
+Public upstream HTTP documentation specifies named arguments with
+`format: "json"`. Native clients send `format: "convex_encoded_json"` and a
+one-element argument array. The guide records this observation separately;
+OpenAPI models the public JSON form. Deployment compatibility for SDK encodings
+requires the matched Convex client/service versions.
 
 ### Response shapes and caller policies
 
@@ -69,10 +74,11 @@ this checkout cannot independently prove enforcement in hosted storage.
 
 The source configures Better Auth organization, Convex and cross-domain plugins;
 the CLI adds device authorization and API-key plugins. Public callers also use
-the following SDK methods. Their presence is established, but a method name alone
-does not establish its HTTP route, all plugin validation or deployment settings.
-The OpenAPI document includes routes independently demonstrated by raw HTTP
-clients; it does not mechanically turn every SDK method into an invented URL.
+the following SDK methods. Their presence is established, but a method name
+alone does not establish its HTTP route, all plugin validation or deployment
+settings. The OpenAPI document includes routes independently demonstrated by raw
+HTTP clients; it does not mechanically turn every SDK method into an invented
+URL.
 
 | SDK methods | Public call sites and intent |
 | --- | --- |
@@ -89,12 +95,16 @@ clients; it does not mechanically turn every SDK method into an invented URL.
 | `convex.token` | Component JWT owner; account JWT exchange |
 | `$fetch('/electron/token')` | Electron auth service; SDK-relative browser callback exchange |
 
+_Table 2: Account operations reached through the Better Auth SDK, and where they
+are called._
+
 React session/organization hooks are client state APIs, not additional cloud
 routes. The browser social-sign-in variant sends `provider` and `callbackURL`;
 OpenAPI's `/api/auth/sign-in/social` schema describes the independently observed
 native Google ID-token variant. Add other variants only after establishing their
 full wire contract. SDK-mediated operations remain part of the product API
-inventory, even where the public checkout does not define a complete REST schema.
+inventory, even where the public checkout does not define a complete REST
+schema.
 
 ## Constants, callbacks and internal boundaries
 
@@ -106,36 +116,41 @@ end-user REST operation. They are retained here to make the inventory explicit.
 | `/api/github/callback?setup_action=request` | Native GitHub settings authorization navigation and callback allowlist; full provider callback contract is private |
 | `/api/auth/mobile/email-verified` | Native sign-up/verification callback URL; callback handler/redirect contract is private |
 | `/api/sharing/read` | Exported constant in `packages/shared/src/session-sharing.ts`; no active HTTP caller found, so no method or body is asserted |
-| `/api/share-agent/{token}` | Agent URL returned by the share client; URL validation is documented, content media/schema and full handler behavior are not established |
+| `/api/share-agent/{token}` | Agent URL returned by the share client; URL validation is documented, content media/schema and full handler behaviour are not established |
 | `/api/internal/account-data/purge-r2` | Internal account-data cleanup constant; not an end-user route |
 | `/internal/account-data/purge-durable-object` | Internal cleanup constant; not an end-user route |
 | `/api/loro-streams/server-token` | Server-to-server grant path; no public hosted handler contract |
 | `/api/action/sessionBootstrap:bootstrapSessionCreateInStreams` | Signing-domain path constant; not evidence for a callable public REST route |
 
-`packages/shared/src/loro-server-auth.ts` publishes HMAC-SHA-256 signing constants:
-`X-Lody-Signature`, `X-Lody-Timestamp`, `X-Lody-Signature-Version: v1`, with canonical
-bytes formed by joining timestamp, uppercased method, path and exact body using
-newlines. This does not establish timestamp tolerance, key distribution, signature
-verification policy or public access to the server-only paths above. They are
-therefore not presented as ready-to-call client endpoints.
+_Table 3: Paths and patterns that are constants, callbacks, or internal
+boundaries._
 
-Local machine/session/schedule/project control, local MCP HTTP, preview viewers,
-loopback credential brokers, provider API traffic, GitHub's API and lab-only HTTP
-fixtures are outside the cloud REST contract. A URL containing `/api/` is not
-sufficient to include it.
+`packages/shared/src/loro-server-auth.ts` publishes HMAC-SHA-256 signing
+constants: `X-Lody-Signature`, `X-Lody-Timestamp`,
+`X-Lody-Signature-Version: v1`, with canonical bytes formed by joining
+timestamp, uppercased method, path and exact body using newlines. This does not
+establish timestamp tolerance, key distribution, signature verification policy
+or public access to the server-only paths above. They are therefore not
+presented as ready-to-call client endpoints.
+
+Local machine/session/schedule/project control, local Model Context Protocol
+(MCP) HTTP, preview viewers, loopback credential brokers, provider API traffic,
+GitHub's API and lab-only HTTP fixtures are outside the cloud REST contract. A
+URL containing `/api/` is not sufficient to include it.
 
 ## Types requiring additional authority
 
-The ACP extension core submodule is not populated in the inspected checkout.
-`ModelUsage`, imported by cloud usage DTOs, consequently stays explicitly
-unexpanded. Its fields must be obtained from the matched `acp-extension-core`
-revision rather than guessed from another usage payload.
+The Agent Client Protocol (ACP) extension core submodule is not populated in the
+inspected checkout. `ModelUsage`, imported by cloud usage DTOs, consequently
+stays explicitly unexpanded. Its fields must be obtained from the matched
+`acp-extension-core` revision rather than guessed from another usage payload.
 
 The extractor retains structural fields but marks callback-based semantic
 refinements for local machine names, command-pinned HTTPS origins, share titles
-and share manifests. Examples include UTF-8 byte limits, graph/reference validity,
-aggregate decoded size and allowed origin components. Consult the original
-validator before accepting payloads; JSON Schema structure alone is insufficient.
+and share manifests. Examples include UTF-8 byte limits, graph/reference
+validity, aggregate decoded size and allowed origin components. Consult the
+original validator before accepting payloads; JSON Schema structure alone is
+insufficient.
 
 Preview device commands and automation settings are intentionally partial at
 the HTTP proof boundary. They reference command contracts owned by the separate
@@ -148,7 +163,8 @@ The following cannot be completed truthfully from the supplied public checkout:
 
 - A complete inventory of private or operator-only endpoints, webhooks and jobs.
 - Exact authentication/authorization checks for every operation and role.
-- Complete Better Auth plugin route schemas, cookie/CORS/CSRF policy and redirect
+- Complete Better Auth plugin route schemas, cookie, cross-origin resource
+  sharing (CORS), and cross-site request forgery (CSRF) policy and redirect
   allowlists for each deployment.
 - Exhaustive HTTP status/error codes, throttling, quotas and retry headers.
 - Server-side request length limits where only a TypeScript DTO exists.

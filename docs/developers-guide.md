@@ -1,13 +1,14 @@
 # Developer's guide
 
 This guide is for anyone maintaining this repository: running its gates,
-checking the formal models, regenerating the cloud API reference, and adding
-or revising documents. It does not describe Lody itself; the
+checking the formal models with TLC, the model checker for the TLA+
+specification language, regenerating the cloud API reference, and adding or
+revising documents. It does not describe Lody itself; the
 [documentation contents](contents.md) lead to that material.
 
 The [repository layout](repository-layout.md) explains where each file lives
-and which files are generated. New documents follow the
-[documentation style guide](https://github.com/leynos/agent-helper-scripts/blob/main/documentation-library/documentation-style-guide.md).
+and which files are generated. Every document follows the
+[documentation style guide](documentation-style-guide.md).
 
 ## 1. Prerequisites
 
@@ -34,8 +35,8 @@ Every gate is a `Makefile` target. `make help` lists them.
 | `ruff` | The Python sources pass lint |
 | `biome` | The generator and authored JSON pass lint |
 | `typecheck` | The generator type-checks |
-| `markdownlint` | Every Markdown file passes the repository's rules |
-| `nixie` | Every Mermaid diagram parses |
+| `markdownlint` | Every Markdown file passes the style guide's formatting rules, including the 80-column wrap |
+| `nixie` | Every Mermaid diagram renders |
 | `cloud-api-check` | The generated cloud API files match what the generator produces from the pinned Lody source |
 | `openapi` | `openapi.yaml` is a valid OpenAPI document |
 | `lint` | All of the above, in that order |
@@ -102,7 +103,7 @@ unless the probes have been run again.
 
 ## 6. Document conventions
 
-These rules are normative for new and revised documents.
+These rules are normative for every document.
 
 - Follow the documentation style guide: British English with Oxford spelling,
   sentence-case headings, prose wrapped at 80 columns, a caption under every
@@ -117,17 +118,27 @@ These rules are normative for new and revised documents.
 - Keep each set within its boundary and link to the neighbouring set instead
   of restating it.
 
-The three sets were written separately, before they shared a tree, and
-differ in places from the style guide. The differences are known and
-deliberate for now:
+The style guide is a copy of the
+[upstream guide](https://github.com/leynos/agent-helper-scripts/blob/991af8457b0d7ccda90ad3da11f93f5f155da822/documentation-library/documentation-style-guide.md)
+at the linked commit. Refresh it from upstream instead of editing it here.
 
-| Difference | Where | Reason |
-| ---------- | ----- | ------ |
-| Tables and diagrams are not captioned, and diagrams have no preceding description | All three sets | The sets predate the style guide's adoption here |
-| Citations use bracketed evidence and reference identifiers, not numeric footnotes | Flock and RPC sets | Each identifier is a stable anchor that many documents cite |
-| Prose is not wrapped at 80 columns | Cloud API set | Its line-length rule is disabled because the generated references cannot be wrapped |
+Two conventions of the Flock and RPC sets sit alongside the style guide and
+are deliberate:
 
-_Table 3: Known differences between the existing sets and the style guide._
+- Evidence and literature citations are inline links to stable anchors, such
+  as `E-S5` and `[1]`, because many documents cite the same row. Numeric
+  footnotes are used only for incidental notes.
+- Quoted material keeps its original spelling. This covers identifiers, test
+  titles, and text quoted from the Lody source or from upstream packages.
+
+The generated cloud API references follow the same rules. The generator wraps
+their prose and captions their tables, so a style change to those files
+belongs in `scripts/generate-cloud-api.mjs`. Type listings and descriptions
+copied from the Lody source keep their original wording.
+
+Spelling is not gated in this repository. Check a change against the Oxford
+spelling policy with `typos` and the configuration published beside the
+upstream style guide.
 
 ## 7. Adding or changing a document
 

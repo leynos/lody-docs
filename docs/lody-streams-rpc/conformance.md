@@ -32,6 +32,8 @@ and raw results are in [`probes/`](probes/).
 | P-10 | Raw HTTP against the development server | Stream operations before the bucket exists return 404; `offset=0` and `offset=-1` both read from the start; a TTL of four seconds is counted from creation and not renewed by an append; an empty array append returns 400; a wrong content type returns 409 |
 | P-11 | Lody's own opt-in integration test, unmodified, with `LODY_LORO_STREAMS_RPC_INTEGRATION=1` | All three tests fail with `fetch failed`: `loro dev` 0.6.0 serves cleartext HTTP/2 by default, and it also requires the bucket to exist |
 
+_Table 1: Probes executed for this study, and their results._
+
 Commands, from `packages/loro-streams-rpc` in the scratch copy:
 
 ```sh
@@ -145,6 +147,8 @@ Variations on the ping request, by validator outcome:
 | `file/preview` with plain parameters instead of a content envelope | Rejected | No reply |
 | `file/preview` with a content envelope produced by the real encryptor | Accepted | Dispatched |
 
+_Table 2: Variations on the ping request, by validator outcome._
+
 Variations on the ping response, by validator outcome:
 
 | Variation | `LoroStreamsRpcResponseSchema` |
@@ -159,6 +163,8 @@ Variations on the ping response, by validator outcome:
 | Extra key `workspaceId` | Rejected |
 | `error.code: -32601` | Rejected |
 | `error` with an extra key `retryable` | Rejected |
+
+_Table 3: Variations on the ping response, by validator outcome._
 
 Lody's own tests contain further literal envelopes that can serve as inputs,
 for example the timestamp cases at [E-W29](evidence.md#e-w29). The only
@@ -205,6 +211,8 @@ are in [encrypted RPC](encrypted-rpc.md).
 | Shutdown with work in flight | Read aborted; queued tasks discarded; running handlers not awaited; exit within seven seconds | None | Request stream | Callers may receive nothing; unexpired requests replay on next start | **Impl** [E-S14](evidence.md#e-s14) |
 | Accepted restart or upgrade | Response delivery attempted for five seconds, then the operation proceeds | None | Method-specific | Caller may time out although the operation ran | **Impl**, **Test** |
 | Caller clock ahead of or behind the daemon | The daemon compares `expiresAt` with its own clock | None | None | Requests dropped early, or kept past the caller's deadline | **Infer** |
+
+_Table 4: Failure cases for ordinary RPC._
 
 ## Compatibility classes
 
@@ -313,6 +321,8 @@ not run here) or **Specified** (derived from the source, not run).
 | TR-09 | O | Browser client, SSE failing | Three failed SSE reads | Reader switches to long-poll at the saved offset | [E-T33](evidence.md#e-t33) | Lody test "falls back to long-poll when SSE reads keep failing, and still answers pending calls" |
 | TR-10 | O | Any | Append whose body is a JSON array of two requests | Two requests handled | P-8 | Executed (development server) |
 
+_Table 5: Conformance cases for transport and addressing._
+
 ### Wire contract
 
 | Id | Profile | Preconditions | Input or sequence | Expected observable outcome | Evidence | Status |
@@ -331,6 +341,8 @@ not run here) or **Specified** (derived from the source, not run).
 | WR-12 | O | Owner-scoped method | Valid envelope | `result` is a content envelope that decrypts under the same owner | P-2 | Executed (codec only) |
 | WR-13 | O | Fractional timestamps | Request with `sentAt` 1234.56 | Accepted by the schema | P-1 | Executed |
 
+_Table 6: Conformance cases for the wire contract._
+
 ### Lifecycle, deadlines and cancellation
 
 | Id | Profile | Preconditions | Input or sequence | Expected observable outcome | Evidence | Status |
@@ -343,6 +355,8 @@ not run here) or **Specified** (derived from the source, not run).
 | LC-06 | O | Daemon running | Rejected `machine/restart` | Response appended; callback never invoked | [E-S13](evidence.md#e-s13) | Lody test, as LC-05 |
 | LC-07 | H | Watch with `waitMs` 15000 and 10 seconds to expiry | `session/history-watch` | Wait bounded to nine seconds | [E-S16](evidence.md#e-s16) | Specified |
 | LC-08 | H | History request | Deadline passes during metadata readiness | No operation; no response | [E-S10](evidence.md#e-s10) | Lody test "does not start history %s when its deadline expires during %s" |
+
+_Table 7: Conformance cases for lifecycle, deadlines, and cancellation._
 
 ### Duplicates and crash recovery
 
@@ -358,6 +372,8 @@ not run here) or **Specified** (derived from the source, not run).
 | DD-08 | O | Client waiting | Two identical responses | First settles the call; second ignored | [E-C3](evidence.md#e-c3) | Specified |
 | DD-09 | O | Requests queued | Daemon stops | Queued requests not handled; replayed on next start if unexpired | [E-S14](evidence.md#e-s14) | Specified |
 
+_Table 8: Conformance cases for duplicates and crash recovery._
+
 ### Overload and scheduling
 
 | Id | Profile | Preconditions | Input or sequence | Expected observable outcome | Evidence | Status |
@@ -368,6 +384,8 @@ not run here) or **Specified** (derived from the source, not run).
 | OV-04 | O | Overload pool holds 128 refusals | One more ordinary request | No response; warning logged | [E-S5](evidence.md#e-s5) | Specified; no Lody test |
 | OV-05 | O | 128 history writes pending | `machine/ping` | Delayed until one write settles | [E-S1](evidence.md#e-s1) | Specified; no Lody test |
 
+_Table 9: Conformance cases for overload and scheduling._
+
 ### Authority
 
 | Id | Profile | Preconditions | Input or sequence | Expected observable outcome | Evidence | Status |
@@ -376,6 +394,8 @@ not run here) or **Specified** (derived from the source, not run).
 | AU-02 | H | Grant withdrawn during the read | `session/history-read` | No history in the response | [E-S15](evidence.md#e-s15) | Lody test "drops encrypted history when authority is withdrawn during %s" |
 | AU-03 | H | Write proof expires during authorization | `session/history-write` | `session_history_write_denied`; no write | [E-S10](evidence.md#e-s10) | Lody test "does not start history %s when its deadline expires during %s" |
 | AU-04 | O | Any writer to the request stream | `session/cancel` naming an active turn | Handled; the request carries no requester identity | [methods](methods.md) | Specified |
+
+_Table 10: Conformance cases for authority._
 
 ## Interoperability suite
 
@@ -392,6 +412,9 @@ not run here) or **Specified** (derived from the source, not run).
 | Dispatch, cancel and steer against a real session | Method-level cases in [methods](methods.md) | A real daemon and agent; not available here |
 | Token issue, shard routing, production TTL, heartbeat and close cadence | TR-01, TR-09 | The hosted token service and gateway; not available here |
 
+_Table 11: Interoperability steps for a Rust caller against the existing
+daemon._
+
 ### Existing client against the Rust daemon
 
 | Step | Cases | Needs |
@@ -402,6 +425,9 @@ not run here) or **Specified** (derived from the source, not run).
 | Restart the Rust daemon with unexpired requests in the stream | DD-01, DD-02 | The same; the expected outcome depends on the compatibility decision recorded in the implementation notes |
 | Saturate the ordinary lane | OV-01, OV-02 | The same, with a blocking synthetic handler |
 | The web or desktop application against the Rust daemon | All | Presence, machine record and document synchronization as well as RPC; a hosted or self-hosted control plane |
+
+_Table 12: Interoperability steps for the existing client against a Rust
+daemon._
 
 The cases marked "Local Streams" can run against `loro dev` started with
 `--protocol http1` and an explicitly created bucket (P-10, P-11).
@@ -420,3 +446,6 @@ The cases marked "Local Streams" can run against `loro dev` started with
 | Does a replayed `machine/restart` restart the daemon again? | Append a restart with a long deadline; observe after the restart | The repository (the verification endpoint is not present) |
 | Do the daemon's handlers behave idempotently under P-9 replay? | Repeat P-9 with the real handlers and a real session | These probes (synthetic handler) |
 | How does intake behave with 128 pending history writes? | OV-05 with a blocking writer | Lody's tests (no case exists) |
+
+_Table 13: Open questions, each with the smallest experiment that would answer
+it._

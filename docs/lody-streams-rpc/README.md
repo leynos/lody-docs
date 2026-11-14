@@ -20,6 +20,8 @@ gaps and recommendations are kept apart and labelled.
 | Submodules | Not initialized (`packages/acp-extension-*`, the mobile chat kit) |
 | Dependencies installed in the checkout | None; `node_modules` is absent |
 
+_Table 1: The Lody checkout that the study read._
+
 Pinned versions relevant to the protocol, from `pnpm-workspace.yaml` and
 `pnpm-lock.yaml` ([E-U10](evidence.md#e-u10)):
 
@@ -35,6 +37,8 @@ Pinned versions relevant to the protocol, from `pnpm-workspace.yaml` and
 | `effect` | 4.0.2 | Runtime used by the daemon |
 | `@noble/hashes` | 2.2.0 | Hashing in the RPC package |
 | `@agentclientprotocol/sdk` | `^1.3.0` in the catalogue | Agent Client Protocol (ACP); not part of RPC |
+
+_Table 2: Pinned package versions relevant to the protocol._
 
 The sha512 digests of the two downloaded `@loro-dev` packages equal the
 lockfile's integrity values, so the upstream code read is the code Lody
@@ -56,6 +60,8 @@ distinct, and the documents keep them distinct.
 | Loro and Flock document synchronization | Replicated state and durable commands as document rows | Touched where it meets RPC; the Flock protocol has [its own document set](../flock-protocol/README.md) |
 | Agent Client Protocol | Daemon to agent, over the agent's standard streams | Only its boundary: [protocol: layers](protocol.md#layers) |
 
+_Table 3: The five layers, and where each is documented._
+
 A Streams client, the Loro software development kit, an ACP library and Iroh
 each implement one of the other layers. None of them implements Lody RPC.
 
@@ -75,6 +81,8 @@ repository.
 | [Implementation notes](implementation-notes.md) | Contradictions, evidence gaps, known defects, and the implications for the Rust implementation |
 | [Evidence index](evidence.md) | Every cited source location with a permalink |
 | [`probes/`](probes/) | Sources and raw results of the probes |
+
+_Table 4: Documents in the Streams RPC set._
 
 Encrypted RPC has its own document, and the evidence index and probes are
 separate files, because folding them into the protocol document would have
@@ -158,8 +166,8 @@ made it unusable.
 
 ## Unresolved blockers
 
-These cannot be settled from the repository. Each has a proposed experiment
-in [conformance](conformance.md#open-questions-and-the-smallest-experiment-for-each).
+These cannot be settled from the repository. Each has a proposed experiment in
+[conformance](conformance.md#open-questions-and-the-smallest-experiment-for-each).
 
 - Production gateway behaviour: retention, offsets, heartbeat and close
   cadence, size limit, consistency across shard hosts.

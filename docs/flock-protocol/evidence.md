@@ -1,11 +1,11 @@
 # Evidence index
 
-Every citation of the form `E-…` in this documentation resolves to a row
-below. Lody sources are linked at commit
+Every citation of the form `E-…` in this documentation resolves to a row below.
+Lody sources are linked at commit
 [`61bd9701a`](https://github.com/LodyAI/Lody/tree/61bd9701a5ed6899a9f42787df682acfc3fd7d4b);
 line numbers refer to that commit. Upstream sources are files inside the
-published npm packages, linked through unpkg, with line numbers from the
-package as published.
+published npm packages, linked through unpkg, with line numbers from the package
+as published.
 
 The **Basis** column says how each row was established:
 
@@ -35,6 +35,8 @@ The **Basis** column says how each row was established:
 | <a id="e-k14"></a>E-K14 | `packages/shared/src/time-sync.ts` [98–100](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/shared/src/time-sync.ts#L98-L100); `packages/components/src/atoms/agents.ts` [120](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/components/src/atoms/agents.ts#L120); `packages/components/src/hooks/use-remove-local-project.ts` [88](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/components/src/hooks/use-remove-local-project.ts#L88) | `getServerNow()` and its use for `cancelledAt` and `requestedAt` on the desktop. | Read |
 | <a id="e-k15"></a>E-K15 | `apps/cli/src/lib/loro/doc.ts` [4081–4112](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/loro/doc.ts#L4081-L4112), [4116–4230](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/loro/doc.ts#L4116-L4230) | Daemon writers of rate-limit and capability rows. | Read |
 
+_Table 1: Evidence for keys and rows._
+
 ## Sync coordinator
 
 | Id | Location | Shows | Basis |
@@ -57,6 +59,8 @@ The **Basis** column says how each row was established:
 | <a id="e-s16"></a>E-S16 | `apps/cli/src/lib/local-project-meta.ts` [157–166](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/local-project-meta.ts#L157-L166) | Fallback when no coordinator is supplied: one best-effort `syncOnce()`. | Read |
 | <a id="e-s17"></a>E-S17 | `apps/cli/src/lib/loro/AGENTS.md` [140–158](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/loro/AGENTS.md#L140-L158) | The two recovery signals, `onStreamsOnline` and `onMetaRoomSynced`, and why they stay separate. | Read |
 
+_Table 2: Evidence for the sync coordinator._
+
 ## Command watcher
 
 | Id | Location | Shows | Basis |
@@ -69,6 +73,8 @@ The **Basis** column says how each row was established:
 | <a id="e-c6"></a>E-C6 | `apps/cli/src/lib/message-handler.ts` [4578–4597](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/message-handler.ts#L4578-L4597) | `rescanMachineCommands`: per-family drain and the authority gate on provider setup. | Read |
 | <a id="e-c7"></a>E-C7 | `apps/cli/src/lib/message-handler.ts` [589–609](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/message-handler.ts#L589-L609) | `getMachineCommandEventImpact`: which families an event batch touched. | Read |
 | <a id="e-c8"></a>E-C8 | `apps/cli/src/lib/loro/AGENTS.md` [126–138](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/loro/AGENTS.md#L126-L138) | "Durable commands are scanned, not evented". | Read |
+
+_Table 3: Evidence for the command watcher._
 
 ## Provider setup
 
@@ -91,6 +97,8 @@ The **Basis** column says how each row was established:
 | <a id="e-p15"></a>E-P15 | `apps/cli/src/lib/provider-setup-manager.test.ts` [515–577](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/provider-setup-manager.test.ts#L515-L577) | Test: "converges cancellation over a config published concurrently on another replica". | Read |
 | <a id="e-p16"></a>E-P16 | `apps/cli/src/lib/loro/doc.ts` [2004–2033](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/cli/src/lib/loro/doc.ts#L2004-L2033) | `getAgentConfigForMachineLaunch`: daemon-authoritative sources only; a cancelled setup is rejected. | Read |
 
+_Table 4: Evidence for provider setup._
+
 ## Local projects and retired commands
 
 | Id | Location | Shows | Basis |
@@ -109,6 +117,8 @@ The **Basis** column says how each row was established:
 | <a id="e-d12"></a>E-D12 | `apps/mobile/ios/packages/cloud-runtime/src/runtime/archive-session.ts` [270–289](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/cloud-runtime/src/runtime/archive-session.ts#L270-L289) | iOS still writes `['cmd','archiveSession', id]` and ignores an append failure. | Checked |
 | <a id="e-d13"></a>E-D13 | `packages/components/src/hooks/use-session-actions.ts` [782–795](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/packages/components/src/hooks/use-session-actions.ts#L782-L795) | Client whole-row `put` of a project row to record imported history. | Read |
 
+_Table 5: Evidence for local projects and retired commands._
+
 ## Transports and clients
 
 | Id | Location | Shows | Basis |
@@ -125,6 +135,8 @@ The **Basis** column says how each row was established:
 | <a id="e-t10"></a>E-T10 | `apps/mobile/ios/packages/cloud-runtime/src/runtime/provider-settings.ts` [529–558](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/cloud-runtime/src/runtime/provider-settings.ts#L529-L558) | iOS cancellation: marker append, then clean-up; `Date.now()` timestamps. | Checked |
 | <a id="e-t11"></a>E-T11 | `apps/mobile/ios/packages/cloud-runtime/src/runtime/archive-session.ts` [96–104](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/apps/mobile/ios/packages/cloud-runtime/src/runtime/archive-session.ts#L96-L104) | iOS append of one JSON frame to the stream. | Checked |
 | <a id="e-t12"></a>E-T12 | `.agents/docs/cli-lib-local-loro-data-plane.md` [30–33](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/.agents/docs/cli-lib-local-loro-data-plane.md#L30-L33), [86–89](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/.agents/docs/cli-lib-local-loro-data-plane.md#L86-L89), [102–105](https://github.com/LodyAI/Lody/blob/61bd9701a5ed6899a9f42787df682acfc3fd7d4b/.agents/docs/cli-lib-local-loro-data-plane.md#L102-L105) | Local data plane rules: authentication, room bridging, no cloud status forwarding. | Read |
+
+_Table 6: Evidence for transports and clients._
 
 ## Upstream packages
 
@@ -147,3 +159,5 @@ The **Basis** column says how each row was established:
 | <a id="e-u15"></a>E-U15 | [`loro-repo@0.25.0` `dist/index.d.ts`](https://unpkg.com/loro-repo@0.25.0/dist/index.d.ts) lines 246–258; [`loro-repo@0.25.0` `dist/utils.js`](https://unpkg.com/loro-repo@0.25.0/dist/utils.js) lines 144–276 | The durability barrier contract; `FlockPersistenceJournal`. | Checked |
 | <a id="e-u16"></a>E-U16 | [`@loro-dev/streams-crdt@0.20.0` `dist/ephemeral-effect-CG31W4Zr.d.ts`](https://unpkg.com/@loro-dev/streams-crdt@0.20.0/dist/ephemeral-effect-CG31W4Zr.d.ts) lines 13–22 | `RemoteCursor`: `nextOffset` and `serverLowerBoundVersion`. | Checked |
 | <a id="e-u17"></a>E-U17 | [`@loro-dev/streams-crdt@0.20.0` `README.md`](https://unpkg.com/@loro-dev/streams-crdt@0.20.0/README.md) lines 434, 1752 | Bootstrap and resume. | Checked |
+
+_Table 7: Evidence from upstream packages._

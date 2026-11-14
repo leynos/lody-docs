@@ -38,11 +38,22 @@ The coordinator keeps one record per machine document
 | `retryTimer`, `retryAttempt` | The armed retry and its backoff exponent |
 | `roomSub`, `roomBinding` | The live room and its detached-aware status view |
 
+_Table 1: State the sync coordinator keeps for each Machine Flock document._
+
 All of it is in memory. A crash discards it; the
 [initial join sync](replication.md#the-cursor) is what uploads writes that
 were durable but unsent when the process died.
 
 ## Transitions
+
+For screen readers: the following state diagram shows a document moving between
+four states: clean, syncing, waiting, and parked. Marking a clean document dirty
+starts a sync when a transport is attached, and parks it otherwise. A sync
+returns the document to clean when it is confirmed with no write since it
+started, moves it to waiting when it must be retried, and parks it when it finds
+no transport. A waiting document syncs again when its retry timer fires or when
+the streams come online. A parked document has no timer, and only the
+streams-online signal wakes it.
 
 ```mermaid
 stateDiagram-v2
@@ -65,6 +76,8 @@ stateDiagram-v2
     end note
 ```
 
+_Figure 1: Upload states of a Machine Flock document in the sync coordinator._
+
 **`markDirty`** sets `dirty`, increments `dirtyVersion`, ensures the room is
 joined, and calls `syncNow` ([E-S2](evidence.md#e-s2)).
 
@@ -84,18 +97,20 @@ of 30 seconds by default ([E-S5](evidence.md#e-s5),
 | Not attempted | `transports === 0` | Stay dirty; **arm no timer** |
 | Attempted, not confirmed | `ok` false, timeout, or thrown error | Stay dirty; schedule a retry |
 
+_Table 2: Outcomes of a sync attempt and their effect on the document's state._
+
 Sources: [E-S5](evidence.md#e-s5), [E-S6](evidence.md#e-s6).
 
 Two details carry the correctness of this table.
 
-*`dirtyVersion`.* A write that lands while a sync is in flight shares that
+_`dirtyVersion`._ A write that lands while a sync is in flight shares that
 sync's promise, but the sync may have exported before the write. Comparing
 `dirtyVersion` with the value captured at the start is what stops the
 coordinator from declaring such a write uploaded. Remove the comparison and
 the model finds a clean document with an unsent row in four steps
 ([ablation](formal-model.md#ablations)).
 
-*Zero transports.* `syncOnce` with no transport resolves successfully and
+_Zero transports._ `syncOnce` with no transport resolves successfully and
 vacuously ([E-U10](evidence.md#e-u10)). The coordinator treats that as
 unconfirmed but refuses to arm a timer for it: a daemon that is deliberately
 offline would otherwise re-attempt every dirty document forever
@@ -151,7 +166,7 @@ proceeds anyway; the sync's own outcome decides what happens next
 
 ## What the coordinator does not do
 
-- It does not confirm that any *other* replica has received the write, only
+- It does not confirm that any _other_ replica has received the write, only
   that a transport accepted the round.
 - It does not persist the dirty flag. Correctness after a crash rests on the
   initial join sync, not on the flag.
