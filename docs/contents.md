@@ -6,8 +6,8 @@ once, with a note on why a reader would open it.
 ## Orientation
 
 - [Documentation contents](contents.md): this index.
-- [Project README](../README.md): the three document sets, entry points by
-  task, and how the documented protocols relate to one another.
+- [Project README](../README.md): the document sets, entry points by task,
+  and how the documented protocols relate to one another.
 - [Repository layout](repository-layout.md): where documents, formal models,
   generated references, and tooling live, and which files are generated.
 - [Developer's guide](developers-guide.md): how to run the gates, check the
@@ -15,6 +15,47 @@ once, with a note on why a reader would open it.
 - [Documentation style guide](documentation-style-guide.md): the spelling,
   formatting, captioning, and document-type conventions that every document
   here follows.
+
+## Architecture
+
+The whole system at a high level, as a map for the detailed sets.
+
+- [Architecture overview](architecture/README.md): the daemon's processes and
+  supervision, what is inside the worker, start-up, what it asks of the
+  cloud, its local interfaces, and one turn traced end to end.
+- [Data model overview](architecture/data-model.md): where the authoritative
+  copy of each kind of state lives, who writes it, and how identifiers join
+  the cloud, the replicated documents, and local disk.
+- [Evidence index](architecture/evidence.md): the source location and
+  permalink behind every `E-O…` citation in the two overviews.
+
+## Loro documents
+
+How the daemon and its clients use Loro documents for sessions, and how a
+turn travels through them.
+
+- [Loro documents overview](loro-documents/README.md): scope, the set on one
+  page, conventions, and what the set does not establish.
+- [Document catalogue](loro-documents/catalogue.md): the kinds of document in
+  a workspace, how each is named and streamed, and the metadata store and
+  existence index that make scans cheap.
+- [Session document](loro-documents/session-document.md): the schema of a
+  session's document and metadata record; read this before reading or
+  writing either.
+- [Writers and merge behaviour](loro-documents/writers-and-merge.md): which
+  component writes each part, and where Lody relies on or defends against a
+  particular merge outcome.
+- [Persistence and synchronization](loro-documents/persistence-and-sync.md):
+  storage, attaching and detaching the cloud, the cost of opening a session,
+  cursors, and the two recovery signals.
+- [Presence](loro-documents/presence.md): the ephemeral channel that says
+  whether a machine is online and what a session is doing, with its timing
+  and rules.
+- [Turn dispatch](loro-documents/turn-dispatch.md): the durable route from a
+  client's writes to the agent's prompt, with status, claims, crash
+  behaviour, and stop.
+- [Evidence index](loro-documents/evidence.md): the source location and
+  permalink behind every `E-D…` citation in the Loro documents.
 
 ## Flock protocol
 

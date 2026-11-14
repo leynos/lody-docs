@@ -11,9 +11,12 @@ the [operation reference](operations.md) for individual cloud functions. The
 [coverage and limitations](coverage.md) identify the contracts that cannot be
 established from this checkout.
 
-Two neighbouring subjects have their own document sets:
-[remote procedure calls (RPC) over Loro Streams](../lody-streams-rpc/README.md)
-and the [Flock protocol](../flock-protocol/README.md). This reference covers
+Neighbouring subjects have their own document sets:
+[remote procedure calls (RPC) over Loro Streams](../lody-streams-rpc/README.md),
+the [Flock protocol](../flock-protocol/README.md), and
+[Loro documents](../loro-documents/README.md). The
+[architecture overview](../architecture/README.md) shows how the daemon uses
+the cloud services. This reference covers
 only the cloud credential exchange that admits a client to the Streams gateway.
 The [documentation contents](../contents.md) list every document in the
 repository.

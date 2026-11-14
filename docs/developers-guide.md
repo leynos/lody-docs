@@ -21,7 +21,7 @@ and which files are generated. Every document follows the
 | `ruff` | `check-fmt`, `ruff`, `fmt` | |
 | `nixie` | `nixie` | Validates Mermaid diagrams |
 | `uvx` | `openapi` | Runs a pinned `openapi-spec-validator` |
-| A Lody checkout at the pinned commit | `cloud-api-check` | See [section 4](#4-the-cloud-api-reference) |
+| A Lody checkout at the pinned commit | `cloud-api-check`, `evidence-check` | See [section 4](#4-the-cloud-api-reference) |
 
 _Table 1: Tools the gates depend on._
 
@@ -38,6 +38,7 @@ Every gate is a `Makefile` target. `make help` lists them.
 | `markdownlint` | Every Markdown file passes the style guide's formatting rules, including the 80-column wrap |
 | `nixie` | Every Mermaid diagram renders |
 | `cloud-api-check` | The generated cloud API files match what the generator produces from the pinned Lody source |
+| `evidence-check` | Every checked row of the architecture and Loro evidence indexes still matches the pinned Lody source |
 | `openapi` | `openapi.yaml` is a valid OpenAPI document |
 | `lint` | All of the above, in that order |
 | `tlc` | Each safety model holds, and each ablation and observation still produces its counterexample (about two minutes) |
@@ -107,18 +108,35 @@ cannot run from this repository, and no gate executes them. Only the Python
 probe builder is linted. Treat the result files as evidence: do not edit them
 unless the probes have been run again.
 
-## 6. Document conventions
+## 6. The evidence indexes
+
+The architecture and Loro sets each have an evidence index whose rows give a
+file, a line range, and the _decisive text_ that the cited lines contain.
+`scripts/check_evidence.py` reads those tables and confirms that every row
+marked "Checked" still holds against the Lody checkout. It uses the same
+checkout as the generator; see [section 4](#4-the-cloud-api-reference).
+
+When adding a citation to either set, add its row to the index with the
+decisive text copied exactly from one line of the source, and run
+`make evidence-check`. When moving the pin to a newer Lody commit, expect
+this gate to fail wherever the cited code has moved: each failure names the
+row to revisit.
+
+The Flock and RPC evidence indexes predate this checker and are not covered
+by it.
+
+## 7. Document conventions
 
 These rules are normative for every document.
 
 - Follow the documentation style guide: British English with Oxford spelling,
   sentence-case headings, prose wrapped at 80 columns, a caption under every
   table and diagram, and a description before every Mermaid diagram.
-- State the Lody commit that a claim was read from. All three sets currently
-  describe the same commit; do not mix commits within a set.
+- State the Lody commit that a claim was read from. Every set currently
+  describes the same commit; do not mix commits within a set.
 - Cite the source for each claim, using the mechanism the set already uses:
-  an evidence index row in the Flock and RPC sets, and `x-source` provenance
-  in the cloud set.
+  an evidence index row in the architecture, Loro, Flock, and RPC sets, and
+  `x-source` provenance in the cloud set.
 - Separate what the source does from inference, intent, and recommendation,
   and label each.
 - Keep each set within its boundary and link to the neighbouring set instead
@@ -128,8 +146,8 @@ The style guide is a copy of the
 [upstream guide](https://github.com/leynos/agent-helper-scripts/blob/991af8457b0d7ccda90ad3da11f93f5f155da822/documentation-library/documentation-style-guide.md)
 at the linked commit. Refresh it from upstream instead of editing it here.
 
-Two conventions of the Flock and RPC sets sit alongside the style guide and
-are deliberate:
+Two conventions of the sets that cite evidence sit alongside the style
+guide and are deliberate:
 
 - Evidence and literature citations are inline links to stable anchors, such
   as `E-S5` and `[1]`, because many documents cite the same row. Numeric
@@ -146,7 +164,7 @@ Spelling is not gated in this repository. Check a change against the Oxford
 spelling policy with `typos` and the configuration published beside the
 upstream style guide.
 
-## 7. Adding or changing a document
+## 8. Adding or changing a document
 
 1. Put the document in the right place; see
    [where new material belongs](repository-layout.md#where-new-material-belongs).

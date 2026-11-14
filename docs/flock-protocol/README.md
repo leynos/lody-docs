@@ -31,13 +31,16 @@ daemon also reads a per-workspace catalogue Flock and publishes code
 collaboration index Flocks; those share the replication layer described here
 but carry no commands, and are covered only where they clarify a boundary.
 
-Two neighbouring subjects have their own document sets. Requests that need an
-immediate reply travel by
+Neighbouring subjects have their own document sets. Session content lives in
+[Loro documents](../loro-documents/README.md), which share the repository and
+transport described here. Requests that need an immediate reply travel by
 [remote procedure call (RPC) over Loro Streams](../lody-streams-rpc/README.md),
 not by Flock rows. The token that admits a replica to the cloud stream is issued
 by the cloud services described in the
 [cloud API guide](../cloud-api/README.md). The
-[documentation contents](../contents.md) list every document in the repository.
+[architecture overview](../architecture/README.md) places them all in one
+picture, and the [documentation contents](../contents.md) list every document
+in the repository.
 
 ## What the protocol is, in one page
 

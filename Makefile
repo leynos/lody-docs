@@ -1,5 +1,5 @@
 .PHONY: help all tools deps tlc tlc-liveness tlc-all fmt check-fmt ruff biome typecheck \
-	markdownlint nixie cloud-api-check openapi lint check clean
+	markdownlint nixie cloud-api-check evidence-check openapi lint check clean
 
 TLA_TOOLS_VERSION := 1.7.4
 TLA_TOOLS_SHA256 := 936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
@@ -64,10 +64,13 @@ nixie: ## Validate the Mermaid diagrams
 cloud-api-check: deps ## Check the generated cloud API files against the Lody source
 	npm run check
 
+evidence-check: ## Check the generated evidence indexes against the Lody source
+	python3 scripts/check_evidence.py $(LODY_SOURCE)
+
 openapi: ## Validate the OpenAPI description
 	npm run validate:openapi
 
-lint: check-fmt ruff biome typecheck markdownlint nixie cloud-api-check openapi ## Run every lint
+lint: check-fmt ruff biome typecheck markdownlint nixie cloud-api-check evidence-check openapi ## Run every lint
 
 check: lint tlc-all ## Run every gate, including the slow liveness models
 

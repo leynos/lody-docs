@@ -14,6 +14,8 @@ files.
 │   ├── repository-layout.md     This document
 │   ├── developers-guide.md      How to check and maintain the repository
 │   ├── documentation-style-guide.md  Conventions every document follows
+│   ├── architecture/            Architecture and data model overviews
+│   ├── loro-documents/          Document set: Loro documents and turn dispatch
 │   ├── flock-protocol/          Document set: the Flock protocol
 │   ├── lody-streams-rpc/        Document set: RPC over Loro Streams
 │   │   └── probes/              Probe sources and recorded results
@@ -21,6 +23,7 @@ files.
 ├── tla/                         TLA+ modules, TLC configurations, manifest
 ├── scripts/
 │   ├── check_models.py          Runs TLC against the manifest
+│   ├── check_evidence.py        Checks evidence indexes against the Lody source
 │   └── generate-cloud-api.mjs   Generates the cloud API reference
 ├── package.json                 Pinned Node.js tooling and npm scripts
 ├── package-lock.json
@@ -35,15 +38,17 @@ _Figure 1: The repository tree, with one line on each path._
 
 | Path | Purpose | Conventions |
 | ---- | ------- | ----------- |
-| `README.md` | The reader's entry point: the three document sets, entry points by task, and how the subjects relate | The only document that may address the reader directly |
+| `README.md` | The reader's entry point: the document sets, entry points by task, and how the subjects relate | The only document that may address the reader directly |
 | `docs/contents.md` | The index; lists every document once | Updated whenever a document is added, renamed, or removed |
 | `docs/documentation-style-guide.md` | The conventions every document follows | A copy of the upstream guide; refreshed from upstream, not edited here |
+| `docs/architecture/` | The architecture and data model overviews | Link into the detailed sets instead of repeating them; claims cite `evidence.md` rows (`E-O…`) |
+| `docs/loro-documents/` | Hand-written documents on Loro documents, presence, and turn dispatch | Claims cite `evidence.md` rows (`E-D…`), each carrying the decisive text that `make evidence-check` verifies |
 | `docs/flock-protocol/` | Hand-written documents on the Flock protocol | Claims cite `evidence.md` rows (`E-…`) and `references.md` entries (`[n]`); `README.md` is the set's overview |
 | `docs/lody-streams-rpc/` | Hand-written documents on the Streams remote procedure call (RPC) protocol | Claims carry a basis tag and cite `evidence.md` rows; `README.md` is the set's overview |
 | `docs/lody-streams-rpc/probes/` | Sources and raw results of the probes cited in `conformance.md` | A record of what was run, not a test suite; the TypeScript sources need a Lody export to run |
 | `docs/cloud-api/` | The cloud API guide, references, and their inputs | Mixes authored and generated files; see Table 2 |
 | `tla/` | One `.tla` module per modelled protocol, `.cfg` files per TLC run, and `models.json` | A configuration named `Module_Mechanism.cfg` is an ablation that must fail; `models.json` records every expected verdict |
-| `scripts/` | The model runner and the cloud API generator | Python is formatted and linted with ruff; JavaScript with Biome and the TypeScript checker |
+| `scripts/` | The model runner, the evidence checker, and the cloud API generator | Python is formatted and linted with ruff; JavaScript with Biome and the TypeScript checker |
 | `.tools/` | Downloaded `tla2tools.jar` and TLC logs | Not tracked; created by `make tools` and removed by `make clean` |
 | `node_modules/` | Pinned Node.js tooling | Not tracked; created by `make deps` |
 

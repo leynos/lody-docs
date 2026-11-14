@@ -57,7 +57,7 @@ distinct, and the documents keep them distinct.
 | Loro Durable Streams | Append-only named streams over HTTP, with live tail | [Protocol: transport](protocol.md#transport) |
 | Lody RPC | JSON envelopes on a request stream per machine and a response stream per caller, dispatched by the daemon | [Protocol](protocol.md), [methods](methods.md) |
 | Encrypted RPC | Signed and sealed frames with journals, for encrypted workspaces | [Encrypted RPC](encrypted-rpc.md) |
-| Loro and Flock document synchronization | Replicated state and durable commands as document rows | Touched where it meets RPC; the Flock protocol has [its own document set](../flock-protocol/README.md) |
+| Loro and Flock document synchronization | Replicated state and durable commands as document rows | Touched where it meets RPC; [Loro documents](../loro-documents/README.md) and [the Flock protocol](../flock-protocol/README.md) each have their own document set |
 | Agent Client Protocol | Daemon to agent, over the agent's standard streams | Only its boundary: [protocol: layers](protocol.md#layers) |
 
 _Table 3: The five layers, and where each is documented._
@@ -67,8 +67,9 @@ each implement one of the other layers. None of them implements Lody RPC.
 
 The Streams token that admits a caller to the gateway is issued by the cloud
 services, which the [cloud API guide](../cloud-api/README.md) documents. The
-[documentation contents](../contents.md) list every document in the
-repository.
+[architecture overview](../architecture/README.md) places every layer in one
+picture, and the [documentation contents](../contents.md) list every document
+in the repository.
 
 ## Reading order
 
