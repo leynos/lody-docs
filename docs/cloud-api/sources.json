@@ -1,0 +1,274 @@
+{
+  "repository": "https://github.com/LodyAI/Lody",
+  "revision": "61bd9701a5ed6899a9f42787df682acfc3fd7d4b",
+  "scope": "Public optional-cloud HTTP clients and CloudApi DTOs. Excludes Flock, Loro usage and Streams RPC.",
+  "typedOperations": 167,
+  "supplementalOperations": 5,
+  "operations": 172,
+  "unresolved": [
+    {
+      "source": "packages/cloud-api/src/index.ts:218",
+      "typescript": "ModelUsage",
+      "reason": "Definition is outside the indexed public DTO sources."
+    },
+    {
+      "source": "packages/cloud-api/src/index.ts:223",
+      "typescript": "ModelUsage",
+      "reason": "Definition is outside the indexed public DTO sources."
+    },
+    {
+      "source": "packages/shared/src/e2ee-local-pairing.ts:6",
+      "typescript": "Zod .refine(...) semantic callback",
+      "reason": "Structural schema retained; semantic refinement requires the source validator."
+    },
+    {
+      "source": "packages/shared/src/e2ee-remote-pairing.ts:5",
+      "typescript": "Zod .refine(...) semantic callback",
+      "reason": "Structural schema retained; semantic refinement requires the source validator."
+    },
+    {
+      "source": "packages/shared/src/session-share-package.ts:38",
+      "typescript": "Zod .refine(...) semantic callback",
+      "reason": "Structural schema retained; semantic refinement requires the source validator."
+    },
+    {
+      "source": "packages/shared/src/session-share-package.ts:76",
+      "typescript": "Zod .superRefine(...) semantic callback",
+      "reason": "Structural schema retained; semantic refinement requires the source validator."
+    }
+  ],
+  "files": [
+    {
+      "path": "apps/cli/src/agent/managed-agent-runtime.ts",
+      "sha256": "aa8f8fa968728f1aeea838ba226a54a774864ca1189084250c0ee775c2d862b3"
+    },
+    {
+      "path": "apps/cli/src/lib/auth.ts",
+      "sha256": "cec0a9277a69e10c0ff48aef05ccc2b814ed0fb1f8e78c540e78db0869a9af26"
+    },
+    {
+      "path": "apps/cli/src/lib/bug-report.ts",
+      "sha256": "0a2644137cff7be10959e6b1802dca47d6872b255d0a9b76b821c85d7d1907e9"
+    },
+    {
+      "path": "apps/cli/src/lib/cloud-cli-port.ts",
+      "sha256": "d1b88b9a0f45e9c2c49346dd1195531d83bf542a82ed59609b0526065e8dc9df"
+    },
+    {
+      "path": "apps/cli/src/lib/cloud-pr-association.ts",
+      "sha256": "4fe4fc4c50e3bd82d36510a7234cfc916d0c8ec5b9b9b4f503b23ea946351292"
+    },
+    {
+      "path": "apps/cli/src/lib/e2ee/remote-pairing.ts",
+      "sha256": "58601959592fc3212ddde23cf8e2dc55e460c62c853e9b90712ddaa79a6be3b2"
+    },
+    {
+      "path": "apps/cli/src/lib/managed-daemon-release.ts",
+      "sha256": "8865d812f8e5c4635b7cd8178dfc9edbac5256120a28c7c099ca118600598798"
+    },
+    {
+      "path": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+      "sha256": "de39268b31ded0a791779081437ff80b171b7ca5b99d1cafd075729497546a5e"
+    },
+    {
+      "path": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Auth/AuthAPI.swift",
+      "sha256": "20bdef64bd285fe2ed8734a9bb6f08230d894efb3107efb510aa76ca3556a858"
+    },
+    {
+      "path": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Auth/NativeAuthHandoff.swift",
+      "sha256": "5e51e4b6d7b04d669329c2a7bb4cbd3ebb0b1e2ac281cece7c7d7c0da8ff10e9"
+    },
+    {
+      "path": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+      "sha256": "8411403c4c2d05293fd1b62f0377a751e243f21bcd96f05982864f921c04e679"
+    },
+    {
+      "path": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/WorkspaceSettingsCloud.swift",
+      "sha256": "03c1386bbafe4852e89b82da001ef224b33d6af9f0ebf8302ffa1a63b83857d0"
+    },
+    {
+      "path": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift",
+      "sha256": "e979c925f9436e594a9723e90946d0c494b211f161d012380a16af658aa2e559"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-account-pairing.ts",
+      "sha256": "ec7fcde3f3ce9314458d1930e261bbd33f50cc30ea972d91fadf38ade9c83883"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-automatic-pairing.ts",
+      "sha256": "00acccba4e603a5a90967ff448f2ba419827ec4317147cf2dd67b95024334b87"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-device.ts",
+      "sha256": "0917748b80496c5607201a1feb9ace3b875867793d1923aaca19e189b658b8c4"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-epoch-staging.ts",
+      "sha256": "cfa72122ccd0ce332d7d9e5f2ab88a8e168694c81f56cd344f5a62d0668064eb"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-join.ts",
+      "sha256": "f9bd61d75796b33d18a3c6fbb8829c960cd1b629e29062b7d01ef2c56cfc9d9e"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-machine-pairing.ts",
+      "sha256": "3eebbd05e8bee857d57958d17c5990428795b33051a8f8bfccbf39dd9a67fe85"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-machine-sharing.ts",
+      "sha256": "108c8c4ef1c61fc5eff16b3d8a00e5dc99d2b0c97851c5e10fe0e8ac37c1d3ff"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-members.ts",
+      "sha256": "5ac3e60bcd59a70e7ac8cecff4339a78cac5eaaa12bdc4bb95d509f1486c4346"
+    },
+    {
+      "path": "packages/cloud-api/src/e2ee-workspaces.ts",
+      "sha256": "f4d03c1f3dcf6d030260a23ed8513e772f092719e9cde30ef26811fcfb03729b"
+    },
+    {
+      "path": "packages/cloud-api/src/index.ts",
+      "sha256": "f34155bb9d67c6dd62fe39f6aed8b28cb4bc8ab40c111f2d006d51689585efa0"
+    },
+    {
+      "path": "packages/cloud-api/src/seat-invite-preview.ts",
+      "sha256": "c8aea3ba072d9ff14cad27ae639b2db92222669db0c4898a83f54a4fdb4e9b2f"
+    },
+    {
+      "path": "packages/cloud-api/src/session-sharing.ts",
+      "sha256": "0cb9916863582829d89bacda8641ac66235a209da4db23f2d31903267490646b"
+    },
+    {
+      "path": "packages/components/src/lib/automation-control-api.ts",
+      "sha256": "cd79a607cdf1e9ec0ac8c2778e859163a76ee90a03da8c69b916bb8a5e23ce51"
+    },
+    {
+      "path": "packages/components/src/lib/avatar-upload.ts",
+      "sha256": "9378c89b4ed8f541ef2cb7cdf5bb8f51227f9cd97df3cf4f2712313c869cc383"
+    },
+    {
+      "path": "packages/components/src/lib/bug-report-api.ts",
+      "sha256": "ba2696f09cfc4daa33817657c1195b7f29eb9df2841be4228f73205db0c1e974"
+    },
+    {
+      "path": "packages/components/src/lib/cli-api-key.ts",
+      "sha256": "bad18741fc4ab97926668f6eee204022fdd9fe257965a564a3e7d900f4da0e24"
+    },
+    {
+      "path": "packages/components/src/lib/machine-lifecycle-api.ts",
+      "sha256": "91a210fe6cae40d01b09cfa41158a7e73d5fc3ac051b362699238d75b59bada2"
+    },
+    {
+      "path": "packages/components/src/lib/preview-control-api.ts",
+      "sha256": "bbca4b4452dd2e1d1e628e261848b99ace0468141af5e0e84198af48a4c93b6a"
+    },
+    {
+      "path": "packages/components/src/lib/session-file-upload.ts",
+      "sha256": "d26d303d9b34a8b376e2a83393c2c12f09d238c120b8ec71388e2489bc3ee203"
+    },
+    {
+      "path": "packages/components/src/lib/verify-password.ts",
+      "sha256": "a5af110b40d32b7ce83a994044f6f6dd735aa4adf34caa7b9300aff875ab47e0"
+    },
+    {
+      "path": "packages/components/src/routes/device.lazy.tsx",
+      "sha256": "48bacfa004947aa986494fcb6c830956eb3b4efa13164b173c4ecb0eaf40dd5c"
+    },
+    {
+      "path": "packages/e2ee-core/src/host/recovery-vault.ts",
+      "sha256": "9dfb6293675c2f7d892e8919c95617c3b7c746c028a295e9993eb09486f4b3b4"
+    },
+    {
+      "path": "packages/e2ee-core/src/host/staging.ts",
+      "sha256": "8881f69ced11c2db44b8c04344c5ea0daf0e0c0ae245b57a1ec5199637f5b35a"
+    },
+    {
+      "path": "packages/platform/src/cloud-port.ts",
+      "sha256": "0e901df5dcd6319ed4f7c55439e23159c94b85cd935f736eaf7ff6d48d5bd77f"
+    },
+    {
+      "path": "packages/platform/src/runtime-artifacts.ts",
+      "sha256": "0224629625cbb63f64896fdc16cf0cc20a39dcdbc8972fd1877429660b2c7c24"
+    },
+    {
+      "path": "packages/shared/src/ai.ts",
+      "sha256": "abba657db11b0b4487e78213c507f6670b12d687fd1892ac76114591521c0278"
+    },
+    {
+      "path": "packages/shared/src/automations/control.ts",
+      "sha256": "e6789e815e8d91c4432863fc7a1f74495db16c73e15a245708f2dac3538e497a"
+    },
+    {
+      "path": "packages/shared/src/avatar.ts",
+      "sha256": "cfd0204670446f5e7b9ed8ff4527b664aca71e7860953b5af67c3d03a583f749"
+    },
+    {
+      "path": "packages/shared/src/community.ts",
+      "sha256": "4d63cdc49036f0d8cb21a19fdb87e9891655d52e5bae1e61b4b6f621e3b20b71"
+    },
+    {
+      "path": "packages/shared/src/daemon-release.ts",
+      "sha256": "a0ce0e40f1c4e05e4ff46bdf2bb1bf7eac3f2cce43f8694f3b34d0ac2497f19d"
+    },
+    {
+      "path": "packages/shared/src/e2ee-local-pairing.ts",
+      "sha256": "4aaa498cd47da895f7af397d4b6246074f0e6cb6c3f0663e8faf9ccc557d5410"
+    },
+    {
+      "path": "packages/shared/src/e2ee-remote-pairing.ts",
+      "sha256": "5655959a9e9e74461d61a8635d8cb372b1aa1447fcff93213dc2d52adddf3460"
+    },
+    {
+      "path": "packages/shared/src/loro-streams-auth.ts",
+      "sha256": "cb0fea3bfe9721b06c5af45395e8f37d9779f99c77b0dd96b99d8ce5a4e96acd"
+    },
+    {
+      "path": "packages/shared/src/machine-pairing.ts",
+      "sha256": "55dd7bbb92aea8d5aa2ab2801479d558355f6f4b5b9c8de9325c33eb8e52b5e1"
+    },
+    {
+      "path": "packages/shared/src/notifications/index.ts",
+      "sha256": "0a90bc5f2be1148b481581573c69ce71609a17a3a23df2651a679d1303b135fe"
+    },
+    {
+      "path": "packages/shared/src/notifications/presentation.ts",
+      "sha256": "ad0a5d80a90e544621be334dd7b4ff39286efda7150d070f0067d63b0c766a24"
+    },
+    {
+      "path": "packages/shared/src/project.ts",
+      "sha256": "88da9f1216387c74d4b7b637d7b807032f92f92537b166369642947adc8e6438"
+    },
+    {
+      "path": "packages/shared/src/rpc-secret.ts",
+      "sha256": "420005652bf70a6df17c6a738c277fe35816c175d3afcab580378a2a1f6e03d6"
+    },
+    {
+      "path": "packages/shared/src/session-file.ts",
+      "sha256": "e34d3be218937b6ec93809cab068388b26c5d8bf93ed33546567c548994aae7c"
+    },
+    {
+      "path": "packages/shared/src/session-image.ts",
+      "sha256": "311854e58046dab33945f2e3c2749c22887b23d7ba08c8433b6539ecdd09f06d"
+    },
+    {
+      "path": "packages/shared/src/session-share-client.ts",
+      "sha256": "3190f0314a5d514808baedad5d7ee95e65e85ba7f6d0a60164ef7bcfb8472d8b"
+    },
+    {
+      "path": "packages/shared/src/session-share-delivery.ts",
+      "sha256": "b6564aa5db65b9d884d310cec84d3cb4913e52510196d4a4d99f50a26e7e28cb"
+    },
+    {
+      "path": "packages/shared/src/session-share-package.ts",
+      "sha256": "3c8f6052d1d6b256dcdf3c011e973332b8a788bea64db8d943075581c0b005b3"
+    },
+    {
+      "path": "packages/shared/src/session-sharing.ts",
+      "sha256": "ccd8cd568002392d1c283c0a5de7b008eacd0b594a52b60dd35afb43327eab0e"
+    },
+    {
+      "path": "packages/shared/src/time-sync.ts",
+      "sha256": "96a2cfccc07c95acd79e8f8cea25b47e489a523814b03b0a870c37daebcd353d"
+    }
+  ]
+}
