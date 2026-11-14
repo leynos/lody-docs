@@ -80,6 +80,9 @@ The optional cloud services that the public Lody clients call.
 - [Cloud API guide](cloud-api/README.md): service origins, credentials,
   sign-in flows, the cloud function transport, attachments, shares, and error
   handling; read this before the references.
+- [CLI authentication](cloud-api/cli-authentication.md): how the CLI and
+  daemon obtain, store, present, and lose their cloud credential, with the
+  sign-in flows, start-up decisions, and exit codes.
 - [HTTP route index](cloud-api/routes.md): every documented route with its
   method, origin, and operation, for finding an endpoint quickly.
 - [Operation reference](cloud-api/operations.md): each cloud function with its

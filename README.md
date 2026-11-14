@@ -25,6 +25,7 @@ line on why you would open it.
 | Implement a compatible client or daemon | [RPC protocol](docs/lody-streams-rpc/protocol.md), then the [method reference](docs/lody-streams-rpc/methods.md) and [conformance cases](docs/lody-streams-rpc/conformance.md); then the Flock [data model](docs/flock-protocol/data-model.md) and [durable commands](docs/flock-protocol/durable-commands.md) |
 | Call the cloud services | [Cloud API guide](docs/cloud-api/README.md), the [route index](docs/cloud-api/routes.md), and the [OpenAPI description](docs/cloud-api/openapi.yaml) |
 | Understand how machine state synchronizes, and why it converges | Flock [overview](docs/flock-protocol/README.md), [replication](docs/flock-protocol/replication.md), and the [formal model](docs/flock-protocol/formal-model.md) |
+| Sign a CLI or daemon in to the cloud | [CLI authentication](docs/cloud-api/cli-authentication.md) |
 | Support end-to-end encrypted workspaces | [Encrypted RPC](docs/lody-streams-rpc/encrypted-rpc.md) and the cloud guide's [encrypted control-plane semantics](docs/cloud-api/README.md#encrypted-control-plane-semantics) |
 | Review the risks, gaps, and open questions | Flock [observations](docs/flock-protocol/observations.md), RPC [implementation notes](docs/lody-streams-rpc/implementation-notes.md), and cloud [coverage and limits](docs/cloud-api/coverage.md) |
 | Check a claim against the source | The evidence indexes for [Flock](docs/flock-protocol/evidence.md) and [RPC](docs/lody-streams-rpc/evidence.md), and the cloud [source manifest](docs/cloud-api/sources.json) |

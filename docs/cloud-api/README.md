@@ -203,6 +203,10 @@ configuration is unavailable.
 
 ### CLI sign-in and connection tokens
 
+This section summarizes the routes. [CLI authentication](cli-authentication.md)
+describes the client's behaviour around them: the credential file, start-up
+decisions, rejection at run time, and exit codes.
+
 The CLI device authorization flow uses the Better Auth device plugin with
 `client_id: "lody-cli"`. It receives `device_code`, `user_code`, verification
 URLs, `expires_in`, and `interval`, then polls the plugin with grant type

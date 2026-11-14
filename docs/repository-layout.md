@@ -58,6 +58,7 @@ Only the cloud API set contains generated files. Editing one by hand makes
 | ------------------------- | ------ | ------------ |
 | `README.md` | Authored | Yes |
 | `coverage.md` | Authored | Yes |
+| `cli-authentication.md` | Authored | Yes |
 | `http.json` | Authored; input to the generator | Yes |
 | `supplemental.json` | Authored; input to the generator | Yes |
 | `openapi.yaml` | Generated | No |
