@@ -1,0 +1,195 @@
+[
+  {
+    "name": "deviceAuth:validateCliToken",
+    "kind": "query",
+    "source": "apps/cli/src/lib/auth.ts:802",
+    "args": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      },
+      "required": ["token"]
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "valid": {
+          "type": "boolean"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "user": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "name": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": ["id", "email"]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["valid"]
+    },
+    "description": "Observed CLI call to backend ingress /api/query without a bearer header; token is in args. This function is absent from the public CloudApi type. User fields reflect the local response parser."
+  },
+  {
+    "name": "github:associatePullRequestForCli",
+    "kind": "action",
+    "source": "apps/cli/src/lib/cloud-pr-association.ts:52",
+    "args": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string"
+        },
+        "repoFullName": {
+          "type": "string"
+        },
+        "prNumber": {
+          "type": "number"
+        },
+        "prUrl": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "cliToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "workspaceId",
+        "repoFullName",
+        "prNumber",
+        "prUrl",
+        "branch",
+        "status",
+        "sessionId",
+        "cliToken"
+      ]
+    },
+    "result": {},
+    "description": "Observed CLI call to backend ingress /api/action without a bearer header. Client treats any successful HTTP response as acknowledgement and does not parse a result body; result remains unspecified. This function is absent from CloudApi."
+  },
+  {
+    "name": "pushSubscriptions:configuration",
+    "kind": "query",
+    "source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift",
+    "args": {
+      "type": "object",
+      "properties": {}
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "selfHostedEnabled": {
+          "type": "boolean"
+        }
+      },
+      "required": ["selfHostedEnabled"]
+    },
+    "description": "Native clients obtain an account Convex JWT, then query push registration configuration. No subscription message transport is established here."
+  },
+  {
+    "name": "pushSubscriptions:register",
+    "kind": "mutation",
+    "source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift",
+    "args": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "installationId": {
+              "type": "string"
+            },
+            "platform": {
+              "const": "ios"
+            },
+            "purpose": {
+              "const": "notification"
+            },
+            "token": {
+              "type": "string"
+            },
+            "bundleId": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            }
+          },
+          "required": ["installationId", "platform", "purpose", "token", "bundleId", "language"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "installationId": {
+              "type": "string"
+            },
+            "platform": {
+              "const": "android"
+            },
+            "purpose": {
+              "const": "notification"
+            },
+            "token": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            }
+          },
+          "required": ["installationId", "platform", "purpose", "token", "language"]
+        }
+      ]
+    },
+    "result": {},
+    "description": "Registers native push credentials with an account Convex JWT. iOS includes bundleId; Android does not. Caller ignores the result after the success envelope. Timeout leaves remote commit unknown."
+  },
+  {
+    "name": "pushSubscriptions:unregister",
+    "kind": "mutation",
+    "source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Notifications/PushRegistration.swift",
+    "args": {
+      "type": "object",
+      "properties": {
+        "installationId": {
+          "type": "string"
+        }
+      },
+      "required": ["installationId"]
+    },
+    "result": {},
+    "description": "Removes this installation registration using the original account credential/JWT. Caller ignores the result after the success envelope."
+  }
+]

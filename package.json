@@ -1,0 +1,22 @@
+{
+  "name": "lody-cloud-api-documentation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node scripts/generate-cloud-api.mjs",
+    "check": "node scripts/generate-cloud-api.mjs --check",
+    "lint:docs": "markdownlint-cli2 README.md cloud-api/*.md",
+    "validate:openapi": "uvx --from openapi-spec-validator==0.7.2 openapi-spec-validator cloud-api/openapi.yaml",
+    "check:fmt": "biome format .",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.2",
+    "@types/node": "26.0.1",
+    "markdownlint-cli2": "0.18.1",
+    "typescript": "5.9.3",
+    "yaml": "2.8.1"
+  }
+}
