@@ -74,7 +74,9 @@ def classify(output: str) -> str:
     return "error"
 
 
-def run_model(model: Model, jar: pathlib.Path, workers: str, log_dir: pathlib.Path) -> Outcome:
+def run_model(
+    model: Model, jar: pathlib.Path, workers: str, log_dir: pathlib.Path
+) -> Outcome:
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="tlc-meta-") as meta_dir:
         completed = subprocess.run(
@@ -98,7 +100,9 @@ def run_model(model: Model, jar: pathlib.Path, workers: str, log_dir: pathlib.Pa
             check=False,
         )
     output = completed.stdout + completed.stderr
-    (log_dir / f"{pathlib.Path(model.config).stem}.log").write_text(output, encoding="utf-8")
+    (log_dir / f"{pathlib.Path(model.config).stem}.log").write_text(
+        output, encoding="utf-8"
+    )
     states = STATES.findall(output)
     return Outcome(
         model=model,
@@ -131,7 +135,9 @@ def main() -> int:
     )
     parser.add_argument("--jar", type=pathlib.Path, default=DEFAULT_JAR)
     parser.add_argument("--workers", default="auto")
-    parser.add_argument("--log-dir", type=pathlib.Path, default=ROOT / ".tools" / "tlc-logs")
+    parser.add_argument(
+        "--log-dir", type=pathlib.Path, default=ROOT / ".tools" / "tlc-logs"
+    )
     args = parser.parse_args()
 
     if shutil.which("java") is None:
@@ -150,7 +156,9 @@ def main() -> int:
         outcomes.append(outcome)
 
     failed = [outcome for outcome in outcomes if not outcome.ok]
-    print(f"\n{len(outcomes) - len(failed)}/{len(outcomes)} runs matched their expectation")
+    print(
+        f"\n{len(outcomes) - len(failed)}/{len(outcomes)} runs matched their expectation"
+    )
     return 1 if failed else 0
 
 

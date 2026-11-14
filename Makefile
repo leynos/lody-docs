@@ -1,4 +1,4 @@
-.PHONY: help all tools tlc tlc-liveness tlc-all markdownlint lint check clean
+.PHONY: help all tools tlc tlc-liveness tlc-all fmt check-fmt ruff markdownlint lint check clean
 
 TLA_TOOLS_VERSION := 1.7.4
 TLA_TOOLS_SHA256 := 936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
@@ -29,7 +29,16 @@ tlc-all: tlc tlc-liveness ## Run every model
 markdownlint: ## Lint the Markdown sources
 	markdownlint-cli2 "**/*.md" "#.tools"
 
-lint: markdownlint ## Run every lint
+fmt: ## Format the Python sources
+	ruff format scripts
+
+check-fmt: ## Check Python formatting
+	ruff format --check scripts
+
+ruff: ## Lint the Python sources
+	ruff check scripts
+
+lint: check-fmt ruff markdownlint ## Run every lint
 
 check: lint tlc-all ## Run every gate, including the slow liveness models
 
