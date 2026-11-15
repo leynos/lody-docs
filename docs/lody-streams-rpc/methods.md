@@ -518,7 +518,7 @@ authentication. They do not carry ACP session traffic. **Impl**
 
 | Method | Request schema | Result schema (progress) | Handler | Authorization | Exceptions to the defaults |
 | --- | --- | --- | --- | --- | --- |
-| `machine/acp-capabilities-refresh` | `LoroMachineAcpCapabilitiesRefreshRpcRequestSchema` | `MachineAcpCapabilitiesRefreshResponseSchema` (`MachineAcpBinaryProgressMessageSchema`) | `refreshMachineAcpCapabilities` → `ses` | none visible | Abortable by request ID; an aborted refresh sends no further progress and no final response [E-M63](evidence.md#e-m63) |
+| `machine/acp-capabilities-refresh` | `LoroMachineAcpCapabilitiesRefreshRpcRequestSchema` | `MachineAcpCapabilitiesRefreshResponseSchema` (`MachineAcpBinaryProgressMessageSchema`) | `refreshMachineAcpCapabilities` → `ses` | none visible | Abortable by request ID; an abort observed before a progress or final append starts suppresses that append, but an append already started may still be stored [E-M63](evidence.md#e-m63) |
 | `machine/acp-capabilities-refresh-cancel` | `LoroMachineAcpCapabilitiesRefreshCancelRpcRequestSchema` | none | server-internal controller map | none | Never answered [E-M21](evidence.md#e-m21); `params.requestId` is the RPC `id` of the refresh |
 | `machine/acp-authenticate` | `LoroMachineAcpAuthenticateRpcRequestSchema` | `MachineAcpAuthenticateResponseSchema` (`MachineAcpAuthenticationProgressMessageSchema`) | `authenticateMachineAcp` → `ses` | none visible beyond the secret envelope | Secret recipient is held in memory only [E-M64](evidence.md#e-m64) |
 | `machine/acp-binary-status` | `LoroMachineAcpBinaryStatusRpcRequestSchema` | `MachineAcpBinaryStatusResponseSchema` | `getMachineAcpBinaryStatus` → `ses` | none visible | Encrypted read query |

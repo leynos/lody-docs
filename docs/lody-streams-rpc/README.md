@@ -166,9 +166,10 @@ made it unusable.
   `replyTo` (**Impl**; [E-S12](evidence.md#e-s12),
   [E-W24](evidence.md#e-w24)). Some paths return without attempting a final
   response: `machine/acp-capabilities-refresh-cancel`, which appends nothing;
-  an aborted capability refresh, which suppresses its final response and
-  later progress, although progress appended before the abort stands; and a
-  history write whose deadline passes after its claim (**Impl**;
+  an aborted capability refresh, which suppresses any progress or final
+  append not yet started when the abort is observed, although an append
+  already started may still be stored; and a history write whose deadline
+  passes after its claim (**Impl**;
   [E-M21](evidence.md#e-m21), [E-M63](evidence.md#e-m63),
   [E-S29](evidence.md#e-s29), [E-L56](evidence.md#e-l56)). If every append
   attempt fails, including the fallback `internal_error` append, publication
