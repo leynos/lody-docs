@@ -8,7 +8,9 @@ contain. This script reads those tables and confirms, for every row marked
 An anchored row that does not parse, and a "Checked" row whose decisive-text
 cell has no code span, are failures rather than rows to skip.
 
-Exit status is non-zero if any row fails, or if the checkout is missing.
+Exit status is 0 when every index passes, 1 when a row fails or an index has
+no rows, 2 when the checkout is missing, and 3 when an index cannot be read. A
+cited source file that cannot be read is a row failure.
 """
 
 from __future__ import annotations
@@ -53,7 +55,11 @@ def check_index(index: pathlib.Path, lody: pathlib.Path) -> tuple[int, list[str]
         if not source.is_file():
             failures.append(f"{match['id']}: no such file {match['path']}")
             continue
-        lines = source.read_text(errors="replace").splitlines()
+        try:
+            lines = source.read_text(errors="replace").splitlines()
+        except OSError as error:
+            failures.append(f"{match['id']}: cannot read {match['path']}: {error}")
+            continue
         start = int(match["start"])
         end = int(match["end"] or start)
         if not 1 <= start <= end <= len(lines):
@@ -87,11 +93,16 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     status = 0
     for name in INDEXES:
-        rows, failures = check_index(ROOT / name, args.lody)
+        try:
+            rows, failures = check_index(ROOT / name, args.lody)
+        except (OSError, UnicodeDecodeError) as error:
+            print(f"{name}: cannot read the index: {error}", file=sys.stderr)
+            status = 3
+            continue
         print(f"{name}: {rows} rows, {len(failures)} failures")
         for failure in failures:
             print(f"  {failure}")
-        if failures or rows == 0:
+        if (failures or rows == 0) and status != 3:
             status = 1
     return status
 

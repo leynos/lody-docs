@@ -6,11 +6,18 @@ expectation: either ``"pass"`` or the name of the invariant that TLC must report
 as violated (the ablation configurations). The script exits non-zero when any
 run disagrees with its expectation, so a counterexample that stops appearing is
 as much a failure as an invariant that starts failing.
+
+The steps are separate so that each can be tested alone: ``tlc_command`` builds
+the Java command line, ``run_tlc`` runs it through an injectable process runner
+and returns TLC's output, ``outcome_from`` classifies that output, and
+``write_log`` persists it. ``main`` takes the Java lookup, the default JAR and the
+runner as parameters, defaulting to the real ones.
 """
 
 from __future__ import annotations
 
 import argparse
+import collections.abc as cabc
 import dataclasses
 import json
 import pathlib
@@ -51,6 +58,7 @@ class Outcome:
     distinct_states: int | None
     trace: tuple[str, ...]
     seconds: float
+    output: str = ""
 
     @property
     def ok(self) -> bool:
@@ -99,43 +107,77 @@ def classify(output: str) -> str:
     return "error"
 
 
-def run_model(
-    model: Model, jar: pathlib.Path, workers: str, log_dir: pathlib.Path
-) -> Outcome:
-    started = time.monotonic()
+Runner = cabc.Callable[..., subprocess.CompletedProcess[str]]
+
+
+def tlc_command(
+    model: Model, jar: pathlib.Path, workers: str, meta_dir: str
+) -> list[str]:
+    """Return the Java command line that checks one model."""
+    return [
+        "java",
+        "-XX:+UseParallelGC",
+        "-cp",
+        str(jar),
+        "tlc2.TLC",
+        "-workers",
+        workers,
+        "-metadir",
+        meta_dir,
+        "-config",
+        model.config,
+        f"{model.module}.tla",
+    ]
+
+
+def run_tlc(
+    model: Model,
+    jar: pathlib.Path,
+    workers: str,
+    runner: Runner = subprocess.run,
+) -> str:
+    """Run TLC on one model from ``TLA_DIR`` with a throwaway metadata directory.
+
+    Return TLC's combined output. Nothing else is written.
+    """
     with tempfile.TemporaryDirectory(prefix="tlc-meta-") as meta_dir:
-        completed = subprocess.run(
-            [
-                "java",
-                "-XX:+UseParallelGC",
-                "-cp",
-                str(jar),
-                "tlc2.TLC",
-                "-workers",
-                workers,
-                "-metadir",
-                meta_dir,
-                "-config",
-                model.config,
-                f"{model.module}.tla",
-            ],
+        completed = runner(
+            tlc_command(model, jar, workers, meta_dir),
             cwd=TLA_DIR,
             capture_output=True,
             text=True,
             check=False,
         )
-    output = completed.stdout + completed.stderr
-    (log_dir / f"{pathlib.Path(model.config).stem}.log").write_text(
-        output, encoding="utf-8"
-    )
+    return completed.stdout + completed.stderr
+
+
+def outcome_from(model: Model, output: str, seconds: float) -> Outcome:
+    """Classify TLC's output for one model."""
     states = STATES.findall(output)
     return Outcome(
         model=model,
         observed=classify(output),
         distinct_states=int(states[-1][1]) if states else None,
         trace=tuple(action for _, action in TRACE_STATE.findall(output)),
-        seconds=time.monotonic() - started,
+        seconds=seconds,
+        output=output,
     )
+
+
+def run_model(
+    model: Model, jar: pathlib.Path, workers: str, runner: Runner = subprocess.run
+) -> Outcome:
+    """Run and classify one model; the caller persists the log."""
+    started = time.monotonic()
+    output = run_tlc(model, jar, workers, runner)
+    return outcome_from(model, output, time.monotonic() - started)
+
+
+def write_log(outcome: Outcome, log_dir: pathlib.Path) -> pathlib.Path:
+    """Write one run's TLC output to ``log_dir`` and return the log's path."""
+    path = log_dir / f"{pathlib.Path(outcome.model.config).stem}.log"
+    path.write_text(outcome.output, encoding="utf-8")
+    return path
 
 
 def describe(outcome: Outcome) -> str:
@@ -150,7 +192,20 @@ def describe(outcome: Outcome) -> str:
     return line
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    which: cabc.Callable[[str], str | None] | None = None,
+    default_jar: pathlib.Path = DEFAULT_JAR,
+    runner: Runner | None = None,
+) -> int:
+    """Run the requested model groups and report; return the exit status.
+
+    ``which`` finds the Java binary (default ``shutil.which``), ``default_jar``
+    is the JAR used without ``--jar``, and ``runner`` runs TLC (default
+    ``subprocess.run``).
+    """
+    find = which or shutil.which
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--group",
@@ -158,14 +213,14 @@ def main(argv: list[str] | None = None) -> int:
         choices=GROUPS,
         help="model group to run (repeatable; default: safety and ablation)",
     )
-    parser.add_argument("--jar", type=pathlib.Path, default=DEFAULT_JAR)
+    parser.add_argument("--jar", type=pathlib.Path, default=default_jar)
     parser.add_argument("--workers", default="auto")
     parser.add_argument(
         "--log-dir", type=pathlib.Path, default=ROOT / ".tools" / "tlc-logs"
     )
     args = parser.parse_args(argv)
 
-    if shutil.which("java") is None:
+    if find("java") is None:
         print("java not found on PATH; install a JRE (11 or later)", file=sys.stderr)
         return 2
     if not args.jar.is_file():
@@ -183,7 +238,8 @@ def main(argv: list[str] | None = None) -> int:
     args.log_dir.mkdir(parents=True, exist_ok=True)
     outcomes = []
     for model in models:
-        outcome = run_model(model, jar, args.workers, args.log_dir)
+        outcome = run_model(model, jar, args.workers, runner or subprocess.run)
+        write_log(outcome, args.log_dir)
         print(describe(outcome), flush=True)
         outcomes.append(outcome)
 

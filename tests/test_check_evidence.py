@@ -188,3 +188,35 @@ def test_main_exit_status(
     monkeypatch.setattr(check_evidence, "ROOT", tmp_path)
     monkeypatch.setattr(check_evidence, "INDEXES", ("evidence.md",))
     assert check_evidence.main([str(lody)]) == status
+
+
+def test_main_reports_an_unreadable_index(
+    tmp_path: pathlib.Path,
+    lody: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    index(tmp_path, row())
+    monkeypatch.setattr(check_evidence, "ROOT", tmp_path)
+    monkeypatch.setattr(check_evidence, "INDEXES", ("absent.md", "evidence.md"))
+    assert check_evidence.main([str(lody)]) == 3
+    captured = capsys.readouterr()
+    assert "absent.md: cannot read the index:" in captured.err
+    assert "evidence.md: 1 rows, 0 failures" in captured.out
+
+
+def test_unreadable_source_is_a_row_failure(
+    tmp_path: pathlib.Path, lody: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = index(tmp_path, row())
+    real = pathlib.Path.read_text
+
+    def read_text(self: pathlib.Path, *args, **kwargs) -> str:
+        if self.name == "a.ts":
+            raise PermissionError("denied")
+        return real(self, *args, **kwargs)
+
+    monkeypatch.setattr(pathlib.Path, "read_text", read_text)
+    rows, failures = check_evidence.check_index(path, lody)
+    assert rows == 1
+    assert failures == [f"E-1: cannot read {SOURCE}: denied"]

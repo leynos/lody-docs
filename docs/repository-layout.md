@@ -25,7 +25,8 @@ files.
 ├── scripts/
 │   ├── check_models.py          Runs TLC against the manifest
 │   ├── check_evidence.py        Checks evidence indexes against the Lody source
-│   └── generate-cloud-api.mjs   Generates the cloud API reference
+│   ├── cloud-api/               Modules of the cloud API generator
+│   └── generate-cloud-api.mjs   Entry point of the cloud API generator
 ├── package.json                 Pinned Node.js tooling and npm scripts
 ├── package-lock.json
 ├── biome.json                   Formatter and linter scope for JS and JSON
@@ -49,7 +50,8 @@ _Figure 1: The repository tree, with one line on each path._
 | `docs/lody-streams-rpc/probes/` | Sources and raw results of the probes cited in `conformance.md` | A record of what was run, not a test suite; the TypeScript sources need a Lody export to run |
 | `docs/cloud-api/` | The cloud API guide, references, and their inputs | Mixes authored and generated files; see Table 2 |
 | `tla/` | One `.tla` module per modelled protocol, `.cfg` files per TLC run, and `models.json` | A configuration named `Module_Mechanism.cfg` is an ablation that must fail; `models.json` records every expected verdict |
-| `tests/` | pytest tests of the two Python checkers, and a `node:test` test of the generator's `--check` mode | Run by `make test`; they use temporary fixtures, and the generator test skips when no Lody checkout is present |
+| `tests/` | pytest tests of the evidence and model checkers, and `node:test` unit, fixture and end-to-end tests of the cloud API generator | Run by `make test`; they use temporary fixtures, and the end-to-end test skips when no Lody checkout is present |
+| `scripts/cloud-api/` | Source indexing, schema conversion, operation building, provenance verification, rendering and output comparison for the cloud API generator | Driven by `scripts/generate-cloud-api.mjs`, which alone performs I/O |
 | `scripts/` | The model runner, the evidence checker, and the cloud API generator | Python is formatted and linted with ruff; JavaScript with Biome and the TypeScript checker |
 | `.tools/` | Downloaded `tla2tools.jar` and TLC logs | Not tracked; created by `make tools` and removed by `make clean` |
 | `node_modules/` | Pinned Node.js tooling | Not tracked; created by `make deps` |

@@ -85,6 +85,19 @@ document that reports its state counts and verdicts: the
 `operations.md`, and `sources.json`. It does not execute Lody or contact any
 service.
 
+`scripts/generate-cloud-api.mjs` is a thin command-line entry point: it reads
+`LODY_SOURCE` and `--check`, supplies real file-system and Git access, and
+either writes the outputs or, with `--check`, only reads and compares them.
+The work is done by the modules in `scripts/cloud-api/`: `source-index.mjs`
+reads and parses the checkout, `schema.mjs` converts types to JSON Schema,
+`operations.mjs` builds the operations, OpenAPI document and manifest,
+`provenance.mjs` verifies the checkout against the pinned commit through an
+injected Git runner, `render.mjs` renders the documents, `outputs.mjs`
+compares or writes them, and `pipeline.mjs` connects these without performing
+any I/O. `tests/cloud-api-units.test.mjs` tests each module in memory, and
+`tests/generate-cloud-api-fixture.test.mjs` tests the whole command against a
+temporary Git repository.
+
 The generator needs a Lody checkout. The `Makefile` looks for one at `../Lody`
 and then `../../Lody`; set `LODY_SOURCE` to use another path. The manifest
 records one digest over every indexed source file and a hash of each file that

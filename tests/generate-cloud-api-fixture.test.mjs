@@ -333,6 +333,27 @@ describe('generate-cloud-api schema conversion', () => {
     assert.deepEqual(thing.required, ['id']);
   });
 
+  it('resolves a record-key alias renamed through a barrel re-export', () => {
+    const thing = thingSchema('record-barrel', {
+      ...shadowingIndex,
+      'packages/shared/src/keys/internal.ts': "export type InternalKey = 'id';\n",
+      'packages/shared/src/keys/index.ts': "export { InternalKey as Key } from './internal';\n",
+      [THING]: "import type { Key } from './keys';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.deepEqual(thing.required, ['id']);
+    assert.deepEqual(Object.keys(thing.properties), ['id']);
+  });
+
+  it('marks a record key imported from an unresolvable module as unresolved', () => {
+    const thing = thingSchema('record-unresolvable', {
+      ...shadowingIndex,
+      [THING]: "import type { Key } from './missing';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.equal(thing['x-unresolved'], true);
+    assert.equal(thing['x-typescript'], 'Record<Key, string>');
+    assert.equal(thing.required, undefined);
+  });
+
   it('marks an ambiguous record-key alias as unresolved', () => {
     const thing = thingSchema('record-ambiguous', {
       ...shadowingIndex,
