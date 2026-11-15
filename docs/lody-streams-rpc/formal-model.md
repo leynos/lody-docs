@@ -42,12 +42,17 @@ within the stated bounds, and nothing beyond them.
 
 ## RpcReplay
 
-The daemon keeps its read offset in memory, and starts a task for each
-request it reads without waiting for the task to finish. A restart resets
-the offset, so every request still in the stream is read again, and an
-unexpired request is dispatched again. The same happens inside one running
-instance when the read loop resets its offset after a 404 or a 410; tasks
-started before that reset keep running.
+The daemon keeps its read offset in memory (**Impl**;
+[E-T30](evidence.md#e-t30)), and starts a task for each request it reads
+without waiting for the task to finish (**Impl**; [E-S1](evidence.md#e-s1)).
+A restart resets the offset, so every request still in the stream is read
+again, and an unexpired request is dispatched again (**Impl**;
+[E-W12](evidence.md#e-w12); **Probe** P-9 in
+[conformance](conformance.md#executed-probes)). The read loop also resets its
+offset after a 404 or a 410 (**Impl**; [E-T29](evidence.md#e-t29)); that the
+gateway then redelivers the same requests is a model assumption (B1), and
+that tasks started before the reset keep running is an inference from the
+reset path, which changes only the offset and cursor (**Infer**).
 
 The model has a request stream, a clock, a read offset, the tasks started and
 not yet finished, and counts per request: tasks started in the current _read
@@ -122,7 +127,11 @@ What the model settles:
 ## RpcHistoryClaim
 
 A history write saves a durable claim under the request identifier before it
-attempts the write. A replay that finds the claim is refused.
+attempts the write (**Impl**; [E-S10](evidence.md#e-s10),
+[E-L56](evidence.md#e-l56)). A replay that finds the claim is refused
+(**Impl**; [E-S8](evidence.md#e-s8), [E-L45](evidence.md#e-l45)). Crash and
+replay at every step are the model's own exploration, not observed
+behaviour.
 
 The model follows one request through authorization, claim, write, and
 response, with crashes and replays at any point. `ClaimFirst` is `TRUE` for
@@ -151,17 +160,21 @@ execution exactly once.
 
 In an encrypted workspace the same sealed original can reach a machine by
 the encrypted Streams channel, by Iroh, and by the durable route through the
-session document. The accelerated routes share a receipt journal, and every
-route ends at the execution service, which must win an `agent-start` claim
-before it prompts the agent. The receipt row is keyed by request
-identifier, and the start claim by user turn identifier.
+session document (**Impl**; [E-X46](evidence.md#e-x46),
+[E-X51](evidence.md#e-x51); **Intent** [E-X92](evidence.md#e-x92)). The
+accelerated routes share a receipt journal (**Impl**;
+[E-X53](evidence.md#e-x53)), and every route ends at the execution service,
+which must win an `agent-start` claim before it prompts the agent (**Impl**;
+[E-X58](evidence.md#e-x58), [E-X61](evidence.md#e-x61)). The receipt row is
+keyed by request identifier, and the start claim by user turn identifier
+(**Impl**; [E-X63](evidence.md#e-x63), [E-X58](evidence.md#e-x58)).
 
 The model has one turn, repeated deliveries on both accelerated routes,
 replication of the turn row, the receipt row, the retained acknowledgement,
 the start row, and crashes. The receipt claim and the offer to the watcher
 are separate steps, as they are in the receiver, which claims and then awaits
-the offer. Every prompt goes through one action, which increments a count of
-prompts.
+the offer (**Impl**; [E-X56](evidence.md#e-x56)). Every prompt goes through
+one action, which increments a count of prompts.
 
 Three constants select the case. `StartClaim` is `TRUE` for the shipped
 behaviour; `FALSE` removes the `agent-start` claim. `ReceiptClaim` is `TRUE`

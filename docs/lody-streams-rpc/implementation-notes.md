@@ -154,7 +154,7 @@ Neither the Loro SDK, an ACP SDK nor Iroh supplies any of the list above.
 
 | Defect | Compatible options | Note |
 | ------ | ------------------ | ---- |
-| KD-01 replay after restart | Persist the read offset; or keep a bounded, durable set of handled request identifiers until each `expiresAt`; or keep Lody's behaviour | Existing clients tolerate either. Persisting an offset must still handle a 404 or 410 reset. An identifier set gives at-most-once admission, not execution exactly once |
+| KD-01 replay after restart | Persist a read checkpoint that never passes a request whose work is unfinished, or persist each admitted request durably before advancing the offset past it; or keep a bounded, durable set of handled request identifiers until each `expiresAt`; or keep Lody's behaviour | Existing clients tolerate either. Persisting the offset alone, when a request is read, skips unexpired queued or running work after a crash (`NoSilentLoss` in [formal models](formal-model.md#rpcreplay)). A persisted checkpoint must still handle a 404 or 410 reset. An identifier set gives at-most-once admission, not execution exactly once |
 | KD-02 silent drops | Keep silence; or answer with an error when `id` and `replyTo` are readable | Existing clients ignore responses they cannot match or parse, so an error is safe only in a valid envelope with a declared `method`. For an unknown method no valid response envelope exists |
 | KD-03 intake blocking | Shed control and history write overflow instead of waiting | Not observable by a correct peer except as an overload error |
 | KD-04 unvalidated `replyTo` | Require the workspace prefix `<workspaceId>:rpc:res:` | Both existing forms satisfy it |

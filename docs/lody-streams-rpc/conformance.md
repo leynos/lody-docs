@@ -141,7 +141,7 @@ Variations on the ping request, by validator outcome:
 | `jsonrpc: "1.0"` | Rejected | No reply |
 | `replyTo: null` | Rejected | No reply |
 | `rpcVersion: 1` | Rejected | No reply |
-| The request wrapped in an array | Rejected by the schema | The gateway flattens an array body before the daemon sees it (P-8) |
+| The request wrapped in an array | Rejected by the schema | The development server flattened an array body into separate requests before the daemon saw them (P-8); the production gateway was not tested |
 | `machine/status` with `params: {}` or `{ "includeDisk": true }` | Accepted | Dispatched |
 | `machine/status` with `params: { "includeDisk": false }` | Rejected | No reply |
 | `file/preview` with plain parameters instead of a content envelope | Rejected | No reply |
@@ -183,33 +183,33 @@ are in [encrypted RPC](encrypted-rpc.md).
 | Gateway answers 401 or 403 to a stream operation | Upstream client retries once after calling the token callback without the rejected token | One retry | Unchanged | Whether a new token is minted is **Unknown** | **Probe** P-3 |
 | Token callback throws on the daemon's read | Plain `Error`; the request loop waits one second and retries indefinitely | Unbounded | Offset in memory | The fatal branch in the server is not reached by this route | **Probe** P-3 |
 | Request stream missing when a caller appends | Caller result `machine_rpc_unavailable` | None by the client | None | User interface shows the machine as unreachable | **Impl** [E-C5](evidence.md#e-c5), [E-K2](evidence.md#e-k2) |
-| Request stream missing when the daemon reads | Daemon recreates it and resets the offset to `-1` | Automatic | New empty stream | Requests appended in the gap were refused to their callers | **Impl**, **Test** |
+| Request stream missing when the daemon reads | Daemon recreates it and resets the offset to `-1` | Automatic | New empty stream | Requests appended in the gap were refused to their callers | **Impl** [E-T29](evidence.md#e-t29); **Test** [E-S26](evidence.md#e-s26) |
 | Response stream missing when the daemon appends | Daemon creates it and appends once more | One further attempt | Response in the new stream | Caller receives the response | **Impl** [E-S12](evidence.md#e-s12) |
 | Transient network error or status 500 and above on a response append | Up to three attempts, 200 and 400 milliseconds apart; then one attempt to append `internal_error`, also with three attempts | Bounded | Side effects stand | Possibly two copies of a response; or none, and the caller times out | **Impl** [E-S12](evidence.md#e-s12) |
-| Status 400 to 499, other than 404, on a response append, including an oversized body | Not retried; an `internal_error` append is attempted | None | Side effects stand | Caller receives `internal_error` or times out | **Impl** |
+| Status 400 to 499, other than 404, on a response append, including an oversized body | Not retried; an `internal_error` append is attempted | None | Side effects stand | Caller receives `internal_error` or times out | **Impl** [E-S12](evidence.md#e-s12), [E-W24](evidence.md#e-w24) |
 | Rate limit (429) on the daemon's read | Upstream retries with backoff and honours a retry hint up to 60 seconds, five times; then Lody waits one second and reads again | Unbounded | Offset in memory | Delay only | **Impl** [E-U5](evidence.md#e-u5) |
-| Rate limit (429) on an append | Treated like any other status below 500: not retried | None | None | Caller `request_failed`; daemon response lost or `internal_error` | **Impl**; not handled as a distinct case |
-| Offset no longer available (410) | Offset reset to `-1` with no delay | Automatic | None | Full replay of the retained stream; a persistent 410 would spin | **Impl**, **Test**; spin is **Infer** |
+| Rate limit (429) on an append | Treated like any other status below 500: not retried | None | None | Caller `request_failed`; daemon response lost or `internal_error` | **Impl** [E-U2](evidence.md#e-u2), [E-C5](evidence.md#e-c5), [E-S12](evidence.md#e-s12); not handled as a distinct case |
+| Offset no longer available (410) | Offset reset to `-1` with no delay | Automatic | None | Full replay of the retained stream; a persistent 410 would spin | **Impl** [E-T29](evidence.md#e-t29), [E-T28](evidence.md#e-t28); **Test** [E-S25](evidence.md#e-s25); spin is **Infer** |
 | Stream TTL elapsed | As for a missing stream | Automatic | New empty stream | Unexpired requests in the old stream are lost | **Infer**; production TTL semantics **Unknown** |
 | Payload that is not valid JSON | Read fails after the offset moved; one-second wait; resume after the payload | Automatic | Offset past the payload | Every message in that payload is skipped without a reply | **Infer** |
 | Request fails the schema | Dropped; warning with the raw parameters, redacted for some methods only | None | None | Caller times out | **Probe** P-6 |
 | Request for another machine or workspace, or expired | Dropped without a log | None | None | Caller times out | **Probe** P-6 |
-| Slow consumer: a caller that stops reading | Daemon still appends | Not applicable | Responses in the stream until its TTL | Nothing reaches the caller | **Impl** |
-| Slow daemon: ordinary lane full | `rpc_request_capacity_exceeded` | Caller's choice; not automatic | None | Method-shaped failure | **Impl**, **Test** |
-| Overload pool also full | Dropped with a warning | None | None | Caller times out | **Impl**; not tested |
-| Control or history write set full (128) | Intake waits | Not applicable | Requests remain in the stream | All later requests, including control, are delayed | **Impl**; not tested |
+| Slow consumer: a caller that stops reading | Daemon still appends | Not applicable | Responses in the stream until its TTL | Nothing reaches the caller | **Impl** [E-S12](evidence.md#e-s12), [E-T18](evidence.md#e-t18) |
+| Slow daemon: ordinary lane full | `rpc_request_capacity_exceeded` | Caller's choice; not automatic | None | Method-shaped failure | **Impl** [E-W27](evidence.md#e-w27); **Test** [E-S28](evidence.md#e-s28) |
+| Overload pool also full | Dropped with a warning | None | None | Caller times out | **Impl** [E-S5](evidence.md#e-s5); not tested |
+| Control or history write set full (128) | Intake waits | Not applicable | Requests remain in the stream | All later requests, including control, are delayed | **Impl** [E-S1](evidence.md#e-s1); not tested |
 | Lost acknowledgement of a request append | Caller reports `request_failed` although the request may be stored | None by the client | Request possibly in the stream | The daemon may still execute it | **Impl** [E-C5](evidence.md#e-c5) |
 | Lost acknowledgement of a response append | Daemon retries | Bounded | Possibly two responses | The client ignores the second | **Infer** |
 | Duplicate request, non-history method | Dispatched and answered again | Not applicable | None | Handler runs twice | **Probe** P-9 |
-| Duplicate history request while the first runs | Joined | Not applicable | Memory | One response | **Impl**, **Test** |
+| Duplicate history request while the first runs | Joined | Not applicable | Memory | One response | **Impl** [E-S7](evidence.md#e-s7); **Test** [E-L70](evidence.md#e-l70) |
 | Duplicate history write after admission | `session_history_write_already_claimed` | Caller must use a new identifier | Claim row | Outcome of the first attempt uncertain | **Impl** [E-S10](evidence.md#e-s10) |
-| Same identifier, different bytes, history method | `rpc_request_identity_mismatch` | None | Unchanged | Error on the newcomer's `replyTo` | **Impl**, **Test** |
-| Same identifier, different bytes, other methods | Not detected | Not applicable | None | Both are dispatched | **Impl** |
-| Refusal store unavailable (disk failure, lock timeout) | History write fails closed with `session_history_request_state_unavailable`; the lookup can block the event loop for up to five seconds | None | None | Error response | **Impl**, **Test** "fails closed when history refusal persistence is %s" |
-| Local repository write failure | Reported as a runtime issue; no daemon-level recovery | None | Unknown | Method-specific | **Impl**; unhandled beyond reporting |
+| Same identifier, different bytes, history method | `rpc_request_identity_mismatch` | None | Unchanged | Error on the newcomer's `replyTo` | **Impl** [E-M31](evidence.md#e-m31); **Test** [E-L70](evidence.md#e-l70) |
+| Same identifier, different bytes, other methods | Not detected | Not applicable | None | Both are dispatched | **Impl** [E-M31](evidence.md#e-m31) |
+| Refusal store unavailable (disk failure, lock timeout) | History write fails closed with `session_history_request_state_unavailable`; the lookup can block the event loop for up to five seconds | None | None | Error response | **Impl** [E-S8](evidence.md#e-s8), [E-L46](evidence.md#e-l46), [E-S11](evidence.md#e-s11); **Test** "fails closed when history refusal persistence is %s" [E-S27](evidence.md#e-s27) |
+| Local repository write failure | Reported as a runtime issue; no daemon-level recovery | None | Unknown | Method-specific | **Impl** [E-D17](evidence.md#e-d17); unhandled beyond reporting |
 | Daemon restart | Offset lost; retained stream replayed; expired requests skipped | Automatic | Request stream; refusal store; documents | Duplicate handling as above | **Probe** P-9 |
 | Shutdown with work in flight | Read aborted; queued tasks discarded; running handlers not awaited; exit within seven seconds | None | Request stream | Callers may receive nothing; unexpired requests replay on next start | **Impl** [E-S14](evidence.md#e-s14) |
-| Accepted restart or upgrade | Response delivery attempted for five seconds, then the operation proceeds | None | Method-specific | Caller may time out although the operation ran | **Impl**, **Test** |
+| Accepted restart or upgrade | Response delivery attempted for five seconds, then the operation proceeds | None | Method-specific | Caller may time out although the operation ran | **Impl** [E-S13](evidence.md#e-s13); **Test** [E-L85](evidence.md#e-l85) |
 | Caller clock ahead of or behind the daemon | The daemon compares `expiresAt` with its own clock | None | None | Requests dropped early, or kept past the caller's deadline | **Infer** |
 
 _Table 4: Failure cases for ordinary RPC._
@@ -351,7 +351,7 @@ _Table 6: Conformance cases for the wire contract._
 | LC-02 | O | Daemon running | Capability refresh aborted by the caller | A `machine/acp-capabilities-refresh-cancel` request naming the original `id`; no response to it; no further progress | [E-W10](evidence.md#e-w10) | Lody test "aborts capability work and suppresses progress after an exact cancel request" |
 | LC-03 | O | Slow handler | Caller times out | Handler still completes and appends its response | [E-S6](evidence.md#e-s6) | Specified |
 | LC-04 | O | Progress every second, 1-second timeout | Seven progress responses | Call still pending | [E-C2](evidence.md#e-c2) | Lody test "measures silence, so a reporting download cannot expire its own request" |
-| LC-05 | O | Daemon running | Accepted `machine/restart` | Accepted response appended before the lifecycle callback; callback within five seconds even if the append stalls | [E-S13](evidence.md#e-s13) | Lody test "handles %s without stranding or executing rejected work" |
+| LC-05 | O | Daemon running | Accepted `machine/restart` | If the append completes within five seconds, the accepted response is appended before the lifecycle callback runs; if the append fails or stalls, the callback runs once after the failure or at the five-second deadline, without the append having completed | [E-S13](evidence.md#e-s13) | Lody test "handles %s without stranding or executing rejected work" |
 | LC-06 | O | Daemon running | Rejected `machine/restart` | Response appended; callback never invoked | [E-S13](evidence.md#e-s13) | Lody test, as LC-05 |
 | LC-07 | H | Watch with `waitMs` 15000 and 10 seconds to expiry | `session/history-watch` | Wait bounded to nine seconds | [E-S16](evidence.md#e-s16) | Specified |
 | LC-08 | H | History request | Deadline passes during metadata readiness | No operation; no response | [E-S10](evidence.md#e-s10) | Lody test "does not start history %s when its deadline expires during %s" |

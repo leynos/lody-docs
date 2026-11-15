@@ -707,10 +707,18 @@ the caller._
   for history methods is marked as a transport failure with an outcome that
   may be unknown (**Impl**; [E-C5](evidence.md#e-c5); **Intent**
   [E-N8](evidence.md#e-n8)).
-- A response proves that the handler returned and that the daemon's append of
-  the response was stored. What the handler's return means differs by method.
-  For the dispatch methods it means delivery or durable acceptance and never
-  that an agent started ([methods](methods.md)).
+- A response produced by a handler proves that the handler returned or threw,
+  and that the daemon's append of the response was stored. What the handler's
+  return means differs by method. For the dispatch methods it means delivery
+  or durable acceptance and never that an agent started
+  ([methods](methods.md)).
+- Some responses are produced before any handler runs, and prove only that
+  the daemon read the request and stored the append: a version mismatch
+  ([E-W12](evidence.md#e-w12)), an overload error
+  ([E-W27](evidence.md#e-w27)), an identity mismatch or a stored refusal
+  for a history method ([E-S7](evidence.md#e-s7),
+  [E-S8](evidence.md#e-s8)), and an owner-session refusal for an
+  owner-scoped method ([E-M34](evidence.md#e-m34)) (**Impl**).
 - An overload error proves only that the daemon read the request while a lane
   was full. It says nothing about an earlier duplicate of the same request
   (**Intent**; [E-N7](evidence.md#e-n7)).

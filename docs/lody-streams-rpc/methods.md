@@ -462,6 +462,13 @@ tagged.
   therefore runs its handler again. **Infer** for the replay itself; **Intent**
   for the documentation.
 - **Lane and timeout.** As in the reconciliation and default-timeout tables.
+- **Schemas.** Each request schema named in the family tables is a member of
+  the request union [E-M2](evidence.md#e-m2); each result schema is the one
+  the client applies to that method after the envelope
+  [E-M80](evidence.md#e-m80). The inner request schemas of the Code Collab and
+  file methods are parsed by the server after decryption
+  [E-M96](evidence.md#e-m96). The encrypted-only schemas are cited in their own
+  table.
 - **Response loss.** A response append is attempted up to three times and is not
   retained for later delivery [E-L2](evidence.md#e-l2). A side effect can
   therefore stand without the caller seeing the response. **Infer**
@@ -671,7 +678,7 @@ wired to the Code Collab service in
 | `code-collab/open-all-changes-diff` | `CodeCollabV2OpenAllChangesDiffRequestSchema` | `CodeCollabV2RpcResponseSchema` | `scope` needs `codeCollabAllChangesScope` |
 | `code-collab/open-turn-diff` | `CodeCollabV2OpenTurnDiffRequestSchema` | `CodeCollabV2RpcResponseSchema` | |
 | `code-collab/init-directory` | `CodeCollabV2InitDirectoryRequestSchema` | `CodeCollabV2RpcResponseSchema` | |
-| `code-collab/lsp-definition`, `code-collab/lsp-references` | `CodeCollabV2LspRpcParamsSchema` | `CodeCollabV2RpcResponseSchema` | Language Server Protocol (LSP) lookups; the declared handler result type is `CodeCollabV2LspUnsupported`; encrypted read queries |
+| `code-collab/lsp-definition`, `code-collab/lsp-references` | `CodeCollabV2LspRpcParamsSchema` | `CodeCollabV2RpcResponseSchema` | Language Server Protocol (LSP) lookups; the declared handler result type is `CodeCollabV2LspUnsupported` [E-M97](evidence.md#e-m97); encrypted read queries |
 
 _Table 11: Code Collab methods._
 
@@ -888,12 +895,18 @@ Milestones, in order:
 6. **Response.** `accepted` is true for the dispositions `accepted`, `duplicate`
    and `already-terminal` [E-L4](evidence.md#e-l4).
 
-- **What the response proves.** The payload reached this daemon process, passed
-  the ownership and terminal guards as of that read, and is in process memory
-  with a check queued. It does not prove authorization, Inbox admission or agent
-  start. **Impl** The session documentation says the acknowledgement "means
-  delivered, not authorized or executed" [E-L8](evidence.md#e-l8), and the
-  handler contract requires acknowledging before executing
+- **What the response proves.** Every response with `accepted: true` proves
+  that the payload reached this daemon process and passed the ownership guard
+  as of that read. Only the disposition `accepted`, and `duplicate` when the
+  turn was already in the stash, also prove that the turn is in process memory
+  with a check queued. `already-terminal` means the turn was already handled,
+  and `duplicate` for the turn that is currently running returns before the
+  stash; neither stashes the payload nor queues a check, and the caller cannot
+  tell the two `duplicate` cases apart. No disposition proves authorization,
+  Inbox admission or agent start. **Impl** [E-L4](evidence.md#e-l4)
+  [E-L5](evidence.md#e-l5) The session documentation says the acknowledgement
+  "means delivered, not authorized or executed" [E-L8](evidence.md#e-l8), and
+  the handler contract requires acknowledging before executing
   [E-L9](evidence.md#e-l9). **Intent**
 - **Deadline.** 15 000 ms by default [E-M77](evidence.md#e-m77). The value is
   kept short to bound replay after a restart [E-L23](evidence.md#e-l23).
@@ -1501,7 +1514,7 @@ Milestones after the preconditions:
 | Crash point | State left | Replay | Basis |
 | --- | --- | --- | --- |
 | Before the claim | nothing | Runs normally if unexpired and the proof still verifies. | **Impl** |
-| After the claim, before the write | claim only | `session_history_write_already_claimed`; outcome uncertain to the caller; retry with a new request ID. | **Impl** |
+| After the claim, before the write | claim only | `session_history_write_already_claimed`; outcome uncertain to the caller, which cannot tell this row from the next. A new request ID is a new claim, so a retry under one can apply the operation twice. Retry only after establishing that the write did not occur, for input operations with the `inputAcceptance` query, or where the operation has its own key, such as the input ID in Table 18. | **Impl**, **Infer** |
 | After the write, before the append | claim and the write | Same error; the write stands. For input operations the `inputAcceptance` query resolves the uncertainty. | **Impl**, **Infer** |
 | After the append | claim, write and response | Same error after an earlier success, with the same ID on the same reply stream. | **Infer** |
 

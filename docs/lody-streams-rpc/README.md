@@ -111,60 +111,93 @@ made it unusable.
 ## Material findings
 
 1. **The transport gives the protocol very little.** Requests and responses
-   are plain appends with no idempotency. The daemon keeps its read position
-   in memory only, so a restart, a missing stream or an expired offset makes
-   it read the whole retained request stream again.
+   are plain appends with no idempotency (**Impl**;
+   [E-T19](evidence.md#e-t19), [E-U2](evidence.md#e-u2)). The daemon keeps
+   its read position in memory only, so a restart, a missing stream or an
+   expired offset makes it read the whole retained request stream again
+   (**Impl**; [E-T30](evidence.md#e-t30), [E-T29](evidence.md#e-t29);
+   **Probe** P-9).
 2. **The only general replay guard is the request's `expiresAt`.** There is
-   no request deduplication outside the three history methods. A probe
+   no request deduplication outside the three history methods (**Impl**;
+   [E-W12](evidence.md#e-w12), [E-M31](evidence.md#e-m31)). A probe
    confirmed that a second server instance runs every unexpired request
-   again and answers it again.
+   again and answers it again (**Probe** P-9).
 3. **Most failures are silent.** A request that fails validation, names
    another machine or has expired gets no reply. Only a version mismatch is
-   answered. The caller cannot distinguish rejection from loss.
+   answered (**Impl**; [E-W12](evidence.md#e-w12); **Probe** P-6). The
+   caller cannot distinguish rejection from loss (**Infer**).
 4. **No response proves that an agent started.** Dispatch responses mean
    delivery or durable acceptance. Execution is claimed later, by other
-   state, after access is checked.
+   state, after access is checked (**Impl**; [E-L4](evidence.md#e-l4),
+   [E-L5](evidence.md#e-l5), [E-L11](evidence.md#e-l11); **Intent**
+   [E-L8](evidence.md#e-l8)).
 5. **The envelope has no sender.** The server checks the target, the expiry
-   and the version. Authority to invoke a method is otherwise whatever each
-   handler verifies, and several methods, including stop and terminate,
-   verify nothing visible.
+   and the version (**Impl**; [E-M32](evidence.md#e-m32),
+   [E-W12](evidence.md#e-w12)). Authority to invoke a method is otherwise
+   whatever each handler verifies, and several methods, including stop and
+   terminate, verify nothing visible (**Impl**;
+   [E-M55](evidence.md#e-m55), [E-M56](evidence.md#e-m56)).
 6. **History writes are admitted at most once per request identifier**, by a
    claim saved before the write. That is not execution exactly once: a crash
-   after the claim leaves the write undone and the identifier refused.
+   after the claim leaves the write undone and the identifier refused
+   (**Impl**; [E-S10](evidence.md#e-s10), [E-L56](evidence.md#e-l56)).
 7. **Control requests are prioritized, with one hole.** Intake does not wait
    for handlers, but it does wait when 128 control or history write tasks
-   are pending, and then everything behind it waits too.
-8. **Nothing bounds handler time, queue residence or payload size**, and one
-   event loop carries RPC, presence and document synchronization.
+   are pending, and then everything behind it waits too (**Impl**;
+   [E-S1](evidence.md#e-s1), [E-M27](evidence.md#e-m27)).
+8. **Nothing bounds handler time, queue residence or payload size** (**Impl**,
+   by absence; [E-S6](evidence.md#e-s6), [E-W26](evidence.md#e-w26)), and
+   one event loop carries RPC, presence and document synchronization
+   (**Impl**; [E-D1](evidence.md#e-d1)).
 9. **Liveness is presence, not RPC.** Clients decide that a machine is
    online from a 30-second heartbeat with a 90-second expiry on a separate
-   stream. `machine/ping` returns a constant.
+   stream (**Impl**; [E-D2](evidence.md#e-d2), [E-K1](evidence.md#e-k1)).
+   `machine/ping` returns a constant (**Impl**; [E-D4](evidence.md#e-d4)).
 10. **Encrypted workspaces use a different protocol**, not this one with
-    encryption added; see [encrypted RPC](encrypted-rpc.md).
+    encryption added (**Impl**; [E-M41](evidence.md#e-m41),
+    [E-M42](evidence.md#e-m42)); see [encrypted RPC](encrypted-rpc.md).
 
 ## Guarantees the evidence supports
 
 - A valid, unexpired, correctly addressed request that the daemon reads
-  while its lanes have room is dispatched, and a response is appended to the
-  request's `replyTo`, at least once.
+  while its lanes have room is dispatched at least once, and the daemon
+  attempts to append a response to the request's `replyTo`. If every append
+  attempt fails, including the fallback `internal_error` append, no response
+  is published (**Impl**; [E-W12](evidence.md#e-w12),
+  [E-S1](evidence.md#e-s1), [E-S12](evidence.md#e-s12),
+  [E-W24](evidence.md#e-w24)).
 - A request is not dispatched after its `expiresAt` has passed on the
-  daemon's clock, unless it had already passed the expiry check.
+  daemon's clock, unless it had already passed the expiry check (**Impl**;
+  [E-W12](evidence.md#e-w12)).
 - A history write is not executed twice under one request identifier while
-  its claim is retained.
-- A saved history refusal is returned again for the same request.
-- Within one request, progress responses precede the final response.
+  its claim is retained (**Impl**; [E-S10](evidence.md#e-s10),
+  [E-L56](evidence.md#e-l56)).
+- A saved history refusal is returned again for the same request (**Impl**;
+  [E-S8](evidence.md#e-s8), [E-L44](evidence.md#e-l44); **Test**
+  [E-L71](evidence.md#e-l71)).
+- Within one request, progress responses precede the final response
+  (**Impl**, **Test**; see
+  [protocol](protocol.md#progress-overload-and-cancellation)).
 - An accepted restart or upgrade waits at most five seconds for its response
-  to be delivered before proceeding.
+  to be delivered before proceeding (**Impl**; [E-S13](evidence.md#e-s13);
+  **Test** [E-L85](evidence.md#e-l85)).
 
 ## Guarantees that are missing
 
-- Delivery of a request to the daemon, or of a response to the caller.
-- Any signal that a request was rejected, other than a version mismatch.
-- Deduplication of requests across a daemon restart, outside history.
-- Ordering between requests, beyond admission order within a lane.
-- Cancellation of a running handler when the caller gives up.
-- Authentication of the requester named in a request.
-- Any bound on handler duration or message size.
+- Delivery of a request to the daemon, or of a response to the caller
+  (**Impl**; [E-C1](evidence.md#e-c1), [E-S12](evidence.md#e-s12)).
+- Any signal that a request was rejected, other than a version mismatch
+  (**Impl**; [E-W12](evidence.md#e-w12)).
+- Deduplication of requests across a daemon restart, outside history
+  (**Impl**; [E-T30](evidence.md#e-t30); **Probe** P-9).
+- Ordering between requests, beyond admission order within a lane (**Impl**;
+  [E-M27](evidence.md#e-m27), [E-S3](evidence.md#e-s3)).
+- Cancellation of a running handler when the caller gives up (**Impl**;
+  [E-M63](evidence.md#e-m63) is the only cancellable method).
+- Authentication of the requester named in a request (**Impl**;
+  [E-M32](evidence.md#e-m32); **Intent** [E-W31](evidence.md#e-w31)).
+- Any bound on handler duration or message size (**Impl**, by absence;
+  [E-W26](evidence.md#e-w26)).
 
 ## Unresolved blockers
 
