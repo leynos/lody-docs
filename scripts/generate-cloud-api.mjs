@@ -10,8 +10,10 @@
  * Paths are relative to the working directory, which must be the repository
  * root. The checkout must be at the pinned revision; no source file the
  * generator reads may be modified, staged, untracked or ignored, and no file it
- * would index at that revision may be deleted or renamed, so that each
- * generated link cites what that commit contains.
+ * would index at that revision may be deleted or renamed. Tracked inputs are
+ * also compared blob by blob with that revision, and the assume-unchanged and
+ * skip-worktree flags are refused, so that git status cannot be bypassed. Each
+ * generated link then cites what that commit contains.
  *
  * Outputs: `docs/cloud-api/openapi.yaml`, `routes.md`, `operations.md` and the
  * source manifest `sources.json` (revision, operation counts, unresolved types,
@@ -681,8 +683,47 @@ for (let i = 0; i < status.length; i++) {
   if (/[RC]/.test(entry.slice(0, 2))) paths.push(status[++i]);
   if (paths.some(indexed)) modified.push(paths.length > 1 ? `${entry} <- ${paths[1]}` : entry);
 }
+// Git status trusts the index, and the assume-unchanged and skip-worktree flags
+// hide a tracked file's edits from it. So reject those flags, and compare each
+// tracked input's working-tree content with its blob at the pinned revision.
+const scope = ['--', ...indexRoots, ...read];
+const git = (/** @type {string[]} */ args, input = '') =>
+  execFileSync('git', ['--literal-pathspecs', '-C', root, ...args], { encoding: 'utf8', input });
+for (const entry of git(['ls-files', '-v', '-z', ...scope]).split('\0')) {
+  const [tag, file] = [entry[0], entry.slice(2)];
+  if (entry && indexed(file) && (tag === 'S' || tag !== tag.toUpperCase()))
+    modified.push(`${tag} ${file} (assume-unchanged or skip-worktree)`);
+}
+const pinned = git(['ls-tree', '-r', '-z', revision, ...scope])
+  .split('\0')
+  .map((entry) => entry.match(/^(\d+) blob ([0-9a-f]+)\t(.*)$/s))
+  .filter((match) => match !== null && indexed(match[3]))
+  .map(([, mode, blob, file]) => ({ link: mode === '120000', blob, file }));
+const present = [];
+for (const entry of pinned) {
+  if (fs.lstatSync(path.join(root, entry.file), { throwIfNoEntry: false })) present.push(entry);
+  else modified.push(`${entry.file} (missing from the working tree)`);
+}
+// Git hashes a file through its clean filters, and a symbolic link by its target.
+const regular = present.filter((entry) => !entry.link);
+const hashes = regular.length
+  ? git(['hash-object', '--stdin-paths'], regular.map((entry) => `${entry.file}\n`).join(''))
+      .trimEnd()
+      .split('\n')
+  : [];
+const actual = new Map(regular.map((entry, i) => [entry, hashes[i]]));
+for (const entry of present.filter((e) => e.link)) {
+  const target = Buffer.from(fs.readlinkSync(path.join(root, entry.file)));
+  const header = Buffer.from(`blob ${target.length}\0`);
+  actual.set(entry, crypto.createHash('sha1').update(header).update(target).digest('hex'));
+}
+for (const entry of present)
+  if (actual.get(entry) !== entry.blob)
+    modified.push(`${entry.file} (content differs from ${revision})`);
 if (modified.length)
-  throw Error(`Source files differ from ${revision} in ${root}:\n${modified.join('\n')}`);
+  throw Error(
+    `Source files differ from ${revision} in ${root}:\n${[...new Set(modified)].join('\n')}`,
+  );
 const manifest = {
   repository: 'https://github.com/LodyAI/Lody',
   revision,

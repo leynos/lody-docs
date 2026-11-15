@@ -211,6 +211,25 @@ describe('generate-cloud-api source verification', () => {
     assertNothingWritten(f);
   });
 
+  for (const flag of ['--assume-unchanged', '--skip-worktree'])
+    it(`rejects an edit to a cross-file variable hidden by ${flag}`, () => {
+      const f = fixture(`flag${flag}`);
+      git(f.lody, 'update-index', flag, LIMITS);
+      fs.writeFileSync(path.join(f.lody, LIMITS), 'export const MAX_NAME = 65;\n');
+      assert.equal(git(f.lody, 'status', '--porcelain'), '');
+      const result = generate(f);
+      assert.notEqual(result.status, 0);
+      assert.match(
+        result.stderr,
+        /packages\/shared\/src\/limits\.ts \(assume-unchanged or skip-worktree\)/,
+      );
+      assert.match(
+        result.stderr,
+        /packages\/shared\/src\/limits\.ts \(content differs from [0-9a-f]{40}\)/,
+      );
+      assertNothingWritten(f);
+    });
+
   it('rejects a checkout at a revision other than the pinned one', () => {
     const f = fixture('revision');
     fs.writeFileSync(path.join(f.lody, 'packages/e2ee-core/src/index.ts'), 'export {}; \n');
