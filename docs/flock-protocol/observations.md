@@ -112,6 +112,12 @@ Whether the user would call this a bug depends on what they expect a pending
 removal to mean. It is recorded here because the guard's name suggests a
 wider protection than it gives.
 
+The guard's comparison is also strict. A registration whose `createdAtMs` equals
+the request's `requestedAt` is treated as older, even if it happened after the
+request in the same millisecond. The model finds this edge in six steps
+([formal model](formal-model.md#an-observation-about-the-shipped-protocol)). It
+needs two writes in one millisecond of server time, so it is theoretical.
+
 ## O3. The local data plane and the version vector hole
 
 The local data plane exchanges Flock deltas by version vector

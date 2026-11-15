@@ -12,6 +12,11 @@
 (*   "memory"  - the shipped behaviour;                                    *)
 (*   "durable" - a candidate: persist the offset when a request is read.   *)
 (*                                                                         *)
+(* MaxResets bounds in-process offset resets: after a 404 or 410 the      *)
+(* read loop resets its offset and reads the retained stream again,        *)
+(* without starting a new server instance.  That the gateway then          *)
+(* redelivers retained, unexpired requests is assumed, not verified.       *)
+(*                                                                         *)
 (* RestartSingleUse states an assumption about the private backend: that   *)
 (* it refuses a lifecycle proof it has already verified.  The public       *)
 (* source does not settle this, so both values are checked.                *)
@@ -23,6 +28,7 @@ CONSTANTS Requests,         \* request identifiers
           Ttl,              \* lifetime of a request, in ticks
           MaxTime,          \* bound on the clock
           MaxCrashes,       \* bound on crashes
+          MaxResets,        \* bound on in-process offset resets (404, 410)
           OffsetMode,       \* "memory" or "durable"
           RestartSingleUse  \* BOOLEAN
 
@@ -43,10 +49,15 @@ VARIABLES stream,      \* the request stream: a sequence of request ids
           usedProof,   \* restart requests whose proof the backend has seen
           lost,        \* unexpired requests read and then never handled
           instances,   \* server instances started so far
+          instRuns,    \* request id -> handler runs in the current instance
+          passRuns,    \* request id -> handler runs since the last offset reset
+          resets,      \* in-process offset resets so far
           crashes
 
 vars == <<stream, expires, now, offset, durable, inflight, runs, restartsBy,
-          usedProof, lost, instances, crashes>>
+          usedProof, lost, instances, instRuns, passRuns, resets, crashes>>
+
+Zero == [r \in Requests |-> 0]
 
 Sent == {stream[i] : i \in 1..Len(stream)}
 
@@ -62,6 +73,9 @@ Init ==
     /\ usedProof = {}
     /\ lost = {}
     /\ instances = 1
+    /\ instRuns = Zero
+    /\ passRuns = Zero
+    /\ resets = 0
     /\ crashes = 0
 
 (* A caller appends a request.  No caller re-appends under the same id. *)
@@ -70,13 +84,14 @@ Send(r) ==
     /\ stream' = Append(stream, r)
     /\ expires' = [expires EXCEPT ![r] = now + Ttl]
     /\ UNCHANGED <<now, offset, durable, inflight, runs, restartsBy, usedProof,
-                   lost, instances, crashes>>
+                   lost, instances, instRuns, passRuns, resets, crashes>>
 
 Tick ==
     /\ now < MaxTime
     /\ now' = now + 1
     /\ UNCHANGED <<stream, expires, offset, durable, inflight, runs, restartsBy,
-                   usedProof, lost, instances, crashes>>
+                   usedProof, lost, instances, instRuns, passRuns, resets,
+                   crashes>>
 
 (* The read loop takes the next request and saves the offset before the  *)
 (* handler runs.                                                         *)
@@ -87,7 +102,7 @@ Read ==
     /\ offset' = offset + 1
     /\ durable' = IF OffsetMode = "durable" THEN offset + 1 ELSE durable
     /\ UNCHANGED <<stream, expires, now, runs, restartsBy, usedProof, lost,
-                   instances, crashes>>
+                   instances, instRuns, passRuns, resets, crashes>>
 
 ResumeOffset(d) == IF OffsetMode = "durable" THEN d ELSE 0
 
@@ -97,7 +112,8 @@ DropExpired ==
     /\ now >= expires[inflight]
     /\ inflight' = None
     /\ UNCHANGED <<stream, expires, now, offset, durable, runs, restartsBy,
-                   usedProof, lost, instances, crashes>>
+                   usedProof, lost, instances, instRuns, passRuns, resets,
+                   crashes>>
 
 (* An ordinary handler runs and answers. *)
 Handle ==
@@ -105,9 +121,11 @@ Handle ==
     /\ inflight \notin RestartReqs
     /\ now < expires[inflight]
     /\ runs' = [runs EXCEPT ![inflight] = @ + 1]
+    /\ instRuns' = [instRuns EXCEPT ![inflight] = @ + 1]
+    /\ passRuns' = [passRuns EXCEPT ![inflight] = @ + 1]
     /\ inflight' = None
     /\ UNCHANGED <<stream, expires, now, offset, durable, restartsBy, usedProof,
-                   lost, instances, crashes>>
+                   lost, instances, resets, crashes>>
 
 (* A restart request whose proof the backend refuses is answered with an *)
 (* error and restarts nothing.                                           *)
@@ -118,7 +136,8 @@ RefuseRestart ==
     /\ inflight \in usedProof
     /\ inflight' = None
     /\ UNCHANGED <<stream, expires, now, offset, durable, runs, restartsBy,
-                   usedProof, lost, instances, crashes>>
+                   usedProof, lost, instances, instRuns, passRuns, resets,
+                   crashes>>
 
 (* An accepted restart is answered, then the worker exits and a new      *)
 (* instance starts.  A restart takes at least one tick.                  *)
@@ -134,7 +153,9 @@ HandleRestart ==
     /\ inflight' = None
     /\ offset' = ResumeOffset(durable)
     /\ instances' = instances + 1
-    /\ UNCHANGED <<stream, expires, durable, lost, crashes>>
+    /\ instRuns' = Zero
+    /\ passRuns' = Zero
+    /\ UNCHANGED <<stream, expires, durable, lost, resets, crashes>>
 
 (* The daemon crashes.  Memory is lost; the stream and any persisted     *)
 (* offset survive.                                                       *)
@@ -149,7 +170,22 @@ Crash ==
                THEN lost \cup {inflight}
                ELSE lost
     /\ inflight' = None
-    /\ UNCHANGED <<stream, expires, now, durable, runs, restartsBy, usedProof>>
+    /\ instRuns' = Zero
+    /\ passRuns' = Zero
+    /\ UNCHANGED <<stream, expires, now, durable, runs, restartsBy, usedProof,
+                   resets>>
+
+(* After a 404 or 410 the read loop resets its offset in the same         *)
+(* instance.  Memory survives, so nothing in flight is lost.              *)
+ResetOffset ==
+    /\ resets < MaxResets
+    /\ inflight = None
+    /\ resets' = resets + 1
+    /\ offset' = 0
+    /\ durable' = IF OffsetMode = "durable" THEN 0 ELSE durable
+    /\ passRuns' = Zero
+    /\ UNCHANGED <<stream, expires, now, inflight, runs, restartsBy, usedProof,
+                   lost, instances, instRuns, crashes>>
 
 Next ==
     \/ \E r \in Requests : Send(r)
@@ -160,6 +196,7 @@ Next ==
     \/ RefuseRestart
     \/ HandleRestart
     \/ Crash
+    \/ ResetOffset
 
 Spec == Init /\ [][Next]_vars
 
@@ -174,10 +211,18 @@ TypeOK ==
     /\ usedProof \subseteq RestartReqs
     /\ lost \subseteq Requests
     /\ crashes \in 0..MaxCrashes
+    /\ resets \in 0..MaxResets
+    /\ instRuns \in [Requests -> Nat]
+    /\ passRuns \in [Requests -> Nat]
 
 (* R1.  The guarantee the evidence supports: a request runs at most once *)
-(* per server instance.                                                  *)
-OncePerInstance == \A r \in Requests : runs[r] <= instances
+(* per read pass.  A pass ends at a crash, a restart, or an in-process   *)
+(* offset reset.                                                         *)
+OncePerPass == \A r \in Requests : passRuns[r] <= 1
+
+(* Holds only without in-process offset resets: a request runs at most   *)
+(* once per server instance.                                             *)
+OncePerInstance == \A r \in Requests : instRuns[r] <= 1
 
 (* R2.  A restart loop, if one exists, ends when the request expires.    *)
 RestartLoopBounded == \A r \in RestartReqs : restartsBy[r] <= Ttl
@@ -196,5 +241,10 @@ AtMostOnce == \A r \in Requests : runs[r] <= 1
 
 (* Depends on the backend: a restart request restarts the daemon once.   *)
 RestartOnce == \A r \in RestartReqs : restartsBy[r] <= 1
+
+(* Reachability witnesses.  Each must be violated: it shows that the     *)
+(* states R1 and R2 constrain are reachable.                             *)
+NeverRun == \A r \in Requests : runs[r] = 0
+NeverRestarted == \A r \in RestartReqs : restartsBy[r] = 0
 
 =============================================================================

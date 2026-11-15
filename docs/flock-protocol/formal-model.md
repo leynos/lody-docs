@@ -160,8 +160,12 @@ verification may succeed or fail.
 
 `st[r]` holds two rows (`project`, `cmd`). A project value carries
 `createdAtMs`; a command value carries its status and `requestedAt`. `now` is
-the server clock, advanced by each registration and each request so that the
-two kinds of timestamp are distinct.
+the server clock. With `TieClock = FALSE` each registration and each request
+advances it, so the two kinds of timestamp are distinct. With
+`TieClock = TRUE` either may reuse the latest timestamp, as two writes in the
+same millisecond would. Each value also carries a ghost field holding the
+real order of the event that wrote it, so that D1 judges "registered after
+the request" by real order rather than by timestamp.
 
 | Action | Code | Evidence |
 | ------ | ---- | -------- |
@@ -175,7 +179,7 @@ _Table 7: Actions of `LocalProjectDelete` and the code each one models._
 
 | Id | Name | Statement |
 | -- | ---- | --------- |
-| D1 | `FreshProjectNeverRemoved` | The daemon never removes a project whose `createdAtMs` is later than the command's `requestedAt` |
+| D1 | `FreshProjectNeverRemoved` | The daemon never removes a project registered after the command was requested, by real order |
 | D2 | `NoResurrection` | In a converged state, no project registration that the daemon removed is visible. **Not a property of the shipped protocol** |
 | L1 | `CommandsDrain` | Eventually and permanently, replicas agree and no command row is visible |
 
@@ -230,9 +234,9 @@ checkpoint tests fail under the shared-cursor and schedule-only variants
 | ------------- | ------- | -------- | ------ |
 | `LocalProjectDelete_Resurrection.cfg` | Shipped (`UiRowUpdates = TRUE`) | D2 | **Violated** |
 | `LocalProjectDelete_NoRowUpdates.cfg` | Client row rewrites disabled | D1, D2 | Pass (15,081 states) |
+| `LocalProjectDelete_EqualTimestamps.cfg` | Shipped, with equal timestamps allowed | D1 | **Violated** in 6 steps |
 
-_Table 11: TLC results for `NoResurrection`, with and without client row
-rewrites._
+_Table 11: TLC results for the observations about the shipped protocol._
 
 Counterexample: a client requests the delete; the daemon receives it; the
 client rewrites the project row (for example, to record imported history)
@@ -240,6 +244,15 @@ with a later clock; the daemon removes the project and the command; after
 everything is exchanged, the client's rewrite outranks the daemon's
 tombstone and the project is visible again with no command pending. See
 [observations](observations.md#o1-a-removed-project-can-come-back).
+
+The staleness guard compares timestamps strictly: it spares a project only
+if its `createdAtMs` is later than the request's `requestedAt`. When the two
+are equal, D1 fails. A client registers a project and requests its removal;
+the daemon, not yet synchronized, registers the same project in the same
+millisecond; the daemon then processes the request and removes a
+registration that came after it. The window is one millisecond of server
+time, so this is a theoretical edge, recorded because the earlier model
+assumed it away.
 
 ## Abstractions and assumptions
 
@@ -253,7 +266,7 @@ shows.
 | A3 | A local write and its `repo.flush()` are one step | A crash between them loses an unacknowledged write; no property here depends on it |
 | A4 | A zero-transport `syncOnce` resolves in the step that starts it ([E-U10](evidence.md#e-u10)) | See [observations](observations.md#o4-the-zero-transport-window) |
 | A5 | Crash and restart are one step | Downtime is modelled only as delay |
-| A6 | The command modules use state-based `Push`/`Pull` | Justified by S4; partial delivery within one document is not explored there |
+| A6 | The command modules exchange whole replica states (`Push`/`Pull`) instead of the stream | This is an abstraction, not a refinement of `FlockReplication`. S4 shows only that replicas agree once everything is exchanged; it does not show that every intermediate behaviour of the stream-based protocol appears here. Partial delivery within one document is not explored |
 | A7 | One client replica | Two clients racing each other (for example, retry against cancel) are not explored |
 | A8 | `physicalTime` skew is a bounded choice of clock (`Skew`, `MaxT`) | Large or adversarial skew is not explored |
 | A9 | The local data plane and the mobile client are not modelled | Their behaviour rests on the prose and the cited tests |

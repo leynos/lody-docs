@@ -8,15 +8,17 @@
 (* docs/lody-streams-rpc/protocol.md, "Duplicates and deduplication" and   *)
 (* "Crash windows on the daemon".                                          *)
 (*                                                                         *)
-(* ClaimFirst = TRUE is the shipped order.  ClaimFirst = FALSE writes      *)
-(* first and claims afterwards, to show what the order prevents.           *)
+(* ClaimFirst = TRUE is the shipped order; FALSE writes first and claims   *)
+(* afterwards.  RespondOnClaim = FALSE is the shipped behaviour; TRUE      *)
+(* answers "accepted" as soon as the claim is saved, before the write.     *)
 (***************************************************************************)
 EXTENDS Naturals
 
-CONSTANTS MaxCrashes,   \* bound on daemon crashes
-          ClaimFirst    \* BOOLEAN
+CONSTANTS MaxCrashes,      \* bound on daemon crashes
+          ClaimFirst,      \* BOOLEAN
+          RespondOnClaim   \* BOOLEAN
 
-ASSUME ClaimFirst \in BOOLEAN
+ASSUME ClaimFirst \in BOOLEAN /\ RespondOnClaim \in BOOLEAN
 
 VARIABLES pc,        \* phase of the in-memory request task
           claim,     \* durable: the admission claim exists
@@ -59,11 +61,18 @@ Write ==
     /\ pc' = IF ClaimFirst THEN "ready" ELSE "written"
     /\ UNCHANGED <<claim, answers, expired, crashes>>
 
+(* The accepted response.  In the RespondOnClaim ablation it may be sent *)
+(* as soon as the claim exists, and the task continues to the write.     *)
 Respond ==
-    /\ pc = "ready"
-    /\ answers' = answers \cup {"accepted"}
-    /\ pc' = "idle"
-    /\ UNCHANGED <<claim, writes, expired, crashes>>
+    \/ /\ pc = "ready"
+       /\ answers' = answers \cup {"accepted"}
+       /\ pc' = "idle"
+       /\ UNCHANGED <<claim, writes, expired, crashes>>
+    \/ /\ RespondOnClaim
+       /\ pc = "claimed"
+       /\ "accepted" \notin answers
+       /\ answers' = answers \cup {"accepted"}
+       /\ UNCHANGED <<pc, claim, writes, expired, crashes>>
 
 Expire ==
     /\ ~expired
@@ -101,5 +110,10 @@ AcceptedImpliesWritten == ("accepted" \in answers) => writes >= 1
 (* the write happened.  A crash between the claim and the write leaves  *)
 (* the write undone and the identifier refused.                         *)
 ClaimImpliesWritten == (pc = "idle" /\ claim) => writes = 1
+
+(* Reachability witnesses.  Each must be violated: it shows that the    *)
+(* states that H1 and H2 constrain are reachable.                       *)
+NeverWritten == writes = 0
+NeverAccepted == "accepted" \notin answers
 
 =============================================================================

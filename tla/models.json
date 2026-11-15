@@ -95,7 +95,7 @@
     "config": "RpcReplay.cfg",
     "expect": "pass",
     "group": "safety",
-    "note": "Shipped request replay: once per server instance, bounded restart loop, no silent loss (R1-R3)."
+    "note": "Shipped request replay, with one in-process offset reset: a request runs at most once per read pass; bounded restart loop; no request left behind a persisted offset (R1-R3)."
   },
   {
     "module": "RpcReplay",
@@ -109,7 +109,7 @@
     "config": "RpcReplay_DurableOffset.cfg",
     "expect": "pass",
     "group": "safety",
-    "note": "Candidate: with a persisted read offset, a request runs at most once."
+    "note": "Candidate: with a persisted read offset and no in-process reset, a request runs at most once."
   },
   {
     "module": "RpcHistoryClaim",
@@ -180,5 +180,89 @@
     "expect": "DeliveryAcknowledged",
     "group": "ablation",
     "note": "Observation: a crash between the receipt claim and the retained ACK silences the request."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_EqualTimestamps.cfg",
+    "expect": "FreshProjectNeverRemoved",
+    "group": "ablation",
+    "note": "Observation: when a registration and a delete request share a millisecond, the strict staleness guard can remove a project registered after the request."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_GatewayReset.cfg",
+    "expect": "OncePerInstance",
+    "group": "ablation",
+    "note": "Observation: an in-process offset reset after a 404 or 410 runs an unexpired request again in the same server instance."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_WitnessRun.cfg",
+    "expect": "NeverRun",
+    "group": "ablation",
+    "note": "Witness: a handler run is reachable, so R1 is not vacuous."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_WitnessRestart.cfg",
+    "expect": "NeverRestarted",
+    "group": "ablation",
+    "note": "Witness: an accepted restart is reachable, so R2 is not vacuous."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_RespondOnClaim.cfg",
+    "expect": "AcceptedImpliesWritten",
+    "group": "ablation",
+    "note": "Answering on the claim, before the write, sends an accepted reply for a write that never happens."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_WitnessWrite.cfg",
+    "expect": "NeverWritten",
+    "group": "ablation",
+    "note": "Witness: an applied write is reachable, so H1 is not vacuous."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_WitnessAccept.cfg",
+    "expect": "NeverAccepted",
+    "group": "ablation",
+    "note": "Witness: an accepted reply is reachable, so H2 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_NoReceiptClaim.cfg",
+    "expect": "OfferAtMostOnce",
+    "group": "ablation",
+    "note": "Without the receipt claim, a repeated delivery offers the turn again."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_ReceiptCrash.cfg",
+    "expect": "ReceiptImpliesOffer",
+    "group": "ablation",
+    "note": "Observation: a crash between the receipt claim and the offer leaves the receipt started and never offered."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_WitnessPrompt.cfg",
+    "expect": "NeverPrompted",
+    "group": "ablation",
+    "note": "Witness: a prompt is reachable, so X1 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_WitnessOffer.cfg",
+    "expect": "NeverOffered",
+    "group": "ablation",
+    "note": "Witness: an offer is reachable, so X2 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_WitnessSettle.cfg",
+    "expect": "NeverSettled",
+    "group": "ablation",
+    "note": "Witness: a settled start row is reachable, so X3 is not vacuous."
   }
 ]
