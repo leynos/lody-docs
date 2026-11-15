@@ -375,6 +375,27 @@ describe('generate-cloud-api schema conversion', () => {
     assert.equal(thing.required, undefined);
   });
 
+  it('resolves a record key qualified by an `import = require` binding', () => {
+    const thing = thingSchema('record-require', {
+      ...shadowingIndex,
+      'packages/shared/src/keys.ts': "export type Key = 'id';\n",
+      [THING]: "import keys = require('./keys');\nexport type Thing = Record<keys.Key, string>;\n",
+    });
+    assert.deepEqual(thing.required, ['id']);
+    assert.deepEqual(Object.keys(thing.properties), ['id']);
+  });
+
+  it('marks a record key qualified by a package `import = require` as unresolved', () => {
+    const thing = thingSchema('record-require-package', {
+      ...shadowingIndex,
+      [THING]:
+        "import keys = require('@lody/keys');\nexport type Thing = Record<keys.Key, string>;\n",
+    });
+    assert.equal(thing['x-unresolved'], true);
+    assert.equal(thing.additionalProperties, undefined);
+    assert.equal(thing.required, undefined);
+  });
+
   it('marks an ambiguous record-key alias as unresolved', () => {
     const thing = thingSchema('record-ambiguous', {
       ...shadowingIndex,

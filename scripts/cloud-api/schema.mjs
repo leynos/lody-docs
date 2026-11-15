@@ -67,8 +67,15 @@ const declaredIn = (sf, name) =>
  */
 function importOf(sf, name) {
   for (const statement of sf.statements) {
-    if (ts.isImportEqualsDeclaration(statement) && statement.name.text === name)
-      return { kind: 'require', specifier: undefined, name };
+    if (ts.isImportEqualsDeclaration(statement) && statement.name.text === name) {
+      const reference = statement.moduleReference;
+      // `import x = require('m')` names a module; `import x = A.B` does not.
+      const specifier =
+        ts.isExternalModuleReference(reference) && ts.isStringLiteral(reference.expression)
+          ? reference.expression.text
+          : undefined;
+      return { kind: 'require', specifier, name };
+    }
     if (!ts.isImportDeclaration(statement)) continue;
     const specifier = ts.isStringLiteral(statement.moduleSpecifier)
       ? statement.moduleSpecifier.text
@@ -420,18 +427,25 @@ export function createConverter(index, initialSchemas = {}) {
   }
   /**
    * The declarations a record key type reference can mean, null when it
-   * cannot be resolved safely, or undefined when it is a qualified name that is
-   * not reached through a namespace import (left as an open record).
+   * cannot be resolved safely, or undefined when it is a qualified name whose
+   * qualifier is not an import binding (left as an open record).
    * @param {ts.TypeReferenceNode} node
    */
   function keyDeclarations(node) {
     const sf = node.getSourceFile();
     const { typeName } = node;
     if (ts.isIdentifier(typeName)) return aliasDeclarations(sf, typeName.text);
-    if (!ts.isIdentifier(typeName.left)) return undefined;
-    const imported = importOf(sf, typeName.left.text);
-    if (imported?.kind !== 'namespace') return undefined;
-    // `ns.Key` with `import * as ns from '...'`: follow the module, or refuse.
+    /** @type {ts.EntityName} */
+    let first = typeName;
+    while (ts.isQualifiedName(first)) first = first.left;
+    const imported = importOf(sf, first.text);
+    if (!imported) return undefined;
+    // `m.Key` where `m` is `import * as m from './m'` or `import m = require('./m')`
+    // names an export of that module: follow it. Any other import-qualified
+    // name (a deeper path, or a default or named import used as a namespace)
+    // is refused rather than left as an open record.
+    if (typeName.left !== first || (imported.kind !== 'namespace' && imported.kind !== 'require'))
+      return null;
     const target = imported.specifier && resolveModule(sf.fileName, imported.specifier);
     return (target && exportedFrom(target, typeName.right.text, new Set())) || null;
   }

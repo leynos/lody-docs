@@ -297,6 +297,13 @@ describe('schema conversion', () => {
       },
     ],
   ];
+  followed.push([
+    'an `import = require` binding used as `m.Key`',
+    {
+      [KEYS]: "export type Key = 'id';\n",
+      [THING]: thingWith("import keys = require('./keys');", 'keys.Key'),
+    },
+  ]);
   for (const [name, sources] of followed)
     it(`follows ${name}`, () => {
       const { thing } = convertThing({ ...shadowed, ...sources });
@@ -332,12 +339,48 @@ describe('schema conversion', () => {
       },
     ],
   ];
+  refused.push(
+    [
+      'an `import = require` of a package used as `m.Key`',
+      { [THING]: thingWith("import keys = require('@lody/keys');", 'keys.Key') },
+    ],
+    [
+      'a default import used as a namespace',
+      {
+        [KEYS]: "export type Key = 'id';\nexport default {};\n",
+        [THING]: thingWith("import keys from './keys';", 'keys.Key'),
+      },
+    ],
+    [
+      'a named import used as a namespace',
+      {
+        [KEYS]: "export namespace keys { export type Key = 'id'; }\n",
+        [THING]: thingWith("import { keys } from './keys';", 'keys.Key'),
+      },
+    ],
+    [
+      'a deeper path through a namespace import',
+      {
+        [KEYS]: "export type Key = 'id';\n",
+        [THING]: thingWith("import * as keys from './keys';", 'keys.inner.Key'),
+      },
+    ],
+  );
   for (const [name, sources] of refused)
     it(`marks a record key from ${name} as unresolved`, () => {
       const { thing } = convertThing({ ...shadowed, ...sources });
       assert.equal(thing['x-unresolved'], true);
       assert.equal(thing.required, undefined);
     });
+
+  it('leaves a key qualified by a local namespace as an open record', () => {
+    const { thing } = convertThing({
+      ...shadowed,
+      [THING]: thingWith("namespace Local { export type Key = 'id'; }", 'Local.Key'),
+    });
+    assert.deepEqual(thing.additionalProperties, { type: 'string' });
+    assert.equal(thing['x-unresolved'], undefined);
+  });
 
   it('falls back to loaded declarations of an unimported name only when they agree', () => {
     const agree = convertThing({
