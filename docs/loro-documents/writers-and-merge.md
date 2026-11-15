@@ -81,13 +81,14 @@ metadata has no compare-and-swap, as the next section shows.
 ## Where merge behaviour matters
 
 For screen readers: the following sequence diagram shows the race that the
-turn history gate prevents. A client writes a user entry at the end of the
-history list in its own replica. Before that entry reaches the daemon, the
-daemon would write the agent's reply at the end of its own copy of the
+turn history gate guards against. A client writes a user entry at the end of
+the history list in its own replica. Before that entry reaches the daemon,
+the daemon would write the agent's reply at the end of its own copy of the
 list. Both insertions are at the same position and concurrent, so the merge
 may order the reply before the question on every device. With the gate, the
 daemon waits until the user entry is visible locally and then writes the
-reply after it.
+reply after it. If the entry has not arrived within 60 seconds, the gate
+opens anyway, and the reply may again sort before the question.
 
 ```mermaid
 sequenceDiagram
@@ -101,20 +102,25 @@ sequenceDiagram
     Note over C,D: Two concurrent inserts at one position.<br/>The reply may sort before the question, permanently.
     Note over D: With the gate
     D->>D: wait until the user entry is visible locally
-    C-->>D: user entry arrives
-    D->>D: append agent reply after the user entry
+    alt user entry arrives within 60 seconds
+        C-->>D: user entry arrives
+        D->>D: append agent reply after the user entry
+    else gate times out
+        D->>D: append agent reply at the end of history
+        Note over C,D: The race is possible again.
+    end
 ```
 
-_Figure 1: The concurrent list insertion that the turn history gate
-prevents._
+_Figure 1: The concurrent list insertion that the turn history gate guards
+against, within its 60-second bound._
 
 | Concern | Merge behaviour | What Lody does | Evidence |
 | ------- | --------------- | -------------- | -------- |
-| Order of a reply against its question | Concurrent inserts at one list position are ordered by a tie-break that neither writer controls | List writes for a turn wait until the user entry is visible locally, for up to 60 seconds; map-keyed metadata and status writes are not gated | [E-D165](evidence.md#e-d165), [E-D166](evidence.md#e-d166) |
+| Order of a reply against its question | Concurrent inserts at one list position are ordered by a tie-break that neither writer controls | List writes for a turn wait until the user entry is visible locally, for up to 60 seconds, after which the gate opens and misordering is possible again; map-keyed metadata and status writes are not gated | [E-D165](evidence.md#e-d165), [E-D166](evidence.md#e-d166) |
 | The same turn inserted twice | A list keeps both rows | Lookups scan from the end and take the newest row; `updateCopies` keeps every copy in step; export keeps every row | [E-D182](evidence.md#e-d182), [E-D185](evidence.md#e-d185) |
 | Reordering history | Lists have no atomic move | A whole-history write that would reorder rows is refused with `unsupported_reorder` | [E-D183](evidence.md#e-d183) |
 | Reordering the queue | A movable list moves an element without duplicating it | The queue is a movable list keyed by container identifier | [E-D243](evidence.md#e-d243) |
-| The same queue submission twice | A list would keep both | A push is de-duplicated by operation identifier; a differing row under the same identifier is an error | [E-D71](evidence.md#e-d71) |
+| The same queue submission twice | A list would keep both | A push is de-duplicated by operation identifier, taken from `operationId` or derived from `userTurnId`, against rows already present locally; a push with neither is not de-duplicated. Under the same identifier, a row that differs in turn, user, task, session configuration, or project is an error; other fields, such as `e2eeIntent`, are not compared | [E-D71](evidence.md#e-d71) |
 | A newer client adds a root | A strict mirror rejects the whole state, and the older client can never write again | Every mirror over a synchronized document ignores unknown properties | [E-D242](evidence.md#e-d242), [E-D248](evidence.md#e-d248) |
 | Two halves of one value merging | Map fields merge independently | Values that must not be split are stored as one string or one plain value | [E-D222](evidence.md#e-d222) |
 | A pointer rewritten from a stale read | Metadata has no compare-and-swap | A settled turn is recorded in its own field beside the producer's pointer | [E-D239](evidence.md#e-d239) |
@@ -135,9 +141,10 @@ Further rules that follow from the same concerns:
   and importing the export would skip the upload, copy the whole document,
   and add a permanent peer (**Intent**; [E-D250](evidence.md#e-d250)).
 - **No atomicity across roots or documents.** History and the queue are
-  different roots, so the human input receipt is the recovery point between
-  those writes; a notification is published best-effort across independently
-  synchronized documents (**Intent**; [E-D63](evidence.md#e-d63),
+  different roots, so the queue promotion receipt in the session metadata's
+  `queuePromotionLedger` is the recovery point between those writes; a
+  notification is published best-effort across independently synchronized
+  documents (**Intent**; [E-D63](evidence.md#e-d63),
   [E-D67](evidence.md#e-d67)).
 - **No secrets in the shared runtime configuration.** The patch boundary
   removes every option identifier that looks sensitive, whatever an upstream

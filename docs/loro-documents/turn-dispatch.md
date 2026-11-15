@@ -4,8 +4,11 @@ This page follows a user's turn from a client to a running agent by the
 _durable_ route: the client writes replicated state, and the owning daemon finds
 it. The remote procedure call (RPC) that accelerates the same turn is described
 in the [method reference](../lody-streams-rpc/methods.md#turn-dispatch); it is
-only an accelerator, and the durable route is what guarantees that a turn is
-eventually seen.
+only an accelerator, and the durable route is what lets the daemon find a turn
+without it. Discovery is eventual only while something prompts the daemon to
+look again: if a reconciliation throws, no retry is scheduled for that session,
+and the turn waits for the next rescan or metadata event (see
+[Recovery](#recovery)).
 
 Turns arrive by being written into the session document. The older message
 bus is deprecated (**Intent**; [E-D126](evidence.md#e-d126)).

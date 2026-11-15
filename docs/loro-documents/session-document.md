@@ -176,8 +176,9 @@ Whether a session has work waiting is decided from metadata alone
 ([E-D240](evidence.md#e-d240)). A turn is
 pending when one of these holds, in order:
 
-1. `processingUserMsgId` is set.
-2. `latestUserMsgId` differs from `lastHandledUserMsgId`.
+1. `processingUserMsgId` is a non-empty string.
+2. `latestUserMsgId` is a non-empty string that differs from
+   `lastHandledUserMsgId`.
 3. A steering turn has status `pending`.
 
 In each case a turn is excluded if it was acknowledged as having no history,

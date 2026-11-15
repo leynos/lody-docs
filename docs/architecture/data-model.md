@@ -5,6 +5,10 @@ each piece lives, who may write it, and how identifiers join the stores. It
 is the companion to the [architecture overview](README.md) and, like it,
 links into the detailed sets instead of repeating their schemas.
 
+It describes Lody at commit
+[`61bd9701a`](https://github.com/LodyAI/Lody/tree/61bd9701a5ed6899a9f42787df682acfc3fd7d4b),
+from the public source.
+
 The cloud backend is private. Where this page says that the cloud holds
 something, that is an inference from the calls the clients make, and it is
 marked **Infer**.
@@ -50,10 +54,13 @@ _Table 2: Where the authoritative copy of each kind of state lives._
 
 Two consequences are worth stating plainly.
 
-- **A session's content is not in the cloud database.** The cloud relays
-  the streams that carry it and authorizes access to them. This is why the
-  cloud API's operations cover control, and why the conversation model is in
-  the [Loro](../loro-documents/README.md) set.
+- **A session's content travels in the replicated documents, not through
+  the cloud API.** The cloud relays the streams that carry it and authorizes
+  access to them. This is why the cloud API's operations cover control, and
+  why the conversation model is in the [Loro](../loro-documents/README.md)
+  set. That the cloud database does not also store the content is an
+  inference from the client calls; whether the private backend keeps a copy
+  of what it relays is not established (**Infer**).
 - **A machine's execution state is not replicated.** The record that a turn
   was started is a local journal entry. Other replicas see only its effects
   in the session document and metadata.
@@ -231,8 +238,8 @@ boundary.
 
 | Write | Accepted when | Reaches others when | Described in |
 | ----- | ------------- | ------------------- | ------------ |
-| Document or metadata change | It is a local commit | The replica's transport uploads it | [Persistence and synchronization](../loro-documents/persistence-and-sync.md#storage) |
-| Flock row by the daemon | It is flushed locally | The sync coordinator uploads it, retrying until confirmed | [Sync coordinator](../flock-protocol/sync-coordinator.md#the-write-path) |
+| Document or metadata change | It is a local commit | The replica's transport uploads it upstream; other replicas receive it when they next synchronize | [Persistence and synchronization](../loro-documents/persistence-and-sync.md#storage) |
+| Flock row by the daemon | It is flushed locally | The sync coordinator uploads it upstream, retrying until confirmed; other replicas receive it when they next synchronize | [Sync coordinator](../flock-protocol/sync-coordinator.md#the-write-path) |
 | RPC request | It is appended to the request stream | The daemon reads the stream | [Request lifecycle](../lody-streams-rpc/protocol.md#request-lifecycle-and-acknowledgements) |
 | Cloud function call | The cloud answers | Immediately, for callers of the cloud | [Errors, retries and pagination](../cloud-api/README.md#errors-retries-and-pagination) |
 | Local claim | The SQLite transaction commits | Never; it is local | [Turn dispatch](../loro-documents/turn-dispatch.md#what-stops-a-turn-starting-twice) |

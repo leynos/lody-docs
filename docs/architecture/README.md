@@ -407,7 +407,7 @@ _Table 8: Where each step of a turn is documented._
 | Credential | Held by | Presented to | Grants |
 | ---------- | ------- | ------------ | ------ |
 | CLI API key | The worker, in `credentials.json` | Cloud functions and routes | Everything the daemon asks of the cloud |
-| Streams token | The worker, in memory | The Streams gateway | Read and append on a workspace's streams |
+| Streams token | The worker, in memory | The Streams gateway | Used to read and append on a workspace's streams; its granted scope is not established (**Infer**) |
 | Purpose-bound proof | A client, briefly | The worker, which has the cloud verify it | One operation, such as a history read or a restart |
 | Local token | The worker; published in the run file | The worker's local sockets | Local control of the daemon |
 | Supervisor token | The host and the worker | Each other, over the process channel | Shutdown and upgrade control |
@@ -425,9 +425,12 @@ Three boundaries follow from the table.
 - **The cloud is the authority on membership and access, and only that.**
   The daemon asks the cloud whether a user may use a machine. It does not
   ask the cloud what a session contains; that is replicated state.
-- **A Streams token is the write boundary of the data plane.** Any replica
-  with a token for a workspace can append to its streams. Within that
-  boundary, who writes which row or field is a convention, as the
+- **A Streams token is, by inference, the write boundary of the data
+  plane.** The clients use a workspace's token both to read and to append to
+  its streams, so any replica holding one is presumed able to append
+  (**Infer**). The token's scope and the gateway's enforcement are not
+  established. Within that boundary, who writes which row or field is a
+  convention, as the
   [Flock](../flock-protocol/observations.md#o6-ownership-is-a-convention) and
   [Loro](../loro-documents/writers-and-merge.md#who-writes-what) sets each
   record. The RPC envelope likewise

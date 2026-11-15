@@ -492,9 +492,11 @@ shutdown ([E-A37](#e-a37), [E-A38](#e-a38)).
 
 Before exiting, the CLI deletes the credential file, but only if the file
 still holds the rejected key. Another process may have signed in again in
-the meantime, and its key must survive (**Test** "does not delete credentials
-that were rotated after this process started"; [E-A39](#e-a39),
-[E-A47](#e-a47)).
+the meantime, and the check is meant to let its key survive (**Test** "does
+not delete credentials that were rotated after this process started";
+[E-A39](#e-a39), [E-A47](#e-a47)). The check is not atomic: the file is read
+and then unlinked in a separate step, so a sign-in that replaces the file
+between the two deletes the new key.
 
 | Clean-up result | Managed by the desktop application | Exit code | Meaning |
 | --------------- | ---------------------------------- | --------- | ------- |

@@ -45,14 +45,21 @@ _Table 1: Kinds of presence record._
 
 Sources: [E-D199](evidence.md#e-d199), [E-D204](evidence.md#e-d204).
 
+Each component of a key is encoded with `encodeURIComponent`, so a user
+identifier such as `local:abc` appears in the key as `local%3Aabc`
+([E-D204](evidence.md#e-d204)).
+
 - **A session record never says `idle`.** Its status is `running`,
   `requestPermission`, or `initializing`, with an optional stage and detail;
   an idle session has no record ([E-D201](evidence.md#e-d201),
   [E-D79](evidence.md#e-d79)).
-- **Fields are bounded.** The only free text is `detail`, limited to 280
-  characters ([E-D198](evidence.md#e-d198)). In an
-  encrypted workspace a minimal schema is used: identifiers must have fixed
-  shapes, and `detail` is dropped ([E-D203](evidence.md#e-d203)).
+- **Only some fields are bounded.** The only free text is `detail`, limited
+  to 280 characters ([E-D198](evidence.md#e-d198)). The ordinary schema
+  requires identifiers such as `userId`, `sessionId`, `machineId`, and
+  `instanceId` only to be non-empty strings, with no maximum length
+  ([E-D260](evidence.md#e-d260)). In an encrypted workspace a minimal schema
+  is used: identifiers must have fixed shapes, and `detail` is dropped
+  ([E-D203](evidence.md#e-d203)).
 - **Invalid entries are skipped**, one key at a time, when presence is read
   ([E-D206](evidence.md#e-d206)).
 - **Viewing records** let the owning machine's pull request poller schedule

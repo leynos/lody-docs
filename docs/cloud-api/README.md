@@ -576,8 +576,10 @@ Removed generations are terminal; re-admission creates a new resource
 generation. Storage acknowledgements do not substitute for verifying the
 returned encrypted original.
 
-Recovery-vault operations store opaque ciphertext and CAS the index. The backend
-does not decrypt it or establish an active Recovery device. Epoch staging
+Recovery-vault operations store opaque ciphertext and CAS the index. The client
+submits only ciphertext; whether the hosted backend can decrypt it is not
+established, because the backend was not inspected. Storing it does not
+establish an active Recovery device. Epoch staging
 likewise stores encrypted originals without creating a new ledger commit point.
 These boundaries explain the cloud contract; cryptographic formats and document
 usage belong in their owning documentation.
