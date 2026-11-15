@@ -1,9 +1,11 @@
 # Writers and merge behaviour
 
-Loro merges concurrent edits automatically, and each container type merges
-in its own way. This page describes which component may write which part of
-a session, and the places where Lody depends on a particular merge outcome
-or defends against one.
+This page describes which component may write which part of a session, and
+the places where Lody depends on a particular merge outcome or defends
+against one. The merge behaviour it describes is what Lody's own code and
+comments rely on, cited at each point; the Loro library's merge rules were
+not read for this study (**Intent** where a statement rests only on a Lody
+comment).
 
 ## The components
 
