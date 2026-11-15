@@ -10,10 +10,13 @@
  * Paths are relative to the working directory, which must be the repository
  * root. The checkout must be at the pinned revision; no source file the
  * generator reads may be modified, staged, untracked or ignored, and no file it
- * would index at that revision may be deleted or renamed. Tracked inputs are
- * also compared blob by blob with that revision, and the assume-unchanged and
- * skip-worktree flags are refused, so that git status cannot be bypassed. Each
- * generated link then cites what that commit contains.
+ * would index at that revision may be deleted or renamed. Beyond git status,
+ * the exact bytes the generator reads from each file are compared with that
+ * file's blob at the pinned revision, hashed here without any Git filter or
+ * line-ending conversion, so a file that a clean filter, `eol` or `ident`
+ * setting makes look unchanged is still refused. Symbolic links, files absent
+ * from that revision, and the assume-unchanged and skip-worktree flags are
+ * refused too. Each generated link then cites what that commit contains.
  *
  * Outputs: `docs/cloud-api/openapi.yaml`, `routes.md`, `operations.md` and the
  * source manifest `sources.json` (revision, operation counts, unresolved types,
@@ -41,7 +44,18 @@ const unresolved = new Map();
 const schemas = {};
 const ref = (name) => ({ $ref: `#/components/schemas/${name}` });
 /** @param {string} file */
-const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const sha256 = (file) => crypto.createHash('sha256').update(readSource(file)).digest('hex');
+/** The bytes of every source file read, kept so that the bytes verified against
+ * the pinned revision are the bytes that were parsed and hashed. */
+const contents = new Map();
+/** @param {string} file @returns {Buffer} */
+function readSource(file) {
+  if (!contents.has(file)) contents.set(file, fs.readFileSync(file));
+  return contents.get(file);
+}
+/** Git's object id for a blob with these exact bytes. @param {Buffer} bytes */
+const blobId = (bytes) =>
+  crypto.createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 const location = (node) => {
   const sf = node.getSourceFile();
   const line = sf.getLineAndCharacterOfPosition(node.getStart()).line + 1;
@@ -61,7 +75,8 @@ function stringLiteral(node) {
 }
 function load(file) {
   if (files.has(file)) return files.get(file);
-  const sf = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+  const text = readSource(file).toString('utf8');
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   files.set(file, sf);
   for (const node of sf.statements) {
     if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) {
@@ -684,8 +699,10 @@ for (let i = 0; i < status.length; i++) {
   if (paths.some(indexed)) modified.push(paths.length > 1 ? `${entry} <- ${paths[1]}` : entry);
 }
 // Git status trusts the index, and the assume-unchanged and skip-worktree flags
-// hide a tracked file's edits from it. So reject those flags, and compare each
-// tracked input's working-tree content with its blob at the pinned revision.
+// hide a tracked file's edits from it; filters and line-ending conversion can
+// also make changed bytes look clean to Git. So reject those flags, and compare
+// the exact bytes read with the pinned blobs, computing blob ids here rather
+// than through Git, so that no filter or conversion is applied.
 const scope = ['--', ...indexRoots, ...read];
 const git = (/** @type {string[]} */ args, input = '') =>
   execFileSync('git', ['--literal-pathspecs', '-C', root, ...args], { encoding: 'utf8', input });
@@ -694,32 +711,30 @@ for (const entry of git(['ls-files', '-v', '-z', ...scope]).split('\0')) {
   if (entry && indexed(file) && (tag === 'S' || tag !== tag.toUpperCase()))
     modified.push(`${tag} ${file} (assume-unchanged or skip-worktree)`);
 }
-const pinned = git(['ls-tree', '-r', '-z', revision, ...scope])
-  .split('\0')
-  .map((entry) => entry.match(/^(\d+) blob ([0-9a-f]+)\t(.*)$/s))
-  .filter((match) => match !== null && indexed(match[3]))
-  .map(([, mode, blob, file]) => ({ link: mode === '120000', blob, file }));
-const present = [];
-for (const entry of pinned) {
-  if (fs.lstatSync(path.join(root, entry.file), { throwIfNoEntry: false })) present.push(entry);
-  else modified.push(`${entry.file} (missing from the working tree)`);
+const pinned = new Map(
+  git(['ls-tree', '-r', '-z', revision, ...scope])
+    .split('\0')
+    .map((entry) => entry.match(/^(\d+) (\w+) ([0-9a-f]+)\t(.*)$/s))
+    .filter((match) => match !== null && indexed(match[4]))
+    .map(([, mode, type, blob, file]) => [file, { mode, type, blob }]),
+);
+const realRoot = fs.realpathSync(root);
+const checked = new Set(read);
+for (const file of pinned.keys())
+  if (fs.lstatSync(path.join(root, file), { throwIfNoEntry: false })) checked.add(file);
+  else modified.push(`${file} (missing from the working tree)`);
+for (const file of [...checked].sort()) {
+  const entry = pinned.get(file);
+  const absolute = path.join(root, file);
+  if (entry?.type !== 'blob') modified.push(`${file} (not a file at ${revision})`);
+  else if (entry.mode === '120000' || path.relative(realRoot, fs.realpathSync(absolute)) !== file)
+    // The generator would read the bytes behind the link, not the link itself.
+    modified.push(`${file} (symbolic link, refused)`);
+  else if (blobId(readSource(absolute)) !== entry.blob)
+    modified.push(
+      `${file} (bytes read differ from ${revision}; filters and line-ending conversion are not applied)`,
+    );
 }
-// Git hashes a file through its clean filters, and a symbolic link by its target.
-const regular = present.filter((entry) => !entry.link);
-const hashes = regular.length
-  ? git(['hash-object', '--stdin-paths'], regular.map((entry) => `${entry.file}\n`).join(''))
-      .trimEnd()
-      .split('\n')
-  : [];
-const actual = new Map(regular.map((entry, i) => [entry, hashes[i]]));
-for (const entry of present.filter((e) => e.link)) {
-  const target = Buffer.from(fs.readlinkSync(path.join(root, entry.file)));
-  const header = Buffer.from(`blob ${target.length}\0`);
-  actual.set(entry, crypto.createHash('sha1').update(header).update(target).digest('hex'));
-}
-for (const entry of present)
-  if (actual.get(entry) !== entry.blob)
-    modified.push(`${entry.file} (content differs from ${revision})`);
 if (modified.length)
   throw Error(
     `Source files differ from ${revision} in ${root}:\n${[...new Set(modified)].join('\n')}`,

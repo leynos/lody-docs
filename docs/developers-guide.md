@@ -88,8 +88,9 @@ service.
 The generator needs a Lody checkout. The `Makefile` looks for one at `../Lody`
 and then `../../Lody`; set `LODY_SOURCE` to use another path. The manifest
 records one digest over every indexed source file and a hash of each file that
-shapes the output or is cited. Generation compares every tracked input with its
-content at the pinned commit, and refuses a checkout with modified, staged,
+shapes the output or is cited. Generation compares the exact bytes it reads with
+the pinned commit's blobs, with no Git filters or line-ending conversion
+applied, refuses symbolic links, and refuses a checkout with modified, staged,
 deleted, renamed, untracked, or ignored source files, files flagged
 `assume-unchanged` or `skip-worktree`, or a checkout at another commit, so
 `make cloud-api-check` passes only against the pinned commit,

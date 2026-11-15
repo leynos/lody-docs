@@ -27,6 +27,9 @@ const TEMPLATE_TYPE = `\`ERR_\${string}\``;
 
 /** A schema bound read by `numberValue()` from a file other than the schema's. */
 const LIMITS = 'packages/shared/src/limits.ts';
+/** The failure for bytes that differ from the pinned blob, whatever Git thinks. */
+const BYTES_DIFFER =
+  /packages\/shared\/src\/limits\.ts \(bytes read differ from [0-9a-f]{40}; filters and line-ending conversion are not applied\)/;
 /** The file that declares the `Thing` result type. */
 const THING = 'packages/shared/src/thing.ts';
 const SOURCES = {
@@ -211,6 +214,48 @@ describe('generate-cloud-api source verification', () => {
     assertNothingWritten(f);
   });
 
+  it('rejects an edit to a cross-file variable that a clean filter hides', () => {
+    const f = fixture('clean-filter');
+    git(f.lody, 'config', 'filter.pin.clean', 'sed s/65/64/');
+    fs.writeFileSync(path.join(f.lody, '.git/info/attributes'), `${LIMITS} filter=pin\n`);
+    fs.writeFileSync(path.join(f.lody, LIMITS), 'export const MAX_NAME = 65;\n');
+    assert.equal(git(f.lody, 'status', '--porcelain'), '');
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, BYTES_DIFFER);
+    assertNothingWritten(f);
+  });
+
+  it('rejects a source file whose line endings differ from the pinned blob', () => {
+    const f = fixture('crlf');
+    fs.writeFileSync(path.join(f.lody, '.git/info/attributes'), `${LIMITS} text eol=crlf\n`);
+    fs.writeFileSync(path.join(f.lody, LIMITS), 'export const MAX_NAME = 64;\r\n');
+    // Staging refreshes the index; the blob stays the pinned one, as after a
+    // checkout that converts line endings.
+    git(f.lody, 'add', LIMITS);
+    assert.equal(git(f.lody, 'status', '--porcelain'), '');
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, BYTES_DIFFER);
+    assertNothingWritten(f);
+  });
+
+  it('refuses an indexed source file that is a symbolic link', () => {
+    const f = fixture('symlink', { 'packages/shared/src/limits.txt': SOURCES[LIMITS] });
+    fs.rmSync(path.join(f.lody, LIMITS));
+    fs.symlinkSync('limits.txt', path.join(f.lody, LIMITS));
+    git(f.lody, 'add', LIMITS);
+    git(f.lody, 'commit', '--quiet', '--no-verify', '-m', 'link');
+    const http = path.join(f.docs, 'http.json');
+    const document = JSON.parse(fs.readFileSync(http, 'utf8'));
+    document['x-source-revision'] = git(f.lody, 'rev-parse', 'HEAD');
+    fs.writeFileSync(http, JSON.stringify(document));
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /packages\/shared\/src\/limits\.ts \(symbolic link, refused\)/);
+    assertNothingWritten(f);
+  });
+
   for (const flag of ['--assume-unchanged', '--skip-worktree'])
     it(`rejects an edit to a cross-file variable hidden by ${flag}`, () => {
       const f = fixture(`flag${flag}`);
@@ -223,10 +268,7 @@ describe('generate-cloud-api source verification', () => {
         result.stderr,
         /packages\/shared\/src\/limits\.ts \(assume-unchanged or skip-worktree\)/,
       );
-      assert.match(
-        result.stderr,
-        /packages\/shared\/src\/limits\.ts \(content differs from [0-9a-f]{40}\)/,
-      );
+      assert.match(result.stderr, BYTES_DIFFER);
       assertNothingWritten(f);
     });
 
