@@ -13,9 +13,15 @@
  * `schema-zod.mjs` or `schema-effect.mjs`. Anything else becomes an
  * `x-unresolved` schema rather than a guess.
  */
+import { isDeepStrictEqual } from 'node:util';
 import ts from 'typescript';
 import { comment, ownProperty, propertiesFrom, propertyName, ref } from './schema-context.mjs';
 import { entityParts } from './schema-scope.mjs';
+import { importedFrom } from './schema-zod.mjs';
+
+/** Whether a declaration is a kind the converter expands. @param {ts.Node} decl */
+export const expandable = (decl) =>
+  ts.isTypeAliasDeclaration(decl) || ts.isInterfaceDeclaration(decl);
 import {
   createUtilities,
   flatten,
@@ -59,7 +65,7 @@ export function createTypeConverter(ctx) {
    * @param {ts.Node} node the reference
    */
   function named(name, node) {
-    return namedFrom(ctx.declarationsOf(node.getSourceFile(), name.split('.')), node);
+    return namedFrom(ctx.declarationsOf(node, name.split('.')), node);
   }
 
   /**
@@ -71,6 +77,11 @@ export function createTypeConverter(ctx) {
       return opaque(node, 'Definition is outside the indexed public DTO sources.');
     if (decls.length > 1) return opaque(node, 'Type name has more than one declaration in scope.');
     const [decl] = decls;
+    if (!expandable(decl))
+      return opaque(
+        node,
+        'Only type aliases and interfaces are expanded; this name is another kind.',
+      );
     if (decl.typeParameters?.length) return opaque(node, 'Generic type requires explicit review.');
     const key = componentName(decl);
     if (schemas[key]) return ref(key);
@@ -97,8 +108,9 @@ export function createTypeConverter(ctx) {
    */
   function baseSchema(base) {
     const parts = !base.typeArguments && entityParts(base.expression);
-    const decls = parts ? ctx.declarationsOf(base.getSourceFile(), parts) : null;
-    if (decls?.length !== 1 || decls[0].typeParameters?.length) return undefined;
+    const decls = parts ? ctx.declarationsOf(base, parts) : null;
+    if (decls?.length !== 1 || !expandable(decls[0]) || decls[0].typeParameters?.length)
+      return undefined;
     const [decl] = decls;
     if (!bases.has(decl)) {
       bases.set(decl, {}); // Break recursion: an inheritance cycle stays unresolved.
@@ -129,16 +141,29 @@ export function createTypeConverter(ctx) {
     const properties = new Map();
     /** @type {string[]} */
     const required = [];
-    let additionalProperties;
+    /** @type {any[]} */
+    const signatures = [];
     for (const base of heritage) {
       const schema = baseSchema(base);
       if (!isPlainObject(schema, true))
         return opaque(base, 'Inherited interface could not be expanded.');
-      for (const [key, value] of Object.entries(schema.properties ?? {}))
-        properties.set(key, value);
+      // A property two bases both declare must satisfy both.
+      for (const [key, value] of Object.entries(schema.properties ?? {})) {
+        const earlier = properties.get(key);
+        properties.set(
+          key,
+          properties.has(key) && !isDeepStrictEqual(earlier, value)
+            ? { allOf: [earlier, value] }
+            : value,
+        );
+      }
       required.push(...(schema.required ?? []));
-      additionalProperties ??= schema.additionalProperties;
+      if (schema.additionalProperties !== undefined) signatures.push(schema.additionalProperties);
     }
+    // Index signatures of several bases are kept only when they all agree.
+    if (signatures.some((other) => !isDeepStrictEqual(other, signatures[0])))
+      return opaque(decl.name, 'Inherited index signatures differ.');
+    let additionalProperties = signatures[0];
     // A member the interface redeclares narrows the inherited one.
     for (const [key, value] of Object.entries(own.properties)) properties.set(key, value);
     required.push(...(own.required ?? []));
@@ -311,6 +336,11 @@ export function createTypeConverter(ctx) {
   function reference(node) {
     const name = node.typeName.getText(),
       args = node.typeArguments ?? [];
+    const head = name.split('.')[0];
+    // A built-in or library name means the built-in only where the module
+    // does not bind it itself; `z` must be Zod's.
+    if (head === 'z' ? !importedFrom(node, 'z', /^zod(\/|$)/) : ctx.isBound(node, head))
+      return named(name, node);
     if (['Array', 'ReadonlyArray'].includes(name))
       return { type: 'array', items: convert(args[0]) };
     if (name === 'Record') {

@@ -1,126 +1,42 @@
 /**
  * Module-scoped name resolution for the schema converters.
  *
- * Every name a converter meets is resolved in the module that contains the
- * reference, never by a global first-indexed lookup. `createScope` returns
- * `declarationsOf(sf, parts, space)`, which finds what a type name
- * (`space: 'type'`, aliases and interfaces) or a value name (`'value'`,
- * variable declarations) used in a module means:
+ * Every name a converter meets is resolved where the reference stands, never
+ * by a global first-indexed lookup. `createScope` returns
+ * `declarationsOf(at, parts, space)`, which finds what a type name
+ * (`space: 'type'`) or a value name (`'value'`) used at a node means:
  *
- * 1. a declaration in that module;
- * 2. else what an import of any form (named, renamed, default, namespace or
+ * 1. an enclosing scope (`schema-bindings.mjs`): a type parameter or function
+ *    parameter (refused: never resolved further), or a declaration in an
+ *    enclosing namespace body or block;
+ * 2. a declaration in the module, of any kind that occupies the space
+ *    (alias, interface, class, enum, namespace, variable, function,
+ *    destructured name, `declare` forms); converters expand only aliases,
+ *    interfaces and variables and refuse the rest;
+ * 3. else what an import of any form (named, renamed, default, namespace or
  *    `import = require`) reaches through relative modules, the workspace
  *    packages that are indexed (`@lody/<name>`, laid out as
  *    `packages/<name>/src`, as every `exports` map at the pinned commit is),
  *    and their named, renamed, default and star re-exports; null when it
  *    cannot be followed;
- * 3. else, for a name neither declared nor imported, every indexed
- *    declaration of it. Callers accept that only when there is one, or, for
- *    a key set, when all agree.
+ * 4. else, for a name bound nowhere in the module, every indexed top-level
+ *    declaration of it, of any kind. Callers accept that only when there is
+ *    one, or, for a key set, when all agree.
  *
- * `Q.Name` resolves through a local namespace or a namespace or `require`
- * import; any other qualifier, and any deeper path, is refused.
- * `importTypeDeclarations` resolves `import('m').Name`.
+ * `Q.Name` resolves through an enclosing or local namespace or a namespace or
+ * `require` import; any other qualifier, and any deeper path, is refused.
+ * `importTypeDeclarations` resolves `import('m').Name`, and `isBound` says
+ * whether a module binds a name itself (so a built-in name is not taken as
+ * the built-in).
  */
 import path from 'node:path';
 import ts from 'typescript';
 import { INDEX_ROOTS } from './source-index.mjs';
+import { declaredIn, enclosing, entityParts, importOf, isExported } from './schema-bindings.mjs';
 
-/** @typedef {ts.TypeAliasDeclaration | ts.InterfaceDeclaration} TypeDeclaration */
-/** @typedef {'type' | 'value'} Space */
+export { entityParts, importOf } from './schema-bindings.mjs';
 
-/** @param {ts.Node} node */
-const isExported = (node) => {
-  const holder = ts.isVariableDeclaration(node) ? node.parent.parent : node;
-  return (
-    /** @type {any} */ (holder).modifiers?.some(
-      (/** @type {ts.Node} */ m) => m.kind === ts.SyntaxKind.ExportKeyword,
-    ) ?? false
-  );
-};
-
-/**
- * The declarations of a name among statements, in one space.
- * @param {readonly ts.Statement[]} statements
- * @param {string} name
- * @param {Space} space
- * @returns {any[]}
- */
-function declaredIn(statements, name, space) {
-  if (space === 'type')
-    return statements.filter(
-      (s) => (ts.isTypeAliasDeclaration(s) || ts.isInterfaceDeclaration(s)) && s.name.text === name,
-    );
-  return statements.flatMap((s) =>
-    ts.isVariableStatement(s)
-      ? s.declarationList.declarations.filter(
-          (v) => ts.isIdentifier(v.name) && v.name.text === name,
-        )
-      : [],
-  );
-}
-
-/**
- * @typedef {object} ImportBinding
- * @property {'named' | 'default' | 'namespace' | 'require'} kind
- * @property {string | undefined} specifier the module specifier, if a string literal
- * @property {string} name the exported name the binding refers to
- */
-
-/**
- * The import that binds a name in a module, if any, whatever its form.
- * @param {ts.SourceFile} sf
- * @param {string} name
- * @returns {ImportBinding | undefined}
- */
-export function importOf(sf, name) {
-  for (const statement of sf.statements) {
-    if (ts.isImportEqualsDeclaration(statement) && statement.name.text === name) {
-      const reference = statement.moduleReference;
-      // `import x = require('m')` names a module; `import x = A.B` does not.
-      const specifier =
-        ts.isExternalModuleReference(reference) && ts.isStringLiteral(reference.expression)
-          ? reference.expression.text
-          : undefined;
-      return { kind: 'require', specifier, name };
-    }
-    if (!ts.isImportDeclaration(statement)) continue;
-    const specifier = ts.isStringLiteral(statement.moduleSpecifier)
-      ? statement.moduleSpecifier.text
-      : undefined;
-    const clause = statement.importClause;
-    if (clause?.name?.text === name) return { kind: 'default', specifier, name: 'default' };
-    const bindings = clause?.namedBindings;
-    if (!bindings) continue;
-    if (ts.isNamespaceImport(bindings)) {
-      if (bindings.name.text === name) return { kind: 'namespace', specifier, name };
-      continue;
-    }
-    const element = bindings.elements.find((e) => e.name.text === name);
-    if (element)
-      return { kind: 'named', specifier, name: (element.propertyName ?? element.name).text };
-  }
-  return undefined;
-}
-
-/**
- * The identifiers of an entity name or a property-access expression of
- * identifiers (`Base`, `ns.Base`), or undefined for anything else.
- * @param {ts.Node} node
- * @returns {string[] | undefined}
- */
-export function entityParts(node) {
-  if (ts.isIdentifier(node)) return [node.text];
-  if (ts.isQualifiedName(node)) {
-    const left = entityParts(node.left);
-    return left && [...left, node.right.text];
-  }
-  if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.name)) {
-    const left = entityParts(node.expression);
-    return left && [...left, node.name.text];
-  }
-  return undefined;
-}
+/** @typedef {import('./schema-bindings.mjs').Space} Space */
 
 /**
  * Create the scope resolver of a conversion.
@@ -149,15 +65,20 @@ export function createScope(ctx) {
     );
   }
   /**
-   * The declarations a name used in a module can mean, or null when it cannot
-   * be resolved safely.
-   * @param {ts.SourceFile} sf
+   * The declarations a name used at a node can mean, or null when it cannot
+   * be resolved safely: enclosing scopes first (type parameters, namespace
+   * bodies), then the module, then its imports, then, for a name bound
+   * nowhere in the module, every indexed declaration of it.
+   * @param {ts.Node} at the reference
    * @param {string[]} parts
    * @param {Space} [space]
    * @returns {any[] | null}
    */
-  function declarationsOf(sf, parts, space = 'type') {
+  function declarationsOf(at, parts, space = 'type') {
+    const sf = at.getSourceFile();
     if (parts.length === 1) {
+      const scoped = enclosing(at, parts[0], space);
+      if (scoped !== undefined) return scoped;
       const bound = bindingIn(sf, parts[0], new Set(), space);
       if (bound !== undefined) return bound;
       const all =
@@ -168,6 +89,18 @@ export function createScope(ctx) {
     }
     if (parts.length !== 2) return null;
     const [qualifier, name] = parts;
+    const scoped = enclosing(at, qualifier, 'type');
+    if (scoped !== undefined) {
+      // Only an enclosing namespace's own namespace member is followed.
+      const blocks = (scoped ?? []).filter(
+        (d) => ts.isModuleDeclaration(d) && d.body && ts.isModuleBlock(d.body),
+      );
+      if (space !== 'type' || !blocks.length || blocks.length !== scoped?.length) return null;
+      const members = blocks.flatMap((d) =>
+        declaredIn(d.body.statements, name, 'type').filter(isExported),
+      );
+      return members.length ? members : null;
+    }
     const imported = importOf(sf, qualifier);
     if (!imported) {
       if (space !== 'type') return null;
@@ -176,6 +109,21 @@ export function createScope(ctx) {
     }
     if (imported.kind !== 'namespace' && imported.kind !== 'require') return null;
     return followModule(sf.fileName, imported.specifier, name, new Set(), space);
+  }
+  /**
+   * Whether a name used at a node is bound in its module: by an enclosing
+   * scope, a declaration of any kind, or an import.
+   * @param {ts.Node} at
+   * @param {string} name
+   * @param {Space} [space]
+   */
+  function isBound(at, name, space = 'type') {
+    const sf = at.getSourceFile();
+    return (
+      enclosing(at, name, space) !== undefined ||
+      declaredIn(sf.statements, name, space).length > 0 ||
+      importOf(sf, name) !== undefined
+    );
   }
   /**
    * The declarations `import('m').Name` means, or null.
@@ -287,5 +235,5 @@ export function createScope(ctx) {
     if (found.length) return found.flat();
     return stars.includes(null) ? null : undefined;
   }
-  return { declarationsOf, importTypeDeclarations };
+  return { declarationsOf, importTypeDeclarations, isBound };
 }

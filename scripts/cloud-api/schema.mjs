@@ -32,6 +32,7 @@ export function createConverter(index, initialSchemas = {}) {
   const scope = createScope(ctx);
   ctx.declarationsOf = scope.declarationsOf;
   ctx.importTypeDeclarations = scope.importTypeDeclarations;
+  ctx.isBound = scope.isBound;
   const keys = createKeyResolver(ctx);
   ctx.literalKeys = keys.literalKeys;
   ctx.propertyKeys = keys.propertyKeys;

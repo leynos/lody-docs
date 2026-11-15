@@ -68,11 +68,28 @@ describe('keyof over intersections', () => {
     }
   });
 
+  it('refuses a three-part intersection whose parts conflict in any pair', () => {
+    for (const type of [
+      "{ kind: string } & { kind: 'a' } & { kind: 'b' }",
+      "{ kind: 'a' } & { kind: string } & { kind: 'b' }",
+      "{ kind: 'a' } & { kind: 'b' } & { kind: string }",
+      'A & B & C',
+      'C & A & B',
+    ]) {
+      const { schema, reasons } = unresolvedReasons(
+        `type A = { kind: string };\ntype B = { kind: 'a' };\ntype C = { kind: 'b' };\nexport type Thing = keyof (${type});\n`,
+      );
+      assert.equal(schema['x-unresolved'], true, type);
+      assert.deepEqual(reasons, ['Key set of the type is not exactly known.'], type);
+    }
+  });
+
   it('keeps an exact key set when shared properties are provably compatible', () => {
     for (const type of [
       "{ kind: 'a' } & { kind: string; a: number }",
       "{ kind: 'a'; a: number } & { kind: 'a' }",
       '{ kind: string } & { kind: string; a: 1 }',
+      "{ kind: string; a: 1 } & { kind: 'a' } & { kind: 'a' }",
     ])
       assert.deepEqual(schemaOf(`export type Thing = keyof (${type});\n`).schema, {
         type: 'string',

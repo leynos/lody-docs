@@ -95,13 +95,13 @@ and parses the checkout, `schema.mjs` converts types to JSON Schema,
 injected Git runner, `render.mjs` renders the documents, `outputs.mjs` compares
 or writes them, and `pipeline.mjs` connects these without performing any I/O.
 `schema.mjs` is a facade over `schema-context.mjs` (shared state),
-`schema-scope.mjs` (resolution of every name in the module that uses it),
-`schema-types.mjs` (TypeScript types and named DTOs), `schema-utilities.mjs`
-(utility types), `schema-keys.mjs` (key sets), `schema-zod.mjs` and
-`schema-effect.mjs`. The `tests/cloud-api-*.test.mjs` files test each module in
-memory, with shared setup in `tests/cloud-api-helpers.mjs`;
-`tests/generate-cloud-api-sources.test.mjs` and
-`tests/generate-cloud-api-schemas.test.mjs` test the whole command against a
+`schema-scope.mjs` (resolution of every name where it is used, over the
+syntax-level bindings of `schema-bindings.mjs`), `schema-types.mjs` (TypeScript
+types and named DTOs), `schema-utilities.mjs` (utility types), `schema-keys.mjs`
+(key sets), `schema-zod.mjs` and `schema-effect.mjs`. The
+`tests/cloud-api-*.test.mjs` files test each module in memory, with shared setup
+in `tests/cloud-api-helpers.mjs`; `tests/generate-cloud-api-sources.test.mjs`
+and `tests/generate-cloud-api-schemas.test.mjs` test the whole command against a
 temporary Git repository built by `tests/cloud-api-fixture.mjs`; and
 `tests/generate-cloud-api.test.mjs` checks the committed documents against the
 real Lody checkout. That last check fails when `LODY_SOURCE` names no checkout,

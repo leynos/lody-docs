@@ -77,8 +77,10 @@ export function stringLiteral(node) {
  * @property {(node: any) => any} zod Zod expression to schema
  * @property {(node: any) => any} effectSchema Effect schema expression to schema
  * @property {(node: ts.TypeNode | undefined) => string[] | undefined | null} literalKeys
- * @property {(sf: ts.SourceFile, parts: string[], space?: 'type' | 'value') => any[] | null} declarationsOf
- *   the declarations a name used in a module can mean (`schema-scope.mjs`)
+ * @property {(at: ts.Node, parts: string[], space?: 'type' | 'value') => any[] | null} declarationsOf
+ *   the declarations a name used at a node can mean (`schema-scope.mjs`)
+ * @property {(at: ts.Node, name: string, space?: 'type' | 'value') => boolean} isBound
+ *   whether the module binds a name itself
  * @property {(node: ts.ImportTypeNode) => any[] | null} importTypeDeclarations
  * @property {(node: ts.TypeNode) => Array<string | number> | null} propertyKeys
  *   the property names `keyof` sees, numbers kept as numbers (`schema-keys.mjs`)
@@ -116,8 +118,10 @@ export function createContext(index, initialSchemas) {
    * @returns {ts.VariableDeclaration | undefined}
    */
   const variableAt = (node, name) => {
-    const found = context.declarationsOf(node.getSourceFile(), name.split('.'), 'value');
-    if (found?.length !== 1) return undefined;
+    const found = context.declarationsOf(node, name.split('.'), 'value');
+    // Only a variable can supply a schema or a bound; a function, class or
+    // enum of the name shadows outer ones but is not expanded.
+    if (found?.length !== 1 || !ts.isVariableDeclaration(found[0])) return undefined;
     used.add(found[0].getSourceFile().fileName);
     return found[0];
   };
@@ -126,7 +130,8 @@ export function createContext(index, initialSchemas) {
     if (ts.isNumericLiteral(node)) return Number(node.text);
     if (ts.isAsExpression(node) || ts.isParenthesizedExpression(node))
       return numberValue(node.expression);
-    if (node.getText() === 'Number.MAX_SAFE_INTEGER') return Number.MAX_SAFE_INTEGER;
+    if (node.getText() === 'Number.MAX_SAFE_INTEGER' && !context.isBound(node, 'Number', 'value'))
+      return Number.MAX_SAFE_INTEGER;
     if (ts.isBinaryExpression(node)) {
       const a = numberValue(node.left),
         b = numberValue(node.right);
@@ -183,6 +188,7 @@ export function createContext(index, initialSchemas) {
     declarationsOf: unset,
     propertyKeys: unset,
     importTypeDeclarations: unset,
+    isBound: unset,
   };
   return context;
 }

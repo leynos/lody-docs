@@ -36,10 +36,10 @@ export const indexable = (file) => /\.ts$/.test(file) && !/\.(test|spec)\.ts$/.t
  * @typedef {object} SourceIndex
  * @property {string} root the Lody checkout
  * @property {Map<string, ts.SourceFile>} files every parsed file, by absolute path
- * @property {Map<string, Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration>>} declarationsByName
- *   every declaration of each type name
- * @property {Map<string, ts.VariableDeclaration[]>} variablesByName every variable declaration of
- *   each name
+ * @property {Map<string, any[]>} declarationsByName every top-level declaration that
+ *   occupies the type space (alias, interface, class, enum, namespace), by name
+ * @property {Map<string, any[]>} variablesByName every top-level declaration that
+ *   occupies the value space (variable, function, class, enum, namespace), by name
  * @property {(file: string) => Buffer} read the bytes of a file, read at most once
  * @property {(file: string) => ts.SourceFile} load parse a file, at most once
  * @property {(file: string) => boolean} isFile whether a regular file exists
@@ -67,16 +67,33 @@ export function createSourceIndex(root, reader) {
     const text = read(file).toString('utf8');
     const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
     files.set(file, sf);
+    /** @param {Map<string, any[]>} map @param {string} name @param {any} node */
+    const add = (map, name, node) => map.set(name, [...(map.get(name) ?? []), node]);
     for (const node of sf.statements) {
-      if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) {
-        const name = node.name.text;
-        declarationsByName.set(name, [...(declarationsByName.get(name) ?? []), node]);
-      }
+      const name = /** @type {any} */ (node).name;
+      const named = name !== undefined && ts.isIdentifier(name) ? name.text : undefined;
+      // Every kind that occupies a space is recorded, so that a supported
+      // declaration is never taken as the only one when another kind shares it.
+      if (
+        named &&
+        (ts.isTypeAliasDeclaration(node) ||
+          ts.isInterfaceDeclaration(node) ||
+          ts.isClassDeclaration(node) ||
+          ts.isEnumDeclaration(node) ||
+          ts.isModuleDeclaration(node))
+      )
+        add(declarationsByName, named, node);
+      if (
+        named &&
+        (ts.isFunctionDeclaration(node) ||
+          ts.isClassDeclaration(node) ||
+          ts.isEnumDeclaration(node) ||
+          ts.isModuleDeclaration(node))
+      )
+        add(variablesByName, named, node);
       if (ts.isVariableStatement(node))
-        for (const v of node.declarationList.declarations) {
-          if (ts.isIdentifier(v.name))
-            variablesByName.set(v.name.text, [...(variablesByName.get(v.name.text) ?? []), v]);
-        }
+        for (const v of node.declarationList.declarations)
+          if (ts.isIdentifier(v.name)) add(variablesByName, v.name.text, v);
     }
     return sf;
   };

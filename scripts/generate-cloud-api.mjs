@@ -11,7 +11,8 @@
  * - `schema.mjs` converts TypeScript, Zod and Effect schemas to JSON Schema,
  *   marking what it cannot expand as `x-unresolved`; it is the facade over
  *   `schema-context.mjs` (shared state and helpers), `schema-scope.mjs`
- *   (module-scoped resolution of every type, value and library name),
+ *   (module-scoped resolution of every type, value and library name, over the
+ *   syntax-level bindings of `schema-bindings.mjs`),
  *   `schema-types.mjs`
  *   (TypeScript types, interfaces and named DTOs), `schema-utilities.mjs`
  *   (object flattening and the utility types), `schema-keys.mjs` (finite key

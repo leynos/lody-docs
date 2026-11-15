@@ -105,12 +105,14 @@ export function createKeyResolver(ctx) {
     }
     if (ts.isTypeReferenceNode(node) && !node.typeArguments) {
       const parts = entityParts(node.typeName);
-      const candidates = parts ? ctx.declarationsOf(node.getSourceFile(), parts) : null;
+      const candidates = parts ? ctx.declarationsOf(node, parts) : null;
       if (candidates === null) return null;
+      // Only a non-generic alias can name a literal key set; any other kind
+      // (an enum, a class, an interface) is not expanded here.
       const results = candidates.map((decl) =>
         ts.isTypeAliasDeclaration(decl) && !decl.typeParameters?.length
           ? literalKeys(decl.type)
-          : undefined,
+          : null,
       );
       if (results.includes(null)) return null;
       const distinct = new Set(results.map((keys) => JSON.stringify(keys ?? null)));
@@ -140,31 +142,34 @@ export function createKeyResolver(ctx) {
     if (ts.isIntersectionTypeNode(node)) {
       const parts = node.types.map((part) => entriesOf(part, path));
       if (parts.includes(null)) return null;
-      /** @type {Map<string | number, PropertyEntry>} */
-      const merged = new Map();
-      for (const entry of /** @type {PropertyEntry[][]} */ (parts).flat()) {
-        const earlier = merged.get(entry.key);
-        // A shared property whose types may conflict could make the whole
-        // intersection `never`, whose key set is every key, not these.
-        if (earlier && !compatible(earlier.type, entry.type)) return null;
-        if (!earlier) merged.set(entry.key, entry);
-      }
-      return [...merged.values()];
+      /** @type {Map<string | number, PropertyEntry[]>} */
+      const byKey = new Map();
+      for (const entry of /** @type {PropertyEntry[][]} */ (parts).flat())
+        byKey.set(entry.key, [...(byKey.get(entry.key) ?? []), entry]);
+      // A shared property whose types may conflict could make the whole
+      // intersection `never`, whose key set is every key, not these: every
+      // pair of declarations of it must be compatible, not only each with the
+      // first.
+      for (const entries of byKey.values())
+        for (const [i, a] of entries.entries())
+          for (const b of entries.slice(i + 1)) if (!compatible(a.type, b.type)) return null;
+      return [...byKey.values()].map((entries) => entries[0]);
     }
     if (!ts.isTypeReferenceNode(node) || node.typeArguments) return null;
     const parts = entityParts(node.typeName);
-    return parts ? declarationEntries(node.getSourceFile(), parts, path) : null;
+    return parts ? declarationEntries(node, parts, path) : null;
   }
   /**
-   * @param {ts.SourceFile} sf
+   * @param {ts.Node} at the reference
    * @param {string[]} parts
    * @param {Set<ts.Node>} path
    * @returns {PropertyEntry[] | null}
    */
-  function declarationEntries(sf, parts, path) {
-    const decls = ctx.declarationsOf(sf, parts);
+  function declarationEntries(at, parts, path) {
+    const decls = ctx.declarationsOf(at, parts);
     if (decls?.length !== 1 || path.has(decls[0]) || decls[0].typeParameters?.length) return null;
     const [decl] = decls;
+    if (!ts.isTypeAliasDeclaration(decl) && !ts.isInterfaceDeclaration(decl)) return null;
     const inner = new Set([...path, decl]);
     location(decl);
     if (ts.isTypeAliasDeclaration(decl)) return entriesOf(decl.type, inner);
@@ -172,7 +177,7 @@ export function createKeyResolver(ctx) {
     const inherited = [];
     for (const base of (decl.heritageClauses ?? []).flatMap((clause) => clause.types)) {
       const baseParts = !base.typeArguments && entityParts(base.expression);
-      inherited.push(baseParts ? declarationEntries(decl.getSourceFile(), baseParts, inner) : null);
+      inherited.push(baseParts ? declarationEntries(base, baseParts, inner) : null);
     }
     const own = memberEntries(decl.members);
     if (!own || inherited.includes(null)) return null;
