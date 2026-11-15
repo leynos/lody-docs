@@ -159,9 +159,11 @@ made it unusable.
 
 ## Guarantees the evidence supports
 
-- A valid, unexpired, correctly addressed request whose `rpcVersion` matches
-  the daemon's, and that the daemon reads while its lanes have room, is
-  dispatched at least once (**Impl**; [E-W12](evidence.md#e-w12),
+- A valid, correctly addressed request whose `rpcVersion` matches the
+  daemon's, that the daemon reads while its lanes have room, and that is still
+  unexpired when `handleRawRequest` checks `expiresAt`, is dispatched at least
+  once. A request that expires between the read and that check is dropped
+  without dispatch (**Impl**; [E-W12](evidence.md#e-w12),
   [E-S1](evidence.md#e-s1)). A version mismatch is answered with
   `rpc_version_mismatch` without invoking the handler. History requests are
   the exception to dispatch: an identical request that arrives while the first
