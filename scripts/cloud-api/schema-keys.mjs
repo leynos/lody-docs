@@ -108,14 +108,25 @@ export function createKeyResolver(ctx) {
   function propertyKeys(node) {
     const entries = entriesOf(node, new Set());
     if (!entries) return null;
-    /** @type {Map<string | number, PropertyEntry[]>} */
-    const byKey = new Map();
-    for (const entry of entries) byKey.set(entry.key, [...(byKey.get(entry.key) ?? []), entry]);
-    // A property declared more than once anywhere in the flattened type could
-    // make an intersection `never`, whose key set is every key; only repeats
-    // of one identical declaration are accepted.
-    for (const declarations of byKey.values()) if (!identical(declarations)) return null;
-    return [...byKey.keys()];
+    // Declarations are grouped by TypeScript's property identity: a numeric
+    // name is its canonical number string (`1`, `1.0`, `0x1` and `1e0` are all
+    // "1"), the same property as the quoted name '1'.
+    /** @type {Map<string, PropertyEntry[]>} */
+    const byName = new Map();
+    for (const entry of entries) {
+      const name = String(entry.key);
+      byName.set(name, [...(byName.get(name) ?? []), entry]);
+    }
+    for (const declarations of byName.values()) {
+      // A property spelt both as a number and as a string has no single key
+      // type.
+      if (new Set(declarations.map((entry) => typeof entry.key)).size > 1) return null;
+      // A property declared more than once anywhere in the flattened type
+      // could make an intersection `never`, whose key set is every key; only
+      // repeats of one identical declaration are accepted.
+      if (!identical(declarations)) return null;
+    }
+    return [...byName.values()].map((declarations) => declarations[0].key);
   }
   /**
    * Every property declaration of a type, with the whole intersection tree

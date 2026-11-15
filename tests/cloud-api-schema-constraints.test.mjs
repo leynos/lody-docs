@@ -130,6 +130,47 @@ describe('keyof over intersections', () => {
     assert.equal(schema['x-unresolved'], true);
   });
 
+  it('treats numeric and quoted numeric names as one property', () => {
+    const named = "type Num = { 1: 'a' };\ntype Str = { '1': 'b' };\ntype Same = { '1': 'a' };\n";
+    for (const type of [
+      "{ 1: 'a' } & { '1': 'b' }",
+      "{ '1': 'b' } & { 1: 'a' }",
+      'Num & Str',
+      '(Str & (Num))',
+      "{ 1: 'a' } & { '1': 'a' }",
+      'Num & Same',
+      "{ 0x1: 'a' } & { '1': 'a' }",
+      "{ 1.0: 'a' } & { '1': 'b' }",
+    ]) {
+      const { schema, reasons } = unresolvedReasons(
+        `${named}export type Thing = keyof (${type});\n`,
+      );
+      assert.equal(schema['x-unresolved'], true, type);
+      assert.deepEqual(reasons, ['Key set of the type is not exactly known.'], type);
+    }
+  });
+
+  it('groups numeric spellings of one number, keeping the key numeric', () => {
+    for (const [type, keys] of [
+      ["{ 0x1: 'a' } & { 1: 'a' }", [1]],
+      ["{ 1.0: 'a'; 2: 'c' } & { 1e0: 'a' }", [1, 2]],
+    ])
+      assert.deepEqual(schemaOf(`export type Thing = keyof (${type});\n`).schema, {
+        type: 'number',
+        enum: keys,
+      });
+    assert.equal(
+      schemaOf("export type Thing = keyof ({ 0x1: 'a' } & { 1: 'b' });\n").schema['x-unresolved'],
+      true,
+    );
+    assert.deepEqual(schemaOf("export type Thing = keyof ({ '01': 'a' } & { 1: 'b' });\n").schema, {
+      anyOf: [
+        { type: 'string', enum: ['01'] },
+        { type: 'number', enum: [1] },
+      ],
+    });
+  });
+
   it('keeps an exact key set when repeats are one identical declaration', () => {
     for (const type of [
       "{ kind: 'a'; a: number } & { kind: 'a' }",
