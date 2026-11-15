@@ -164,11 +164,13 @@ made it unusable.
   [E-W12](evidence.md#e-w12), [E-S1](evidence.md#e-s1)). Where the method
   produces a response, the daemon attempts to append it to the request's
   `replyTo` (**Impl**; [E-S12](evidence.md#e-s12),
-  [E-W24](evidence.md#e-w24)). Some paths return without any append
-  attempt: `machine/acp-capabilities-refresh-cancel`, an aborted capability
-  refresh, and a history write whose deadline passes after its claim
-  (**Impl**; [E-M21](evidence.md#e-m21), [E-M63](evidence.md#e-m63),
-  [E-L56](evidence.md#e-l56)). If every append
+  [E-W24](evidence.md#e-w24)). Some paths return without attempting a final
+  response: `machine/acp-capabilities-refresh-cancel`, which appends nothing;
+  an aborted capability refresh, which suppresses its final response and
+  later progress, although progress appended before the abort stands; and a
+  history write whose deadline passes after its claim (**Impl**;
+  [E-M21](evidence.md#e-m21), [E-M63](evidence.md#e-m63),
+  [E-S29](evidence.md#e-s29), [E-L56](evidence.md#e-l56)). If every append
   attempt fails, including the fallback `internal_error` append, publication
   is unconfirmed: an append whose acknowledgement was lost may still have
   been stored (**Infer**; [E-S12](evidence.md#e-s12)).

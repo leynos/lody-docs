@@ -46,8 +46,12 @@ The daemon keeps its read offset in memory (**Impl**;
 [E-T30](evidence.md#e-t30)). Intake does not wait for handlers to finish, but
 admission is bounded: a control or history-write request waits while 128
 tasks of its kind are pending, and an ordinary or watch request beyond its
-limit is answered with an overload error, or dropped when the overload pool
-is also full (**Impl**; [E-S1](evidence.md#e-s1), [E-S5](evidence.md#e-s5)).
+limit is passed to an overload task that attempts an error response, or
+dropped when the overload pool is also full (**Impl**;
+[E-S1](evidence.md#e-s1), [E-S5](evidence.md#e-s5)). The overload task
+answers nothing if the server has stopped or the request is invalid,
+misaddressed or expired when the task runs, and a failed append is only
+logged (**Impl**; [E-W27](evidence.md#e-w27)).
 A restart resets the offset, so the daemon reads the retained stream again
 and an unexpired request that passes the same checks is dispatched again
 (**Impl**; [E-T30](evidence.md#e-t30), [E-W12](evidence.md#e-w12)). P-9

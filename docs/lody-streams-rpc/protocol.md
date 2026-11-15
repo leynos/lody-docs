@@ -700,7 +700,7 @@ only, deduplication (**Impl**; [E-W12](evidence.md#e-w12)).
 | Execution claim | Handler, method-specific | Only through the method's result | History write claim; operation inbox; none for most methods | Method-specific |
 | First business side effect | Handler | Not signalled | Method-specific | Not signalled |
 | Progress response | Daemon | A progress response arrives | In the response stream | Failed progress appends are discarded |
-| Terminal result | Daemon | The response arrives | In the response stream | Lost if both the result append and the fallback error append fail |
+| Terminal result | Daemon | The response arrives | In the response stream | Unconfirmed if both the result append and the fallback error append fail: an append may have been stored although its acknowledgement was lost |
 | Caller observation | Caller | The call settles | No | A caller that stopped never observes it |
 
 _Table 11: Milestones of a request, their owners, and the evidence each gives
@@ -716,9 +716,11 @@ the caller._
   [E-N8](evidence.md#e-n8)).
 - A terminal response produced after a handler returns or throws proves that
   the handler finished, and that the daemon's append of the response was
-  stored. A progress response is appended while the handler is still running
-  and proves only that the handler had started and the append was stored
-  (**Impl**; [E-S29](evidence.md#e-s29)). What the handler's return means
+  stored. A progress response proves only that the handler had started and
+  the append was stored. Progress appends are queued and awaited after the
+  handler returns, so one may be stored after the handler has finished; a
+  progress response does not show whether it has (**Impl**;
+  [E-S29](evidence.md#e-s29)). What the handler's return means
   differs by method. For the dispatch methods it means delivery
   or durable acceptance and never that an agent started
   ([methods](methods.md)).
@@ -853,7 +855,7 @@ to completion once started (**Impl**; [E-S22](evidence.md#e-s22)).
 | Target machine | None beyond the above | **Impl** |
 | Session | None in the server; two requests for one session can run concurrently | **Impl**; **Intent** [E-N9](evidence.md#e-n9) |
 | Handler | Session mutations are serialized by their owning service, such as the session writer queue and the per-session dispatch check chain | **Intent** [E-N7](evidence.md#e-n7) |
-| One request's responses | Progress responses in emission order, then the final response; a failed progress append leaves a gap | **Impl**, **Test** |
+| One request's responses | Progress responses in emission order, then the final result when the handler returns; a failed progress append leaves a gap. An error response after a thrown handler is not ordered after pending progress appends | **Impl** [E-S29](evidence.md#e-s29); **Test**, capability refresh only, [E-S30](evidence.md#e-s30); error case **Infer** |
 | Response reader | Responses for different requests interleave in completion order; the client matches by `id` | **Impl** [E-C3](evidence.md#e-c3) |
 
 _Table 14: Ordering that holds at each scope._
