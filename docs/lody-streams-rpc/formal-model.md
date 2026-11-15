@@ -102,10 +102,16 @@ What the model settles:
   holds in production is still unknown; the model shows that nothing on the
   daemon side prevents the loop.
 - **R3 is a contrast, not a finding about the shipped protocol.** Loss is
-  recorded only when a crash leaves an unexpired request behind a persisted
-  offset. With the offset in memory every request is read again, so R3
-  cannot fail. A request that expires before it is read again is dropped by
-  design, and the model does not count that as loss.
+  recorded only when a crash or an accepted restart leaves a request behind
+  a persisted offset while it is still unexpired at the time the new
+  instance starts. With the offset in memory every request is read again, so
+  R3 cannot fail. A request that expires before it could be read again is
+  dropped by design, and the model does not count that as loss.
+- **Offset resets are checked in the shipped mode only.** The durable
+  candidate's loss accounting assumes the persisted offset never moves
+  backwards, so `ResetOffset` is disabled when `OffsetMode` is `"durable"`.
+  How a persisted offset should interact with a 404 or a 410 is left
+  open.
 - **A persisted offset trades duplication for loss.** With `"durable"` and no
   in-process reset, `AtMostOnce` and `RestartOnce` hold, but `NoSilentLoss`
   fails: a request read just before a crash or a restart is never handled. A
@@ -218,7 +224,7 @@ it reaches.
 | `RpcReplay.cfg` | Shipped, one in-process reset | R1, R2, R3 | Pass (47,296 states) |
 | `RpcReplay_NoReset.cfg` | Shipped, no in-process reset | `OncePerInstance` | Pass (9,712 states) |
 | `RpcReplay_RestartSingleUse.cfg` | Shipped, backend refuses reuse | `RestartOnce` | Pass (82,013 states) |
-| `RpcReplay_DurableOffset.cfg` | Candidate, no in-process reset | `AtMostOnce`, `RestartOnce` | Pass (3,690 states) |
+| `RpcReplay_DurableOffset.cfg` | Candidate, no in-process reset | `AtMostOnce`, `RestartOnce` | Pass (3,717 states) |
 | `RpcReplay_AtMostOnce.cfg` | Observation | `AtMostOnce` | Violated in 5 steps |
 | `RpcReplay_GatewayReset.cfg` | Observation | `OncePerInstance` | Violated in 6 steps |
 | `RpcReplay_RestartLoop.cfg` | Observation, backend accepts reuse | `RestartOnce` | Violated in 5 steps |

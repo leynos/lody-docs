@@ -170,7 +170,7 @@ HandleRestart(r) ==
     /\ instRuns' = Zero
     /\ lost' = IF OffsetMode = "durable"
                THEN lost \cup {q \in Requests :
-                                 Finished(r)[q] > 0 /\ now < expires[q]}
+                                 Finished(r)[q] > 0 /\ now + 1 < expires[q]}
                ELSE lost
     /\ UNCHANGED <<stream, expires, durable, maxAdmits, resets, crashes>>
 
@@ -191,15 +191,17 @@ Crash ==
                    restartsBy, usedProof, resets>>
 
 (* After a 404 or 410 the read loop resets its offset in the same         *)
-(* instance.  Tasks already started keep running.                         *)
+(* instance.  Tasks already started keep running.  Resets are modelled    *)
+(* for the shipped "memory" mode only: the "durable" candidate's loss      *)
+(* accounting assumes the persisted offset never moves backwards.          *)
 ResetOffset ==
+    /\ OffsetMode = "memory"
     /\ resets < MaxResets
     /\ resets' = resets + 1
     /\ offset' = 0
-    /\ durable' = IF OffsetMode = "durable" THEN 0 ELSE durable
     /\ admits' = Zero
-    /\ UNCHANGED <<stream, expires, now, pending, maxAdmits, runs, instRuns,
-                   maxInstRuns, restartsBy, usedProof, lost, crashes>>
+    /\ UNCHANGED <<stream, expires, now, durable, pending, maxAdmits, runs,
+                   instRuns, maxInstRuns, restartsBy, usedProof, lost, crashes>>
 
 Next ==
     \/ \E r \in Requests :
