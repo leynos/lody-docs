@@ -5,6 +5,8 @@ The evidence indexes of the architecture and Loro document sets list, for each
 citation, a file, a line range and the decisive text that the cited lines
 contain. This script reads those tables and confirms, for every row marked
 "Checked", that the text is still present in that range of the pinned source.
+An anchored row that does not parse, and a "Checked" row whose decisive-text
+cell has no code span, are failures rather than rows to skip.
 
 Exit status is non-zero if any row fails, or if the checkout is missing.
 """
@@ -23,6 +25,8 @@ ROW = re.compile(
     r"\[[^\]]+\]\([^)#]+#L(?P<start>\d+)(?:-L(?P<end>\d+))?\) "
     r"\| (?P<text>.*) \| (?P<basis>Checked|Reported) \|$"
 )
+# Every evidence row starts with its anchor; headers and prose do not.
+EVIDENCE_ROW = re.compile(r"^\| <a id=")
 
 
 def decisive_texts(cell: str) -> list[str]:
@@ -34,9 +38,11 @@ def check_index(index: pathlib.Path, lody: pathlib.Path) -> tuple[int, list[str]
     """Check one evidence index; return the row count and a list of failures."""
     failures: list[str] = []
     rows = 0
-    for line in index.read_text().splitlines():
+    for number, line in enumerate(index.read_text().splitlines(), start=1):
         match = ROW.match(line)
         if match is None:
+            if EVIDENCE_ROW.match(line):
+                failures.append(f"line {number}: evidence row does not parse")
             continue
         rows += 1
         source = lody / match["path"]
@@ -54,7 +60,10 @@ def check_index(index: pathlib.Path, lody: pathlib.Path) -> tuple[int, list[str]
         if match["basis"] != "Checked":
             continue
         cited = "\n".join(lines[start - 1 : end])
-        for text in decisive_texts(match["text"]):
+        texts = decisive_texts(match["text"])
+        if not texts:
+            failures.append(f"{match['id']}: decisive-text cell has no code span")
+        for text in texts:
             if text not in cited:
                 failures.append(
                     f"{match['id']}: {text!r} not in {match['path']}:{start}-{end}"
@@ -62,13 +71,13 @@ def check_index(index: pathlib.Path, lody: pathlib.Path) -> tuple[int, list[str]
     return rows, failures
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """Check every evidence index and report."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "lody", type=pathlib.Path, help="path to the Lody checkout at the pinned commit"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if not args.lody.is_dir():
         print(f"Lody checkout not found: {args.lody}", file=sys.stderr)
         return 2

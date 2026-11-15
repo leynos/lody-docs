@@ -1,12 +1,14 @@
 .PHONY: help all tools deps tlc tlc-liveness tlc-all fmt check-fmt ruff biome typecheck \
-	markdownlint nixie cloud-api-check evidence-check openapi lint check clean
+	markdownlint nixie cloud-api-check evidence-check openapi lint test test-python \
+	test-node check clean
 
 TLA_TOOLS_VERSION := 1.7.4
 TLA_TOOLS_SHA256 := 936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
 TLA_TOOLS_URL := https://github.com/tlaplus/tlaplus/releases/download/v$(TLA_TOOLS_VERSION)/tla2tools.jar
 TLA_TOOLS_JAR := .tools/tla2tools.jar
 NODE_DEPS := node_modules/.package-lock.json
-PYTHON_SOURCES := scripts docs/lody-streams-rpc/probes
+PYTHON_SOURCES := scripts tests docs/lody-streams-rpc/probes
+PYTEST := uv run --no-project --with pytest==8.4.2 pytest -p no:cacheprovider
 # The Lody checkout that the cloud API generator reads. It sits beside this
 # repository, or two levels up when this is a linked worktree.
 LODY_SOURCE ?= $(or $(firstword $(wildcard ../Lody ../../Lody)),../../Lody)
@@ -15,7 +17,7 @@ export LODY_SOURCE
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "%-16s %s\n", $$1, $$2}'
 
-all: lint tlc ## Run every lint and the safety and ablation models
+all: lint test tlc ## Run every lint, the tests, and the safety and ablation models
 
 tools: $(TLA_TOOLS_JAR) ## Download the pinned TLA+ tools
 
@@ -65,14 +67,22 @@ cloud-api-check: deps ## Check the generated cloud API files against the Lody so
 	npm run check
 
 evidence-check: ## Check the generated evidence indexes against the Lody source
-	python3 scripts/check_evidence.py $(LODY_SOURCE)
+	python3 scripts/check_evidence.py "$(LODY_SOURCE)"
 
 openapi: ## Validate the OpenAPI description
 	npm run validate:openapi
 
 lint: check-fmt ruff biome typecheck markdownlint nixie cloud-api-check evidence-check openapi ## Run every lint
 
-check: lint tlc-all ## Run every gate, including the slow liveness models
+test: test-python test-node ## Run the tests of the repository scripts
+
+test-python: ## Test the evidence and model checkers
+	$(PYTEST) tests
+
+test-node: deps ## Test the cloud API generator's check mode
+	node --test tests/*.test.mjs
+
+check: lint test tlc-all ## Run every gate, including the slow liveness models
 
 clean: ## Remove downloaded tools, dependencies, and TLC logs
 	rm -rf .tools node_modules

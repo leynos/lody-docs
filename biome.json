@@ -3,6 +3,7 @@
   "files": {
     "includes": [
       "scripts/**/*.mjs",
+      "tests/**/*.mjs",
       "*.json",
       "docs/cloud-api/http.json",
       "docs/cloud-api/supplemental.json",

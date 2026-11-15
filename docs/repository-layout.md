@@ -21,6 +21,7 @@ files.
 │   │   └── probes/              Probe sources and recorded results
 │   └── cloud-api/               Document set: the cloud HTTP API
 ├── tla/                         TLA+ modules, TLC configurations, manifest
+├── tests/                       Tests of the repository scripts
 ├── scripts/
 │   ├── check_models.py          Runs TLC against the manifest
 │   ├── check_evidence.py        Checks evidence indexes against the Lody source
@@ -48,6 +49,7 @@ _Figure 1: The repository tree, with one line on each path._
 | `docs/lody-streams-rpc/probes/` | Sources and raw results of the probes cited in `conformance.md` | A record of what was run, not a test suite; the TypeScript sources need a Lody export to run |
 | `docs/cloud-api/` | The cloud API guide, references, and their inputs | Mixes authored and generated files; see Table 2 |
 | `tla/` | One `.tla` module per modelled protocol, `.cfg` files per TLC run, and `models.json` | A configuration named `Module_Mechanism.cfg` is an ablation that must fail; `models.json` records every expected verdict |
+| `tests/` | pytest tests of the two Python checkers, and a `node:test` test of the generator's `--check` mode | Run by `make test`; they use temporary fixtures, and the generator test skips when no Lody checkout is present |
 | `scripts/` | The model runner, the evidence checker, and the cloud API generator | Python is formatted and linted with ruff; JavaScript with Biome and the TypeScript checker |
 | `.tools/` | Downloaded `tla2tools.jar` and TLC logs | Not tracked; created by `make tools` and removed by `make clean` |
 | `node_modules/` | Pinned Node.js tooling | Not tracked; created by `make deps` |
@@ -81,4 +83,5 @@ _Table 2: Which cloud API files are generated._
   as its overview.
 - A new formal model goes in `tla/`, with an entry per configuration in
   `tla/models.json`.
-- Tooling goes in `scripts/` and is exposed as a `Makefile` target.
+- Tooling goes in `scripts/` and is exposed as a `Makefile` target, with its
+  tests in `tests/`.

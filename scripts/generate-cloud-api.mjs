@@ -1,4 +1,25 @@
-/** Rebuild documentation from the public client contract; never contact a service. */
+/**
+ * Rebuild the cloud API documentation from Lody's public client contract.
+ *
+ * Inputs: the Lody checkout named by `LODY_SOURCE` (default `../../Lody`),
+ * whose `packages/cloud-api/src/index.ts` exports the `CloudApi` type, and
+ * whose shared, e2ee-core and e2ee-machine-sharing packages define the DTOs it
+ * uses; and the authored documents `docs/cloud-api/http.json` (non-Convex
+ * HTTP routes and hand-written schemas, plus the pinned `x-source-revision`)
+ * and `docs/cloud-api/supplemental.json` (Convex calls outside `CloudApi`).
+ * Paths are relative to the working directory, which must be the repository
+ * root. The checkout must be at the pinned revision, and every source file the
+ * generator reads must be unmodified, so that each generated link cites what
+ * that commit contains.
+ *
+ * Outputs: `docs/cloud-api/openapi.yaml`, `routes.md`, `operations.md` and the
+ * source manifest `sources.json` (revision, operation counts, unresolved types
+ * and the hash of every source file read). With `--check`, nothing is written;
+ * the script fails with "Stale generated document" if any output differs from
+ * what it would generate. `npm run generate` writes the outputs, and `npm run
+ * check` (the Makefile `cloud-api-check` gate) verifies them. The generator
+ * never contacts a service.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -225,7 +246,17 @@ function convert(node) {
       args = node.typeArguments ?? [];
     if (['Array', 'ReadonlyArray'].includes(name))
       return { type: 'array', items: convert(args[0]) };
-    if (name === 'Record') return { type: 'object', additionalProperties: convert(args[1]) };
+    if (name === 'Record') {
+      const values = convert(args[1]);
+      const keys = literalKeys(args[0]);
+      return keys
+        ? {
+            type: 'object',
+            properties: Object.fromEntries(keys.map((key) => [key, values])),
+            required: keys,
+          }
+        : { type: 'object', additionalProperties: values };
+    }
     if (name === 'Readonly') return convert(args[0]);
     if (['Omit', 'Pick', 'Partial', 'Required'].includes(name)) {
       const object = flatten(convert(args[0]));
@@ -247,6 +278,10 @@ function convert(node) {
             : name === 'Required'
               ? Object.keys(props)
               : (object.required ?? []).filter((k) => k in props),
+        // An index signature survives every utility except Pick.
+        ...(name !== 'Pick' && object.additionalProperties !== undefined
+          ? { additionalProperties: object.additionalProperties }
+          : {}),
       };
     }
     if (['Extract', 'Exclude'].includes(name)) {
@@ -277,6 +312,30 @@ function convert(node) {
     node,
     'Unsupported TypeScript syntax; retained as an explicitly unconstrained schema.',
   );
+}
+/**
+ * Return the keys of a record key type made only of string literals, following
+ * non-generic type aliases; return undefined for any other key type.
+ * @param {ts.TypeNode | undefined} node
+ * @returns {string[] | undefined}
+ */
+function literalKeys(node) {
+  if (!node) return undefined;
+  if (ts.isParenthesizedTypeNode(node)) return literalKeys(node.type);
+  if (ts.isLiteralTypeNode(node) && ts.isStringLiteral(node.literal)) return [node.literal.text];
+  if (ts.isUnionTypeNode(node)) {
+    const parts = node.types.map(literalKeys);
+    return parts.every(Boolean) ? parts.flat() : undefined;
+  }
+  if (ts.isTypeReferenceNode(node) && !node.typeArguments) {
+    const decl = declarations.get(node.typeName.getText());
+    if (decl && ts.isTypeAliasDeclaration(decl) && !decl.typeParameters?.length) {
+      const keys = literalKeys(decl.type);
+      if (keys) location(decl);
+      return keys;
+    }
+  }
+  return undefined;
 }
 function zod(node) {
   if (ts.isAsExpression(node) || ts.isParenthesizedExpression(node)) return zod(node.expression);
@@ -579,6 +638,26 @@ for (const item of Object.values(document.paths))
 const revision = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], {
   encoding: 'utf8',
 }).trim();
+// The authored inputs cite one commit; never combine them with another.
+if (revision !== document['x-source-revision'])
+  throw Error(
+    `Lody checkout ${root} is at ${revision}, but docs/cloud-api/http.json pins ${document['x-source-revision']}`,
+  );
+// HEAD names the commit only if no source file read differs from it.
+const modified = execFileSync(
+  'git',
+  [
+    '-C',
+    root,
+    'status',
+    '--porcelain',
+    '--ignored',
+    '--',
+    ...[...used].map((f) => path.relative(root, f)),
+  ],
+  { encoding: 'utf8' },
+).trim();
+if (modified) throw Error(`Source files differ from ${revision} in ${root}:\n${modified}`);
 const manifest = {
   repository: 'https://github.com/LodyAI/Lody',
   revision,

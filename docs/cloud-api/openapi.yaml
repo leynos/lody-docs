@@ -1218,6 +1218,7 @@ paths:
                     type: boolean
                 required:
                   - allowed
+                additionalProperties: false
         default:
           description: Request failed. Exact error body and status depend on the hosted handler; do not assume
             a common error schema.
@@ -1258,9 +1259,11 @@ paths:
                   allowed:
                     type: boolean
                   expiresAt:
-                    type: number
+                    type: integer
+                    minimum: 0
                 required:
                   - allowed
+                additionalProperties: false
         default:
           description: Request failed. Exact error body and status depend on the hosted handler; do not assume
             a common error schema.
@@ -1464,7 +1467,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserRequestToken"
+                $ref: "#/components/schemas/LifecycleRequestToken"
         default:
           description: Request failed. Exact error body and status depend on the hosted handler; do not assume
             a common error schema.
@@ -1569,7 +1572,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RequestToken"
+                $ref: "#/components/schemas/BugReportRequestToken"
         default:
           description: Request failed. Exact error body and status depend on the hosted handler; do not assume
             a common error schema.
@@ -8045,6 +8048,15 @@ components:
           maxLength: 8192
       required:
         - requestToken
+      additionalProperties: false
+    BugReportRequestToken:
+      type: object
+      properties:
+        requestToken:
+          type: string
+          minLength: 1
+      required:
+        - requestToken
     UserRequestToken:
       type: object
       properties:
@@ -8053,6 +8065,20 @@ components:
           minLength: 1
         requesterUserId:
           type: string
+          minLength: 1
+      required:
+        - requestToken
+        - requesterUserId
+      additionalProperties: false
+    LifecycleRequestToken:
+      type: object
+      properties:
+        requestToken:
+          type: string
+          minLength: 1
+        requesterUserId:
+          type: string
+          minLength: 1
       required:
         - requestToken
         - requesterUserId
@@ -8250,12 +8276,15 @@ components:
       properties:
         requesterUserId:
           type: string
+          minLength: 1
+          maxLength: 200
         expiresAt:
           type: integer
           minimum: 0
       required:
         - requesterUserId
         - expiresAt
+      additionalProperties: false
     IceReply:
       type: object
       properties:
@@ -14311,7 +14340,11 @@ components:
       properties:
         scripts:
           type: object
-          properties: {}
+          properties:
+            bash:
+              type: string
+            powershell:
+              type: string
           required: []
         timeoutMs:
           type: number

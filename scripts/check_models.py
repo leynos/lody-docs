@@ -57,9 +57,34 @@ class Outcome:
         return self.observed == self.model.expect
 
 
-def load_models(groups: set[str]) -> list[Model]:
-    raw = json.loads((TLA_DIR / "models.json").read_text(encoding="utf-8"))
+GROUPS = ("safety", "ablation", "liveness")
+
+
+class ManifestError(ValueError):
+    """The model manifest cannot select the requested runs."""
+
+
+def load_models(
+    groups: set[str], manifest: pathlib.Path = TLA_DIR / "models.json"
+) -> list[Model]:
+    """Return the manifest's models in the requested groups.
+
+    Raise `ManifestError` when an entry names an unknown group or a requested
+    group selects no model, so that a mislabelled manifest cannot pass a gate by
+    running nothing.
+    """
+    raw = json.loads(manifest.read_text(encoding="utf-8"))
     models = [Model(**entry) for entry in raw]
+    unknown = sorted({model.group for model in models} - set(GROUPS))
+    if unknown:
+        msg = f"{manifest}: unknown model group(s): {', '.join(unknown)}"
+        raise ManifestError(msg)
+    empty = sorted(
+        group for group in groups if not any(m.group == group for m in models)
+    )
+    if empty:
+        msg = f"{manifest}: no model in group(s): {', '.join(empty)}"
+        raise ManifestError(msg)
     return [model for model in models if model.group in groups]
 
 
@@ -125,12 +150,12 @@ def describe(outcome: Outcome) -> str:
     return line
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--group",
         action="append",
-        choices=["safety", "ablation", "liveness"],
+        choices=GROUPS,
         help="model group to run (repeatable; default: safety and ablation)",
     )
     parser.add_argument("--jar", type=pathlib.Path, default=DEFAULT_JAR)
@@ -138,7 +163,7 @@ def main() -> int:
     parser.add_argument(
         "--log-dir", type=pathlib.Path, default=ROOT / ".tools" / "tlc-logs"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if shutil.which("java") is None:
         print("java not found on PATH; install a JRE (11 or later)", file=sys.stderr)
@@ -146,12 +171,19 @@ def main() -> int:
     if not args.jar.is_file():
         print(f"{args.jar} not found; run `make tools`", file=sys.stderr)
         return 2
+    # Java runs in TLA_DIR, so a relative class path would no longer resolve.
+    jar = args.jar.resolve()
 
-    args.log_dir.mkdir(parents=True, exist_ok=True)
     groups = set(args.group or ["safety", "ablation"])
+    try:
+        models = load_models(groups)
+    except ManifestError as error:
+        print(error, file=sys.stderr)
+        return 2
+    args.log_dir.mkdir(parents=True, exist_ok=True)
     outcomes = []
-    for model in load_models(groups):
-        outcome = run_model(model, args.jar, args.workers, args.log_dir)
+    for model in models:
+        outcome = run_model(model, jar, args.workers, args.log_dir)
         print(describe(outcome), flush=True)
         outcomes.append(outcome)
 

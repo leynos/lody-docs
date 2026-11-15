@@ -1,4 +1,21 @@
-// Probe written for the lody-docs study. Lives only in the scratch copy.
+/**
+ * Probes P-1 to P-4 of the Streams RPC conformance study.
+ *
+ * Records, without asserting, how real Lody code behaves: which request and
+ * response envelopes `LoroStreamsRpcRequestSchema` and
+ * `LoroStreamsRpcResponseSchema` accept, the owner-scoped encrypted envelope
+ * round trip, and how `createLoroStreamsJsonStreamClient` handles token
+ * errors, a 401 retry and the shape of an append over a stub `fetch`. The
+ * observations are written as JSON to `PROBE_OUT`, or to `/dev/stdout` when
+ * that is unset; `results-validators.json` holds the recorded run.
+ *
+ * This is a record of what was run, not a test of this repository. It ran as
+ * `tests/zz-probe.test.ts` in `packages/loro-streams-rpc` of a scratch export of
+ * Lody, configured by `vitest.probe.config.ts`; the relative `../src/rpc` import
+ * and `@lody/shared` resolve only there. The closing `expect(true)` exists
+ * because Vitest wants an assertion; the evidence is the JSON output, which
+ * `conformance.md` interprets.
+ */
 import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {

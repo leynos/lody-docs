@@ -1742,7 +1742,8 @@
                       "type": "boolean"
                     }
                   },
-                  "required": ["allowed"]
+                  "required": ["allowed"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -1799,10 +1800,12 @@
                       "type": "boolean"
                     },
                     "expiresAt": {
-                      "type": "number"
+                      "type": "integer",
+                      "minimum": 0
                     }
                   },
-                  "required": ["allowed"]
+                  "required": ["allowed"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -2100,7 +2103,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserRequestToken"
+                  "$ref": "#/components/schemas/LifecycleRequestToken"
                 }
               }
             }
@@ -2242,7 +2245,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RequestToken"
+                  "$ref": "#/components/schemas/BugReportRequestToken"
                 }
               }
             }
@@ -4632,6 +4635,17 @@
             "maxLength": 8192
           }
         },
+        "required": ["requestToken"],
+        "additionalProperties": false
+      },
+      "BugReportRequestToken": {
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "required": ["requestToken"]
       },
       "UserRequestToken": {
@@ -4642,7 +4656,23 @@
             "minLength": 1
           },
           "requesterUserId": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["requestToken", "requesterUserId"],
+        "additionalProperties": false
+      },
+      "LifecycleRequestToken": {
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requesterUserId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": ["requestToken", "requesterUserId"]
@@ -4886,14 +4916,17 @@
         "type": "object",
         "properties": {
           "requesterUserId": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
           },
           "expiresAt": {
             "type": "integer",
             "minimum": 0
           }
         },
-        "required": ["requesterUserId", "expiresAt"]
+        "required": ["requesterUserId", "expiresAt"],
+        "additionalProperties": false
       },
       "IceReply": {
         "type": "object",
@@ -5248,5 +5281,6 @@
         "description": "Per-deployment upload secret. Can upload/seal, cannot publish."
       }
     }
-  }
+  },
+  "x-source-revision": "61bd9701a5ed6899a9f42787df682acfc3fd7d4b"
 }

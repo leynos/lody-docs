@@ -20,8 +20,8 @@ and which files are generated. Every document follows the
 | Node.js and npm | Markdown lint, Biome, type-checking, the generator | `make deps` installs the pinned packages; validation used Node.js 26.13.0 |
 | `ruff` | `check-fmt`, `ruff`, `fmt` | |
 | `nixie` | `nixie` | Validates Mermaid diagrams |
-| `uvx` | `openapi` | Runs a pinned `openapi-spec-validator` |
-| A Lody checkout at the pinned commit | `cloud-api-check`, `evidence-check` | See [section 4](#4-the-cloud-api-reference) |
+| `uv` and `uvx` | `openapi`, `test-python` | Run a pinned `openapi-spec-validator`, and pytest without installing it |
+| A Lody checkout at the pinned commit | `cloud-api-check`, `evidence-check`, `test-node` | See [section 4](#4-the-cloud-api-reference) |
 
 _Table 1: Tools the gates depend on._
 
@@ -40,11 +40,12 @@ Every gate is a `Makefile` target. `make help` lists them.
 | `cloud-api-check` | The generated cloud API files match what the generator produces from the pinned Lody source |
 | `evidence-check` | Every checked row of the architecture and Loro evidence indexes still matches the pinned Lody source |
 | `openapi` | `openapi.yaml` is a valid OpenAPI document |
+| `test` | The evidence checker, the model runner, and the cloud API generator's `--check` mode reject what they should (pytest through `uv`, and `node --test`) |
 | `lint` | All of the above, in that order |
 | `tlc` | Each safety model holds, and each ablation and observation still produces its counterexample (about two minutes) |
 | `tlc-liveness` | Each liveness property holds (about ten minutes on 32 cores) |
-| `all` | `lint` and `tlc` |
-| `check` | `lint`, `tlc`, and `tlc-liveness` |
+| `all` | `lint`, `test`, and `tlc` |
+| `check` | `lint`, `test`, `tlc`, and `tlc-liveness` |
 
 _Table 2: The gates and what each one establishes._
 
@@ -92,7 +93,7 @@ against the pinned commit, `61bd9701a5ed6899a9f42787df682acfc3fd7d4b`.
 ```sh
 make deps
 LODY_SOURCE=/path/to/Lody npm run generate
-make cloud-api-check openapi
+LODY_SOURCE=/path/to/Lody make cloud-api-check openapi
 ```
 
 When moving the pin to a newer Lody commit, follow the maintenance notes in

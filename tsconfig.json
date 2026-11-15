@@ -7,5 +7,5 @@
     "target": "ES2022",
     "skipLibCheck": true
   },
-  "include": ["scripts/**/*.mjs"]
+  "include": ["scripts/**/*.mjs", "tests/**/*.mjs"]
 }

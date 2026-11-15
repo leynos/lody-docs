@@ -5,6 +5,12 @@ checkout. The script reuses the lines of
 ``tests/loro-streams-rpc.integration.test.ts`` that start the local ``loro dev``
 server, switches that server to HTTP/1, and appends the probe cases. It writes
 ``tests/zz-live.test.ts``; it never touches the original checkout.
+
+The probe cases record observations as JSON (in ``PROBE_OUT``, or on standard
+output) rather than asserting them; their closing ``expect(true)`` exists only
+because Vitest wants an assertion. ``results-live.json`` holds the recorded run.
+The teardown stops the development server even if writing the results fails;
+that guard was added after the recorded run and does not change its output.
 """
 
 from pathlib import Path
@@ -31,8 +37,11 @@ describe('live probes against a local loro dev server', () => {
     localServer = await startLocalLoroDevServer();
   }, 60_000);
   afterAll(async () => {
-    writeFileSync(process.env.PROBE_OUT ?? '/dev/stdout', JSON.stringify(out, null, 2));
-    await localServer?.stop();
+    try {
+      writeFileSync(process.env.PROBE_OUT ?? '/dev/stdout', JSON.stringify(out, null, 2));
+    } finally {
+      await localServer?.stop();
+    }
   }, 30_000);
 
   it('P-5..P-9 server behaviour through real Streams', async () => {
