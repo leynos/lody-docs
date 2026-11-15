@@ -259,6 +259,86 @@ describe('schema conversion', () => {
       assert.equal(thing.required, undefined);
     });
 
+  const KEYS = 'packages/shared/src/keys.ts';
+  const THING = 'packages/shared/src/thing.ts';
+  /** @param {string} imports how thing.ts imports its key @param {string} [key] */
+  const thingWith = (imports, key = 'Key') =>
+    `${imports}\nexport type Thing = Record<${key}, string>;\n`;
+  /** @type {Array<[string, Record<string, string>]>} */
+  const followed = [
+    [
+      'a default import of `export type { X as default }`',
+      {
+        [KEYS]: "type ActualKey = 'id';\nexport type { ActualKey as default };\n",
+        [THING]: thingWith("import type Key from './keys';"),
+      },
+    ],
+    [
+      'a default import of `export default X`',
+      {
+        [KEYS]: "type ActualKey = 'id';\nexport default ActualKey;\n",
+        [THING]: thingWith("import Key from './keys';"),
+      },
+    ],
+    [
+      'a default import re-exported through a barrel',
+      {
+        'packages/shared/src/keys/actual.ts':
+          "type ActualKey = 'id';\nexport { ActualKey as default };\n",
+        'packages/shared/src/keys/index.ts': "export { default } from './actual';\n",
+        [THING]: thingWith("import type Key from './keys';"),
+      },
+    ],
+    [
+      'a namespace import used as `ns.Key`',
+      {
+        [KEYS]: "export type Key = 'id';\n",
+        [THING]: thingWith("import * as keys from './keys';", 'keys.Key'),
+      },
+    ],
+  ];
+  for (const [name, sources] of followed)
+    it(`follows ${name}`, () => {
+      const { thing } = convertThing({ ...shadowed, ...sources });
+      assert.deepEqual(thing.required, ['id']);
+    });
+
+  /** @type {Array<[string, Record<string, string>]>} */
+  const refused = [
+    [
+      'a default import from a module without a default export',
+      {
+        [KEYS]: "export type ActualKey = 'id';\n",
+        [THING]: thingWith("import type Key from './keys';"),
+      },
+    ],
+    ['a default import from a package', { [THING]: thingWith("import Key from '@lody/keys';") }],
+    [
+      'a namespace import from a package used as `ns.Key`',
+      { [THING]: thingWith("import * as keys from '@lody/keys';", 'keys.Key') },
+    ],
+    [
+      'a namespace binding used as a key',
+      {
+        [KEYS]: "export type ActualKey = 'id';\n",
+        [THING]: thingWith("import * as Key from './keys';"),
+      },
+    ],
+    [
+      'an `import = require` binding',
+      {
+        [KEYS]: "export type ActualKey = 'id';\n",
+        [THING]: thingWith("import Key = require('./keys');"),
+      },
+    ],
+  ];
+  for (const [name, sources] of refused)
+    it(`marks a record key from ${name} as unresolved`, () => {
+      const { thing } = convertThing({ ...shadowed, ...sources });
+      assert.equal(thing['x-unresolved'], true);
+      assert.equal(thing.required, undefined);
+    });
+
   it('falls back to loaded declarations of an unimported name only when they agree', () => {
     const agree = convertThing({
       'packages/shared/src/keys.ts': "type Key = 'id';\n",

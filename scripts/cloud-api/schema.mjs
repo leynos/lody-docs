@@ -52,21 +52,38 @@ const declaredIn = (sf, name) =>
     ),
   );
 /**
- * The import that binds a name in a module, if any.
+ * @typedef {object} ImportBinding
+ * @property {'named' | 'default' | 'namespace' | 'require'} kind
+ * @property {string | undefined} specifier the module specifier, if a string literal
+ * @property {string} name the exported name the binding refers to
+ */
+/**
+ * The import that binds a name in a module, if any, whatever its form: named,
+ * renamed, default, namespace (`* as`) or `import x = require(...)`, type-only
+ * or not.
  * @param {ts.SourceFile} sf
  * @param {string} name
+ * @returns {ImportBinding | undefined}
  */
 function importOf(sf, name) {
   for (const statement of sf.statements) {
+    if (ts.isImportEqualsDeclaration(statement) && statement.name.text === name)
+      return { kind: 'require', specifier: undefined, name };
     if (!ts.isImportDeclaration(statement)) continue;
-    const bindings = statement.importClause?.namedBindings;
-    if (!bindings || !ts.isNamedImports(bindings)) continue;
+    const specifier = ts.isStringLiteral(statement.moduleSpecifier)
+      ? statement.moduleSpecifier.text
+      : undefined;
+    const clause = statement.importClause;
+    if (clause?.name?.text === name) return { kind: 'default', specifier, name: 'default' };
+    const bindings = clause?.namedBindings;
+    if (!bindings) continue;
+    if (ts.isNamespaceImport(bindings)) {
+      if (bindings.name.text === name) return { kind: 'namespace', specifier, name };
+      continue;
+    }
     const element = bindings.elements.find((e) => e.name.text === name);
     if (element)
-      return {
-        specifier: /** @type {ts.StringLiteral} */ (statement.moduleSpecifier).text,
-        name: (element.propertyName ?? element.name).text,
-      };
+      return { kind: 'named', specifier, name: (element.propertyName ?? element.name).text };
   }
   return undefined;
 }
@@ -372,8 +389,9 @@ export function createConverter(index, initialSchemas = {}) {
       if (parts.includes(null)) return null;
       return parts.every(Boolean) ? [...new Set(parts.flat())] : undefined;
     }
-    if (ts.isTypeReferenceNode(node) && !node.typeArguments && ts.isIdentifier(node.typeName)) {
-      const candidates = aliasDeclarations(node.getSourceFile(), node.typeName.text);
+    if (ts.isTypeReferenceNode(node) && !node.typeArguments) {
+      const candidates = keyDeclarations(node);
+      if (candidates === undefined) return undefined;
       if (candidates === null) return null;
       const results = candidates.map((decl) =>
         ts.isTypeAliasDeclaration(decl) && !decl.typeParameters?.length
@@ -401,28 +419,59 @@ export function createConverter(index, initialSchemas = {}) {
     );
   }
   /**
+   * The declarations a record key type reference can mean, null when it
+   * cannot be resolved safely, or undefined when it is a qualified name that is
+   * not reached through a namespace import (left as an open record).
+   * @param {ts.TypeReferenceNode} node
+   */
+  function keyDeclarations(node) {
+    const sf = node.getSourceFile();
+    const { typeName } = node;
+    if (ts.isIdentifier(typeName)) return aliasDeclarations(sf, typeName.text);
+    if (!ts.isIdentifier(typeName.left)) return undefined;
+    const imported = importOf(sf, typeName.left.text);
+    if (imported?.kind !== 'namespace') return undefined;
+    // `ns.Key` with `import * as ns from '...'`: follow the module, or refuse.
+    const target = imported.specifier && resolveModule(sf.fileName, imported.specifier);
+    return (target && exportedFrom(target, typeName.right.text, new Set())) || null;
+  }
+  /**
    * The declarations a name in a module can mean: its own declaration; else,
-   * if it is imported, the declaration that import reaches through relative
-   * modules and their named, renamed or star re-exports, or null when it
-   * cannot be followed safely; else every loaded declaration of the name,
-   * which literalKeys accepts only when they agree.
+   * if any import binds it, the declaration that import reaches through
+   * relative modules and their named, renamed, default or star re-exports, or
+   * null when it cannot be followed safely; else every loaded declaration of
+   * the name, which literalKeys accepts only when they agree.
    * @param {ts.SourceFile} sf
    * @param {string} name
    * @returns {Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration> | null}
    */
   function aliasDeclarations(sf, name) {
-    const local = declaredIn(sf, name);
-    if (local.length) return local;
-    const imported = importOf(sf, name);
-    if (imported) {
-      const target = resolveModule(sf.fileName, imported.specifier);
-      return (target && exportedFrom(target, imported.name, new Set())) || null;
-    }
-    return index.declarationsByName.get(name) ?? [];
+    const bound = bindingIn(sf, name, new Set());
+    return bound === undefined ? (index.declarationsByName.get(name) ?? []) : bound;
   }
   /**
-   * The declarations a module exports under a name: an array when found,
-   * undefined when the module does not export it, null when it cannot tell.
+   * What a name bound in a module refers to: its declarations, null when it is
+   * imported but cannot be followed safely, or undefined when the module
+   * neither declares nor imports it.
+   * @param {ts.SourceFile} sf
+   * @param {string} name
+   * @param {Set<string>} seen
+   * @returns {Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration> | null | undefined}
+   */
+  function bindingIn(sf, name, seen) {
+    const declared = declaredIn(sf, name);
+    if (declared.length) return declared;
+    const imported = importOf(sf, name);
+    if (!imported) return undefined;
+    // A namespace or `require` binding is not a key type; refuse rather than guess.
+    if (imported.kind === 'namespace' || imported.kind === 'require') return null;
+    const target = imported.specifier && resolveModule(sf.fileName, imported.specifier);
+    return (target && exportedFrom(target, imported.name, seen)) || null;
+  }
+  /**
+   * The declarations a module exports under a name (`default` included): an
+   * array when found, undefined when the module does not export it, null when
+   * it cannot tell.
    * @param {string} file
    * @param {string} name
    * @param {Set<string>} seen
@@ -438,30 +487,40 @@ export function createConverter(index, initialSchemas = {}) {
     /** @type {Array<Array<any> | undefined | null>} */
     const stars = [];
     for (const statement of sf.statements) {
+      // `export default Name;`
+      if (
+        name === 'default' &&
+        ts.isExportAssignment(statement) &&
+        !statement.isExportEquals &&
+        ts.isIdentifier(statement.expression)
+      )
+        return bindingIn(sf, statement.expression.text, seen) ?? null;
       if (!ts.isExportDeclaration(statement)) continue;
-      const specifier = statement.moduleSpecifier
-        ? /** @type {ts.StringLiteral} */ (statement.moduleSpecifier).text
-        : undefined;
+      const specifier =
+        statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)
+          ? statement.moduleSpecifier.text
+          : undefined;
       const clause = statement.exportClause;
       if (!clause) {
+        // `export *` never re-exports a default.
+        if (name === 'default') continue;
         const target = specifier && resolveModule(file, specifier);
         stars.push(target ? exportedFrom(target, name, seen) : null);
         continue;
       }
-      if (!ts.isNamedExports(clause)) continue;
+      if (ts.isNamespaceExport(clause)) {
+        if (clause.name.text === name) return null;
+        continue;
+      }
       const element = clause.elements.find((e) => e.name.text === name);
       if (!element) continue;
       const original = (element.propertyName ?? element.name).text;
-      if (specifier !== undefined) {
-        const target = resolveModule(file, specifier);
+      if (statement.moduleSpecifier) {
+        const target = specifier && resolveModule(file, specifier);
         return target ? (exportedFrom(target, original, seen) ?? null) : null;
       }
       // `export { original as name }` of this module's own binding.
-      const declared = declaredIn(sf, original);
-      if (declared.length) return declared;
-      const imported = importOf(sf, original);
-      const target = imported && resolveModule(file, imported.specifier);
-      return target && imported ? (exportedFrom(target, imported.name, seen) ?? null) : null;
+      return bindingIn(sf, original, seen) ?? null;
     }
     const found = stars.filter((result) => Array.isArray(result));
     if (found.length) return found.flat();

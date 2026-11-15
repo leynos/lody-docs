@@ -354,6 +354,27 @@ describe('generate-cloud-api schema conversion', () => {
     assert.equal(thing.required, undefined);
   });
 
+  it('resolves a record-key alias reached through a default import', () => {
+    const thing = thingSchema('record-default', {
+      ...shadowingIndex,
+      'packages/shared/src/keys.ts':
+        "type ActualKey = 'id';\nexport type { ActualKey as default };\n",
+      [THING]: "import type Key from './keys';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.deepEqual(thing.required, ['id']);
+    assert.deepEqual(Object.keys(thing.properties), ['id']);
+  });
+
+  it('marks a record key from a default import that cannot be followed as unresolved', () => {
+    const thing = thingSchema('record-default-unfollowed', {
+      ...shadowingIndex,
+      'packages/shared/src/keys.ts': "export type ActualKey = 'id';\n",
+      [THING]: "import type Key from './keys';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.equal(thing['x-unresolved'], true);
+    assert.equal(thing.required, undefined);
+  });
+
   it('marks an ambiguous record-key alias as unresolved', () => {
     const thing = thingSchema('record-ambiguous', {
       ...shadowingIndex,
