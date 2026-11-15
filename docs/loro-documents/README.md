@@ -7,13 +7,14 @@ and synchronized, and how a user's turn travels through them to a running
 agent. It cites the source for every claim.
 
 Loro is a library of conflict-free replicated data types (CRDTs). A Loro
-document holds maps, lists, movable lists, and text. That it merges
-concurrent edits from any number of replicas without coordination is the
-library's stated purpose, not something read in its internals (**Intent**;
-see [Scope](#scope)). Lody hosts its documents with
-`loro-repo` ([E-D41](evidence.md#e-d41), [E-D91](evidence.md#e-d91)) and
-synchronizes them through Loro Durable Streams
-([E-D261](evidence.md#e-d261)).
+document holds maps, lists, movable lists, and text. How Lody relies on, and
+defends against, the way those containers merge concurrent edits is set out
+in [writers and merge behaviour](writers-and-merge.md); the library's own
+merge rules were not read for this study (see [Scope](#scope)). Lody hosts
+its documents with `loro-repo` ([E-D41](evidence.md#e-d41),
+[E-D91](evidence.md#e-d91)) and synchronizes them by registering a Loro
+Durable Streams transport with the repository ([E-D45](evidence.md#e-d45),
+[E-D97](evidence.md#e-d97)).
 
 Two neighbouring subjects have their own document sets and are not repeated
 here:

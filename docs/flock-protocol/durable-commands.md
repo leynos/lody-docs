@@ -324,8 +324,10 @@ each ([E-D3](evidence.md#e-d3)). `deleteLocalProjectResources` decides
   (`createdAtMs > requestedAt`), the command is dropped. A project removed and
   registered again with a strictly later `createdAtMs` is not removed by the
   earlier request ([E-D5](evidence.md#e-d5)). The model checks this as **D1**
-  when the two timestamps differ. The comparison is strict, so a registration
-  in the same millisecond as the request is removed; the model finds this
+  when the two timestamps differ. The comparison is strict, so the guard does
+  not protect a registration made in the same millisecond as the request:
+  such a registration passes the guard and is removed if it is otherwise
+  removable, that is, not still referenced. The model finds this
   counterexample when equal timestamps are allowed
   ([formal model](formal-model.md#an-observation-about-the-shipped-protocol),
   [O2](observations.md#o2-re-adding-during-a-pending-removal)).
