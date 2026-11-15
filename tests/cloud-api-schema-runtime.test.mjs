@@ -7,14 +7,22 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { schemaOf, THING } from './cloud-api-helpers.mjs';
 
+/** The library imports, on the same line as the schema so locations stay at line 1. */
+const ZOD = "import { z } from 'zod'; ";
+const EFFECT = "import { Schema } from 'effect'; ";
+/** The one `Hex` helper the Effect converter expands. */
+const HEX =
+  'const Hex = (maxBytes: number) => Schema.String.check(Schema.isPattern(new RegExp(`^(?:[0-9a-f]{2}){1,$' +
+  '{maxBytes}}$`)));\n';
 /** The schema of a Zod expression `S`. @param {string} expression */
 const zodOf = (expression) =>
-  schemaOf(`const S = ${expression};\nexport type Thing = z.infer<typeof S>;\n`);
+  schemaOf(`${ZOD}const S = ${expression};\nexport type Thing = z.infer<typeof S>;\n`);
 /** The schema of a Zod field inside an object. @param {string} field */
 const fieldOf = (field) => zodOf(`z.object({ f: ${field} })`).schema.properties.f;
 /** The schema of an Effect expression `S`. @param {string} expression @param {string} [before] */
 const effectOf = (expression, before = '') =>
-  schemaOf(`${before}const S = ${expression};\nexport type Thing = typeof S.Type;\n`).schema;
+  schemaOf(`${EFFECT}${before}const S = ${expression};\nexport type Thing = typeof S.Type;\n`)
+    .schema;
 
 describe('Zod', () => {
   it('omits optional fields from required and admits null for nullable ones', () => {
@@ -165,6 +173,7 @@ describe('Effect', () => {
     assert.deepEqual(
       effectOf(
         "Schema.Struct({ a: Schema.String, n: Schema.Int, l: Schema.Literals(['x', 'y']), arr: Schema.Array(Schema.String), o: Schema.NullOr(Schema.String), h: Hex(4), p: Schema.String.check(Schema.isPattern(/^a$/)), m: Schema.Array(Schema.String).check(Schema.isMaxLength(3)) })",
+        HEX,
       ),
       {
         type: 'object',

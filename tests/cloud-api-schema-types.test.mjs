@@ -161,7 +161,7 @@ describe('TypeScript types', () => {
     const { thing, converter } = convertThing({
       'packages/shared/src/limits.ts': 'export const MAX = 7;\n',
       [THING]:
-        'const S = z.object({ name: z.string().max(MAX) });\nexport type Thing = z.infer<typeof S>;\n',
+        "import { z } from 'zod';\nconst S = z.object({ name: z.string().max(MAX) });\nexport type Thing = z.infer<typeof S>;\n",
     });
     assert.equal(thing.properties.name.maxLength, 7);
     assert.ok(converter.used.has(path.join(ROOT, 'packages/shared/src/limits.ts')));

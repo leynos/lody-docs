@@ -28,7 +28,7 @@ describe('generate-cloud-api source verification', () => {
     assert.equal(schema.properties.name.maxLength, 64);
     const manifest = JSON.parse(fs.readFileSync(path.join(f.docs, 'sources.json'), 'utf8'));
     assert.ok(manifest.files.some((file) => file.path === LIMITS));
-    assert.equal(manifest.index.files, 5);
+    assert.equal(manifest.index.files, 6);
     assert.equal(generate(f, '--check').status, 0);
   });
 

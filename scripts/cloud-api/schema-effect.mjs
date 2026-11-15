@@ -5,11 +5,40 @@
  * through the variables that name it and converts `Schema.String`,
  * `Schema.Int`, `Hex(n)`, `Schema.Struct` (including spreads of another
  * struct's fields), `Schema.Array`, `Schema.NullOr`, `Schema.Literals` and the
- * `isPattern` and `isMaxLength` checks. Anything else becomes `x-unresolved`.
+ * `isPattern` and `isMaxLength` checks (`maxLength` for strings, `maxItems`
+ * for arrays, the tighter of two). `Schema` counts only where it is imported
+ * from `effect`, `Hex(n)` only for the one known helper definition, and a
+ * spread only for `X.fields` of a plain struct. Anything else becomes
+ * `x-unresolved`.
  * Used by `schema-types.mjs` for `typeof Schema.Type` references.
  */
 import ts from 'typescript';
 import { propertiesFrom, propertyName, stringLiteral } from './schema-context.mjs';
+import { isPlainObject } from './schema-utilities.mjs';
+import { importedFrom } from './schema-zod.mjs';
+
+/** Whether a node is the `Schema` namespace imported from `effect`. @param {ts.Node} node */
+const isSchema = (node) =>
+  ts.isIdentifier(node) && node.text === 'Schema' && importedFrom(node, 'Schema', /^effect(\/|$)/);
+
+/**
+ * The parameter name of `const Hex = (n) => Schema.String.check(Schema.isPattern(
+ * new RegExp(`^(?:[0-9a-f]{2}){1,${n}}$`)))`, the one helper whose calls are
+ * expanded, or undefined for any other definition.
+ * @param {ts.VariableDeclaration | undefined} variable
+ */
+function hexParameter(variable) {
+  const fn = variable?.initializer;
+  if (!fn || !ts.isArrowFunction(fn) || fn.parameters.length !== 1) return undefined;
+  const parameter = fn.parameters[0].name;
+  if (!ts.isIdentifier(parameter) || ts.isBlock(fn.body)) return undefined;
+  // Compared without whitespace; `$\{` is a literal `${` in the compared text.
+  const expected = `Schema.String.check(Schema.isPattern(newRegExp(\`^(?:[0-9a-f]{2}){1,$\{${parameter.text}}}$\`)))`;
+  return fn.body.getText().replace(/\s+/g, '') === expected &&
+    importedFrom(fn, 'Schema', /^effect(\/|$)/)
+    ? parameter.text
+    : undefined;
+}
 
 /**
  * Create the Effect converter of a conversion.
@@ -26,7 +55,7 @@ export function createEffectConverter(ctx) {
         return effectSchema(variable.initializer);
       }
     }
-    if (ts.isPropertyAccessExpression(node) && node.expression.getText() === 'Schema') {
+    if (ts.isPropertyAccessExpression(node) && isSchema(node.expression)) {
       if (node.name.text === 'String') return { type: 'string' };
       if (node.name.text === 'Int') return { type: 'integer' };
     }
@@ -35,6 +64,9 @@ export function createEffectConverter(ctx) {
       ts.isIdentifier(node.expression) &&
       node.expression.text === 'Hex'
     ) {
+      const helper = variableAt(node.expression, 'Hex');
+      if (!hexParameter(helper)) return opaque(node, 'Hex helper has an unexpected definition.');
+      location(/** @type {ts.Node} */ (helper));
       return {
         type: 'string',
         pattern: `^(?:[0-9a-f]{2}){1,${numberValue(node.arguments[0])}}$`,
@@ -46,17 +78,22 @@ export function createEffectConverter(ctx) {
       method = node.expression.name.text,
       /** @type {any} */
       args = node.arguments;
-    if (owner.getText() === 'Schema') {
+    if (isSchema(owner)) {
       if (method === 'Struct' && ts.isObjectLiteralExpression(args[0])) {
         /** @type {Map<string, any>} */
         const properties = new Map();
         /** @type {string[]} */
         const required = [];
         for (const prop of args[0].properties) {
-          if (ts.isSpreadAssignment(prop) && ts.isPropertyAccessExpression(prop.expression)) {
+          if (
+            ts.isSpreadAssignment(prop) &&
+            ts.isPropertyAccessExpression(prop.expression) &&
+            prop.expression.name.text === 'fields'
+          ) {
             const variable = variableAt(prop, prop.expression.expression.getText());
             if (!variable?.initializer) return opaque(node, 'Effect spread not found.');
             const spread = effectSchema(variable.initializer);
+            if (!isPlainObject(spread)) return opaque(node, 'Effect spread is not a plain struct.');
             for (const [key, value] of Object.entries(spread.properties ?? {}))
               properties.set(key, value);
             required.push(...(spread.required ?? []));
@@ -69,7 +106,11 @@ export function createEffectConverter(ctx) {
             required.push(name);
           } else return opaque(node, 'Effect member needs manual expansion.');
         }
-        return { type: 'object', properties: propertiesFrom(properties), required };
+        return {
+          type: 'object',
+          properties: propertiesFrom(properties),
+          required: [...new Set(required)],
+        };
       }
       if (method === 'Array') return { type: 'array', items: effectSchema(args[0]) };
       if (method === 'NullOr') return { anyOf: [effectSchema(args[0]), { type: 'null' }] };
@@ -79,15 +120,27 @@ export function createEffectConverter(ctx) {
     if (method === 'check') {
       let base = effectSchema(owner);
       for (const arg of args) {
-        if (!ts.isCallExpression(arg) || !ts.isPropertyAccessExpression(arg.expression))
+        if (
+          !ts.isCallExpression(arg) ||
+          !ts.isPropertyAccessExpression(arg.expression) ||
+          !isSchema(arg.expression.expression)
+        )
           return opaque(node, 'Effect check needs manual expansion.');
         const name = arg.expression.name.text;
         /** @type {any} */
         const first = arg.arguments[0];
-        if (name === 'isPattern' && ts.isRegularExpressionLiteral(first))
+        if (
+          name === 'isPattern' &&
+          ts.isRegularExpressionLiteral(first) &&
+          base.type === 'string' &&
+          base.pattern === undefined
+        )
           base = { ...base, pattern: first.text.slice(1, -1) };
-        else if (name === 'isMaxLength') base = { ...base, maxItems: numberValue(first) };
-        else return opaque(node, 'Effect refinement needs manual expansion.');
+        else if (name === 'isMaxLength' && ['array', 'string'].includes(base.type)) {
+          const key = base.type === 'array' ? 'maxItems' : 'maxLength';
+          const value = numberValue(first);
+          base = { ...base, [key]: Math.min(base[key] ?? value, value) };
+        } else return opaque(node, 'Effect refinement needs manual expansion.');
       }
       return base;
     }

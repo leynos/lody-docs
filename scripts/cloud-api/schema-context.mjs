@@ -77,10 +77,11 @@ export function stringLiteral(node) {
  * @property {(node: any) => any} zod Zod expression to schema
  * @property {(node: any) => any} effectSchema Effect schema expression to schema
  * @property {(node: ts.TypeNode | undefined) => string[] | undefined | null} literalKeys
- * @property {(sf: ts.SourceFile, parts: string[]) => Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration> | null} declarationsOf
- *   the declarations a type name used in a module can mean
+ * @property {(sf: ts.SourceFile, parts: string[], space?: 'type' | 'value') => any[] | null} declarationsOf
+ *   the declarations a name used in a module can mean (`schema-scope.mjs`)
+ * @property {(node: ts.ImportTypeNode) => any[] | null} importTypeDeclarations
  * @property {(node: ts.TypeNode) => Array<string | number> | null} propertyKeys
- *   the property names `keyof` sees, numbers kept as numbers
+ *   the property names `keyof` sees, numbers kept as numbers (`schema-keys.mjs`)
  */
 
 /**
@@ -107,22 +108,18 @@ export function createContext(index, initialSchemas) {
     return `${path.relative(root, sf.fileName)}:${line}`;
   };
   /**
-   * Find the variable `name`, first in the file of `node`, then in any indexed
-   * file. The file that supplies it shapes the output, so it counts as used.
+   * The one variable a name (`x` or `ns.x`) used at `node` means, resolved in
+   * that node's module (`schema-scope.mjs`), or undefined. The file that
+   * supplies it shapes the output, so it counts as used.
    * @param {ts.Node} node
    * @param {string} name
+   * @returns {ts.VariableDeclaration | undefined}
    */
   const variableAt = (node, name) => {
-    const sf = node.getSourceFile();
-    let found;
-    for (const statement of sf.statements)
-      if (ts.isVariableStatement(statement)) {
-        for (const v of statement.declarationList.declarations)
-          if (!found && v.name.getText() === name) found = v;
-      }
-    found ??= index.variables.get(name);
-    if (found) used.add(found.getSourceFile().fileName);
-    return found;
+    const found = context.declarationsOf(node.getSourceFile(), name.split('.'), 'value');
+    if (found?.length !== 1) return undefined;
+    used.add(found[0].getSourceFile().fileName);
+    return found[0];
   };
   /** @param {any} node @returns {number} */
   const numberValue = (node) => {
@@ -167,7 +164,8 @@ export function createContext(index, initialSchemas) {
   const unset = () => {
     throw Error('Converter function used before it was attached');
   };
-  return {
+  /** @type {Context} */
+  const context = {
     index,
     root,
     schemas,
@@ -184,5 +182,7 @@ export function createContext(index, initialSchemas) {
     literalKeys: unset,
     declarationsOf: unset,
     propertyKeys: unset,
+    importTypeDeclarations: unset,
   };
+  return context;
 }

@@ -6,13 +6,50 @@
  * methods the public contract uses. An optional field is marked with
  * `x-optional` only while its object is being built; the marker never remains
  * in the output, and `.optional().nullable()` stays optional. Bounds take the
- * keyword their base type needs (`minLength`, `minItems` or `minimum`).
+ * keyword their base type needs (`minLength`, `minItems` or `minimum`), and a
+ * chain keeps the tighter bound; a check on a schema it does not apply to, or
+ * a second format or pattern, is `x-unresolved`. `z` counts as Zod only where
+ * it is imported from `zod`.
  * `.refine` and `.superRefine` keep the structural schema, flag it
  * `x-partial` and record the refinement as unresolved; any other method makes
  * the schema `x-unresolved`. Used by `schema-types.mjs` for `z.infer`.
  */
 import ts from 'typescript';
 import { propertiesFrom, propertyName, stringLiteral } from './schema-context.mjs';
+import { importOf } from './schema-scope.mjs';
+
+/**
+ * Whether `name` at `node` is bound by an import from a module whose
+ * specifier matches `from`, so that a local look-alike is never mistaken for
+ * the library.
+ * @param {ts.Node} node
+ * @param {string} name
+ * @param {RegExp} from
+ */
+export function importedFrom(node, name, from) {
+  const binding = importOf(node.getSourceFile(), name);
+  return Boolean(
+    binding?.specifier &&
+      from.test(binding.specifier) &&
+      (binding.kind !== 'named' || binding.name === name),
+  );
+}
+
+/** The base types each refinement method applies to. */
+const APPLIES_TO = /** @type {Record<string, string[]>} */ ({
+  int: ['number', 'integer'],
+  positive: ['number', 'integer'],
+  nonnegative: ['number', 'integer'],
+  safe: ['number', 'integer'],
+  uuid: ['string'],
+  url: ['string'],
+  datetime: ['string'],
+  regex: ['string'],
+  trim: ['string'],
+  min: ['string', 'array', 'number', 'integer'],
+  max: ['string', 'array', 'number', 'integer'],
+  strict: ['object'],
+});
 
 /**
  * Create the Zod converter of a conversion.
@@ -45,7 +82,7 @@ export function createZodConverter(ctx) {
       owner = node.expression.expression,
       /** @type {any} */
       args = node.arguments;
-    if (owner.getText() === 'z') {
+    if (ts.isIdentifier(owner) && owner.text === 'z' && importedFrom(owner, 'z', /^zod(\/|$)/)) {
       if (['string', 'number', 'boolean'].includes(method)) return { type: method };
       if (['unknown', 'any'].includes(method)) return {};
       if (method === 'literal') {
@@ -87,6 +124,8 @@ export function createZodConverter(ctx) {
       if (method === 'record') return { type: 'object', additionalProperties: nested(args.at(-1)) };
     }
     const base = zod(owner);
+    if (APPLIES_TO[method] && !APPLIES_TO[method].includes(base.type))
+      return opaque(node, `Zod .${method}() on a schema it does not apply to.`);
     if (method === 'optional') return { ...base, 'x-optional': true };
     if (method === 'nullable') {
       // `.optional().nullable()` is still optional: lift the marker outward.
@@ -96,8 +135,9 @@ export function createZodConverter(ctx) {
     if (method === 'strict') return { ...base, additionalProperties: false };
     if (['passthrough', 'strip', 'readonly', 'brand'].includes(method)) return base;
     if (method === 'int') return { ...base, type: 'integer' };
-    if (method === 'positive') return { ...base, exclusiveMinimum: 0 };
-    if (method === 'nonnegative') return { ...base, minimum: 0 };
+    if (method === 'positive')
+      return { ...base, exclusiveMinimum: Math.max(base.exclusiveMinimum ?? 0, 0) };
+    if (method === 'nonnegative') return { ...base, minimum: Math.max(base.minimum ?? 0, 0) };
     if (['min', 'max'].includes(method)) {
       const key =
         base.type === 'string'
@@ -111,8 +151,13 @@ export function createZodConverter(ctx) {
             : method === 'min'
               ? 'minimum'
               : 'maximum';
-      return { ...base, [key]: numberValue(args[0]) };
+      // Zod applies every bound in a chain, so the tighter one holds.
+      const value = numberValue(args[0]);
+      const tighter = method === 'min' ? Math.max : Math.min;
+      return { ...base, [key]: base[key] === undefined ? value : tighter(base[key], value) };
     }
+    if (['uuid', 'url', 'datetime', 'regex'].includes(method) && (base.format || base.pattern))
+      return opaque(node, `Zod .${method}() would replace an earlier format or pattern.`);
     if (['uuid', 'url', 'datetime'].includes(method))
       return {
         ...base,

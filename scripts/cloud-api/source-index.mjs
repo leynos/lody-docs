@@ -36,10 +36,10 @@ export const indexable = (file) => /\.ts$/.test(file) && !/\.(test|spec)\.ts$/.t
  * @typedef {object} SourceIndex
  * @property {string} root the Lody checkout
  * @property {Map<string, ts.SourceFile>} files every parsed file, by absolute path
- * @property {Map<string, ts.Declaration>} declarations the first declaration of each type name
  * @property {Map<string, Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration>>} declarationsByName
  *   every declaration of each type name
- * @property {Map<string, ts.VariableDeclaration>} variables the first declaration of each variable
+ * @property {Map<string, ts.VariableDeclaration[]>} variablesByName every variable declaration of
+ *   each name
  * @property {(file: string) => Buffer} read the bytes of a file, read at most once
  * @property {(file: string) => ts.SourceFile} load parse a file, at most once
  * @property {(file: string) => boolean} isFile whether a regular file exists
@@ -54,9 +54,8 @@ export const indexable = (file) => /\.ts$/.test(file) && !/\.(test|spec)\.ts$/.t
 export function createSourceIndex(root, reader) {
   const files = new Map();
   const contents = new Map();
-  const declarations = new Map();
   const declarationsByName = new Map();
-  const variables = new Map();
+  const variablesByName = new Map();
   /** @param {string} file */
   const read = (file) => {
     if (!contents.has(file)) contents.set(file, reader.readFile(file));
@@ -71,12 +70,12 @@ export function createSourceIndex(root, reader) {
     for (const node of sf.statements) {
       if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) {
         const name = node.name.text;
-        if (!declarations.has(name)) declarations.set(name, node);
         declarationsByName.set(name, [...(declarationsByName.get(name) ?? []), node]);
       }
       if (ts.isVariableStatement(node))
         for (const v of node.declarationList.declarations) {
-          if (ts.isIdentifier(v.name) && !variables.has(v.name.text)) variables.set(v.name.text, v);
+          if (ts.isIdentifier(v.name))
+            variablesByName.set(v.name.text, [...(variablesByName.get(v.name.text) ?? []), v]);
         }
     }
     return sf;
@@ -84,9 +83,8 @@ export function createSourceIndex(root, reader) {
   return {
     root,
     files,
-    declarations,
     declarationsByName,
-    variables,
+    variablesByName,
     read,
     load,
     isFile: reader.isFile,

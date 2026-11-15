@@ -87,14 +87,15 @@ service.
 
 `scripts/generate-cloud-api.mjs` is a thin command-line entry point: it reads
 `LODY_SOURCE` and `--check`, supplies real file-system and Git access, and
-either writes the outputs or, with `--check`, only reads and compares them.
-The work is done by the modules in `scripts/cloud-api/`: `source-index.mjs`
-reads and parses the checkout, `schema.mjs` converts types to JSON Schema,
+either writes the outputs or, with `--check`, only reads and compares them. The
+work is done by the modules in `scripts/cloud-api/`: `source-index.mjs` reads
+and parses the checkout, `schema.mjs` converts types to JSON Schema,
 `operations.mjs` builds the operations, OpenAPI document and manifest,
 `provenance.mjs` verifies the checkout against the pinned commit through an
-injected Git runner, `render.mjs` renders the documents, `outputs.mjs`
-compares or writes them, and `pipeline.mjs` connects these without performing
-any I/O. `schema.mjs` is a facade over `schema-context.mjs` (shared state),
+injected Git runner, `render.mjs` renders the documents, `outputs.mjs` compares
+or writes them, and `pipeline.mjs` connects these without performing any I/O.
+`schema.mjs` is a facade over `schema-context.mjs` (shared state),
+`schema-scope.mjs` (resolution of every name in the module that uses it),
 `schema-types.mjs` (TypeScript types and named DTOs), `schema-utilities.mjs`
 (utility types), `schema-keys.mjs` (key sets), `schema-zod.mjs` and
 `schema-effect.mjs`. The `tests/cloud-api-*.test.mjs` files test each module in

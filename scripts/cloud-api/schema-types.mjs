@@ -15,25 +15,65 @@
  */
 import ts from 'typescript';
 import { comment, ownProperty, propertiesFrom, propertyName, ref } from './schema-context.mjs';
-import { entityParts } from './schema-keys.mjs';
-import { createUtilities, flatten, isTransparentOperator } from './schema-utilities.mjs';
+import { entityParts } from './schema-scope.mjs';
+import {
+  createUtilities,
+  flatten,
+  isPlainObject,
+  isTransparentOperator,
+} from './schema-utilities.mjs';
 
 /**
  * Create the type converter of a conversion.
  * @param {import('./schema-context.mjs').Context} ctx
  */
 export function createTypeConverter(ctx) {
-  const { index, schemas, opaque, location, variableAt } = ctx;
+  const { schemas, opaque, location, variableAt } = ctx;
   const utilities = createUtilities(ctx);
 
-  /** @param {string} name @param {ts.Node} node */
+  /**
+   * Component names by declaration, so that two same-named declarations in
+   * different modules never share a schema; the first to be emitted is
+   * `Dto_<Name>`, a later one `Dto_<Name>_2`, and so on.
+   * @type {Map<ts.Node, string>}
+   */
+  const components = new Map();
+  /** @type {Map<string, ts.Node>} */
+  const claimed = new Map();
+  /** @param {any} decl */
+  function componentName(decl) {
+    let key = components.get(decl);
+    if (key) return key;
+    const base = `Dto_${decl.name.text}`;
+    key = base;
+    for (let n = 2; claimed.has(key) || schemas[key]; n++) key = `${base}_${n}`;
+    components.set(decl, key);
+    claimed.set(key, decl);
+    return key;
+  }
+
+  /**
+   * A named DTO, resolved in the module of the referencing node, emitted once
+   * as a component schema and referred to thereafter.
+   * @param {string} name `Name` or `Q.Name`
+   * @param {ts.Node} node the reference
+   */
   function named(name, node) {
-    const key = `Dto_${name}`;
-    if (schemas[key]) return ref(key);
-    /** @type {any} */
-    const decl = index.declarations.get(name);
-    if (!decl) return opaque(node, 'Definition is outside the indexed public DTO sources.');
+    return namedFrom(ctx.declarationsOf(node.getSourceFile(), name.split('.')), node);
+  }
+
+  /**
+   * @param {any[] | null} decls the declarations the reference can mean
+   * @param {ts.Node} node the reference
+   */
+  function namedFrom(decls, node) {
+    if (!decls?.length)
+      return opaque(node, 'Definition is outside the indexed public DTO sources.');
+    if (decls.length > 1) return opaque(node, 'Type name has more than one declaration in scope.');
+    const [decl] = decls;
     if (decl.typeParameters?.length) return opaque(node, 'Generic type requires explicit review.');
+    const key = componentName(decl);
+    if (schemas[key]) return ref(key);
     schemas[key] = {}; // Break recursion.
     const value = ts.isInterfaceDeclaration(decl) ? interfaceSchema(decl) : convert(decl.type);
     schemas[key] = {
@@ -92,7 +132,7 @@ export function createTypeConverter(ctx) {
     let additionalProperties;
     for (const base of heritage) {
       const schema = baseSchema(base);
-      if (schema?.type !== 'object' || schema['x-unresolved'])
+      if (!isPlainObject(schema, true))
         return opaque(base, 'Inherited interface could not be expanded.');
       for (const [key, value] of Object.entries(schema.properties ?? {}))
         properties.set(key, value);
@@ -258,7 +298,8 @@ export function createTypeConverter(ctx) {
         ? ctx.effectSchema(variable.initializer)
         : opaque(node, 'Effect schema definition not found.');
     }
-    if (ts.isImportTypeNode(node) && node.qualifier) return named(node.qualifier.getText(), node);
+    if (ts.isImportTypeNode(node) && node.qualifier)
+      return namedFrom(ctx.importTypeDeclarations(node), node);
     if (ts.isTypeReferenceNode(node)) return reference(node);
     return opaque(
       node,

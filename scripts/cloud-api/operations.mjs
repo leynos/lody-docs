@@ -12,7 +12,9 @@
  */
 import crypto from 'node:crypto';
 import path from 'node:path';
+import ts from 'typescript';
 import { comment, ref } from './schema.mjs';
+import { CONTRACT_MODULE } from './source-index.mjs';
 
 /** Schemas expanded even though no operation names them directly. */
 const EXTRA_DTOS = [
@@ -130,7 +132,9 @@ function convexPath(kind, selected) {
 export function buildApi({ index, converter, http, supplemental }) {
   const { convert, named, location, schemas } = converter;
   /** @type {any} */
-  const contract = index.declarations.get('CloudApi');
+  const contract = index
+    .load(path.join(index.root, CONTRACT_MODULE))
+    .statements.find((s) => ts.isTypeAliasDeclaration(s) && s.name.text === 'CloudApi');
   if (!contract) throw Error('CloudApi type not found in the indexed sources');
   /** @type {Operation[]} */
   const operations = [];

@@ -14,6 +14,25 @@ import { isDeepStrictEqual } from 'node:util';
 import ts from 'typescript';
 import { ownProperty, propertiesFrom } from './schema-context.mjs';
 
+/** Keys that describe an object schema without constraining it further. */
+const DESCRIPTIVE = new Set(['type', 'properties', 'required', 'description', 'x-source']);
+
+/**
+ * Whether a schema is an object schema whose every constraint the utilities
+ * and merges here preserve: only `type`, `properties`, `required` (and
+ * descriptive keys), plus `additionalProperties` where the caller keeps it.
+ * Anything else (`additionalProperties` elsewhere, `patternProperties`,
+ * `anyOf`/`allOf`/`oneOf`, `$ref`, `x-unresolved`, `x-partial`, ...) would be
+ * lost.
+ * @param {any} schema
+ * @param {boolean} [keepsAdditional] whether the caller preserves `additionalProperties`
+ */
+export const isPlainObject = (schema, keepsAdditional = false) =>
+  schema?.type === 'object' &&
+  Object.keys(schema).every(
+    (key) => DESCRIPTIVE.has(key) || (keepsAdditional && key === 'additionalProperties'),
+  );
+
 /**
  * Follow component references to the schema they name.
  * @param {Record<string, any>} schemas
@@ -36,8 +55,7 @@ export function flatten(schemas, schema) {
   const s = deref(schemas, schema);
   if (!s.allOf) return s;
   const parts = s.allOf.map((/** @type {any} */ part) => flatten(schemas, part));
-  if (!parts.every((/** @type {any} */ p) => p.type === 'object' && !p.additionalProperties))
-    return { allOf: parts };
+  if (!parts.every((/** @type {any} */ p) => isPlainObject(p))) return { allOf: parts };
   /** @type {Map<string, any>} */
   const properties = new Map();
   for (const part of parts)
@@ -75,6 +93,9 @@ export function createUtilities(ctx) {
   function objectUtility(name, node, args) {
     const object = flat(ctx.convert(args[0]));
     if (object.type !== 'object') return opaque(node, 'Utility target is not an object.');
+    // Pick drops an index signature; every other constraint must survive.
+    if (!isPlainObject(object, name !== 'Pick'))
+      return opaque(node, 'Utility target has constraints the utility would drop.');
     /** @type {string[] | undefined | null} */
     let keys = [];
     if (name === 'Pick' || name === 'Omit') {

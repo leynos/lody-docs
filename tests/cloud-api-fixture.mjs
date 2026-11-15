@@ -55,6 +55,8 @@ export const SOURCES = {
     '',
   ].join('\n'),
   [LIMITS]: 'export const MAX_NAME = 64;\n',
+  // The package entry point through which the contract imports `Thing`.
+  'packages/shared/src/index.ts': "export * from './thing';\n",
   'packages/e2ee-core/src/index.ts': 'export {};\n',
   'packages/e2ee-machine-sharing/src/index.ts': 'export {};\n',
   '.gitignore': 'ignored.ts\n',

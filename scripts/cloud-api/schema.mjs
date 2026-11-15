@@ -3,8 +3,9 @@
  *
  * `createConverter` is the facade over one conversion. It creates the shared
  * state (`schema-context.mjs`) and wires the focused converters to it:
- * `schema-types.mjs` for TypeScript types and named DTOs, with the utility
- * types in `schema-utilities.mjs`; `schema-keys.mjs` for finite key sets;
+ * `schema-scope.mjs` for module-scoped name resolution; `schema-types.mjs`
+ * for TypeScript types and named DTOs, with the utility types in
+ * `schema-utilities.mjs`; `schema-keys.mjs` for finite key sets;
  * `schema-zod.mjs` and `schema-effect.mjs` for runtime schemas. It resolves
  * names only through its source index (`source-index.mjs`), so it performs no
  * I/O of its own beyond parsing a module the index has not yet loaded. The
@@ -13,6 +14,7 @@
 import { createContext } from './schema-context.mjs';
 import { createEffectConverter } from './schema-effect.mjs';
 import { createKeyResolver } from './schema-keys.mjs';
+import { createScope } from './schema-scope.mjs';
 import { createTypeConverter } from './schema-types.mjs';
 import { createZodConverter } from './schema-zod.mjs';
 
@@ -27,9 +29,11 @@ export { comment, ref } from './schema-context.mjs';
  */
 export function createConverter(index, initialSchemas = {}) {
   const ctx = createContext(index, initialSchemas);
+  const scope = createScope(ctx);
+  ctx.declarationsOf = scope.declarationsOf;
+  ctx.importTypeDeclarations = scope.importTypeDeclarations;
   const keys = createKeyResolver(ctx);
   ctx.literalKeys = keys.literalKeys;
-  ctx.declarationsOf = keys.declarationsOf;
   ctx.propertyKeys = keys.propertyKeys;
   const types = createTypeConverter(ctx);
   ctx.convert = types.convert;
