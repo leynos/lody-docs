@@ -32,8 +32,10 @@ const BYTES_DIFFER =
   /packages\/shared\/src\/limits\.ts \(bytes read differ from [0-9a-f]{40}; filters and line-ending conversion are not applied\)/;
 /** The file that declares the `Thing` result type. */
 const THING = 'packages/shared/src/thing.ts';
+/** The module that exports the `CloudApi` type; it is loaded first. */
+const INDEX = 'packages/cloud-api/src/index.ts';
 const SOURCES = {
-  'packages/cloud-api/src/index.ts': [
+  [INDEX]: [
     "import type { Thing } from '@lody/shared';",
     '',
     'export type CloudApi = {',
@@ -292,6 +294,54 @@ describe('generate-cloud-api schema conversion', () => {
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /Unsupported DTO member: run\(\): void;/);
     assertNothingWritten(f);
+  });
+
+  /** The fixture's CloudApi module with a private `Key` alias loaded first. */
+  const shadowingIndex = { [INDEX]: `${SOURCES[INDEX]}type Key = 'other';\n` };
+  /** @param {string} name @param {Record<string, string>} overrides */
+  function thingSchema(name, overrides) {
+    const f = fixture(name, overrides);
+    const result = generate(f);
+    assert.equal(result.status, 0, result.stderr);
+    return openapi(f).components.schemas.Dto_Thing;
+  }
+
+  it('deduplicates record keys from overlapping aliases', () => {
+    const thing = thingSchema('record-duplicates', {
+      [THING]:
+        "type Base = 'left' | 'right';\nexport type Thing = Record<Base | 'left', string>;\n",
+    });
+    assert.deepEqual(thing.required, ['left', 'right']);
+    assert.deepEqual(Object.keys(thing.properties), ['left', 'right']);
+  });
+
+  it('resolves a record-key alias in the module that declares it', () => {
+    const thing = thingSchema('record-local', {
+      ...shadowingIndex,
+      [THING]: "type Key = 'id';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.deepEqual(thing.required, ['id']);
+    assert.deepEqual(thing.properties, { id: { type: 'string' } });
+  });
+
+  it('resolves a record-key alias through a relative import', () => {
+    const thing = thingSchema('record-import', {
+      ...shadowingIndex,
+      'packages/shared/src/keys.ts': "export type Key = 'id';\n",
+      [THING]: "import type { Key } from './keys';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.deepEqual(thing.required, ['id']);
+  });
+
+  it('marks an ambiguous record-key alias as unresolved', () => {
+    const thing = thingSchema('record-ambiguous', {
+      ...shadowingIndex,
+      'packages/shared/src/keys.ts': "export type Key = 'id';\n",
+      [THING]: "import type { Key } from '@lody/keys';\nexport type Thing = Record<Key, string>;\n",
+    });
+    assert.equal(thing['x-unresolved'], true);
+    assert.equal(thing['x-typescript'], 'Record<Key, string>');
+    assert.equal(thing.properties, undefined);
   });
 
   it('marks unsupported syntax as unresolved rather than as a full schema', () => {

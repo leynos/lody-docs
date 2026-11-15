@@ -39,6 +39,8 @@ const check = process.argv.includes('--check');
 const used = new Set();
 const files = new Map();
 const declarations = new Map();
+/** Every type alias and interface declaration, by name, across loaded files. */
+const declarationsByName = new Map();
 const variables = new Map();
 const unresolved = new Map();
 const schemas = {};
@@ -82,6 +84,7 @@ function load(file) {
     if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) {
       const name = node.name.text;
       if (!declarations.has(name)) declarations.set(name, node);
+      declarationsByName.set(name, [...(declarationsByName.get(name) ?? []), node]);
     }
     if (ts.isVariableStatement(node))
       for (const v of node.declarationList.declarations) {
@@ -279,6 +282,8 @@ function convert(node) {
     if (name === 'Record') {
       const values = convert(args[1]);
       const keys = literalKeys(args[0]);
+      if (keys === null)
+        return opaque(node, 'Record key type has an ambiguous alias; its keys are unknown.');
       return keys
         ? {
             type: 'object',
@@ -344,10 +349,12 @@ function convert(node) {
   );
 }
 /**
- * Return the keys of a record key type made only of string literals, following
- * non-generic type aliases; return undefined for any other key type.
+ * Return the distinct keys of a record key type made only of string literals,
+ * following non-generic type aliases from the module that uses them; return
+ * undefined for any other key type, and null when an alias cannot be resolved
+ * to one declaration and the candidates disagree.
  * @param {ts.TypeNode | undefined} node
- * @returns {string[] | undefined}
+ * @returns {string[] | undefined | null}
  */
 function literalKeys(node) {
   if (!node) return undefined;
@@ -355,17 +362,62 @@ function literalKeys(node) {
   if (ts.isLiteralTypeNode(node) && ts.isStringLiteral(node.literal)) return [node.literal.text];
   if (ts.isUnionTypeNode(node)) {
     const parts = node.types.map(literalKeys);
-    return parts.every(Boolean) ? parts.flat() : undefined;
+    if (parts.includes(null)) return null;
+    return parts.every(Boolean) ? [...new Set(parts.flat())] : undefined;
   }
-  if (ts.isTypeReferenceNode(node) && !node.typeArguments) {
-    const decl = declarations.get(node.typeName.getText());
-    if (decl && ts.isTypeAliasDeclaration(decl) && !decl.typeParameters?.length) {
-      const keys = literalKeys(decl.type);
-      if (keys) location(decl);
-      return keys;
-    }
+  if (ts.isTypeReferenceNode(node) && !node.typeArguments && ts.isIdentifier(node.typeName)) {
+    const candidates = aliasDeclarations(node.getSourceFile(), node.typeName.text);
+    const results = candidates.map((decl) =>
+      ts.isTypeAliasDeclaration(decl) && !decl.typeParameters?.length
+        ? literalKeys(decl.type)
+        : undefined,
+    );
+    if (results.includes(null)) return null;
+    const distinct = new Set(results.map((keys) => JSON.stringify(keys ?? null)));
+    if (distinct.size > 1) return null;
+    if (results[0]) location(candidates[0]);
+    return results[0];
   }
   return undefined;
+}
+/**
+ * Find the declarations a type name can mean in a module: its own declaration,
+ * else the one exported by a relatively imported module, else every loaded
+ * declaration of that name, which literalKeys accepts only when they agree.
+ * @param {ts.SourceFile} sf
+ * @param {string} name
+ * @returns {Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration>}
+ */
+function aliasDeclarations(sf, name) {
+  /** @param {ts.SourceFile} file @param {string} wanted */
+  const own = (file, wanted) =>
+    file.statements.filter(
+      /** @type {(s: ts.Statement) => s is ts.TypeAliasDeclaration | ts.InterfaceDeclaration} */ (
+        (s) =>
+          (ts.isTypeAliasDeclaration(s) || ts.isInterfaceDeclaration(s)) && s.name.text === wanted
+      ),
+    );
+  const local = own(sf, name);
+  if (local.length) return local;
+  for (const statement of sf.statements) {
+    if (!ts.isImportDeclaration(statement)) continue;
+    const bindings = statement.importClause?.namedBindings;
+    if (!bindings || !ts.isNamedImports(bindings)) continue;
+    const element = bindings.elements.find((e) => e.name.text === name);
+    if (!element) continue;
+    const original = (element.propertyName ?? element.name).text;
+    const specifier = /** @type {ts.StringLiteral} */ (statement.moduleSpecifier).text;
+    if (!specifier.startsWith('.')) return declarationsByName.get(original) ?? [];
+    const base = path.resolve(path.dirname(sf.fileName), specifier.replace(/\.js$/, ''));
+    const target = [`${base}.ts`, path.join(base, 'index.ts')].find(
+      (file) => !path.relative(root, file).startsWith('..') && fs.existsSync(file),
+    );
+    const found = target ? own(load(target), original) : [];
+    // A re-export is not followed: fall back to every declaration of the name,
+    // which literalKeys accepts only when they all agree.
+    return found.length ? found : (declarationsByName.get(original) ?? []);
+  }
+  return declarationsByName.get(name) ?? [];
 }
 function zod(node) {
   if (ts.isAsExpression(node) || ts.isParenthesizedExpression(node)) return zod(node.expression);
