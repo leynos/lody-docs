@@ -27,6 +27,8 @@ const TEMPLATE_TYPE = `\`ERR_\${string}\``;
 
 /** A schema bound read by `numberValue()` from a file other than the schema's. */
 const LIMITS = 'packages/shared/src/limits.ts';
+/** The file that declares the `Thing` result type. */
+const THING = 'packages/shared/src/thing.ts';
 const SOURCES = {
   'packages/cloud-api/src/index.ts': [
     "import type { Thing } from '@lody/shared';",
@@ -39,7 +41,7 @@ const SOURCES = {
     '};',
     '',
   ].join('\n'),
-  'packages/shared/src/thing.ts': [
+  [THING]: [
     "import { z } from 'zod';",
     '',
     'const ThingSchema = z.object({ name: z.string().max(MAX_NAME) });',
@@ -167,6 +169,45 @@ describe('generate-cloud-api source verification', () => {
     const result = generate(f);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /!! packages\/shared\/src\/ignored\.ts/);
+    assertNothingWritten(f);
+  });
+
+  it('rejects an unstaged deletion of an indexed declaration file', () => {
+    const f = fixture('deleted');
+    fs.rmSync(path.join(f.lody, THING));
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /\n D packages\/shared\/src\/thing\.ts/);
+    assertNothingWritten(f);
+  });
+
+  it('rejects a staged deletion of an indexed declaration file', () => {
+    const f = fixture('deleted-staged');
+    git(f.lody, 'rm', '--quiet', THING);
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /\nD {2}packages\/shared\/src\/thing\.ts/);
+    assertNothingWritten(f);
+  });
+
+  it('rejects a staged rename of an indexed declaration file', () => {
+    const f = fixture('renamed-staged');
+    git(f.lody, 'mv', THING, 'packages/shared/src/thing.txt');
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(
+      result.stderr,
+      /\nR {2}packages\/shared\/src\/thing\.txt <- packages\/shared\/src\/thing\.ts/,
+    );
+    assertNothingWritten(f);
+  });
+
+  it('rejects an unstaged rename of an indexed declaration file', () => {
+    const f = fixture('renamed');
+    fs.renameSync(path.join(f.lody, THING), path.join(f.lody, 'packages/shared/src/thing.txt'));
+    const result = generate(f);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /\n D packages\/shared\/src\/thing\.ts/);
     assertNothingWritten(f);
   });
 

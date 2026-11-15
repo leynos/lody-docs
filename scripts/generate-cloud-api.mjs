@@ -8,8 +8,9 @@
  * HTTP routes and hand-written schemas, plus the pinned `x-source-revision`)
  * and `docs/cloud-api/supplemental.json` (Convex calls outside `CloudApi`).
  * Paths are relative to the working directory, which must be the repository
- * root. The checkout must be at the pinned revision, and no source file the
- * generator reads may be modified, staged, untracked or ignored, so that each
+ * root. The checkout must be at the pinned revision; no source file the
+ * generator reads may be modified, staged, untracked or ignored, and no file it
+ * would index at that revision may be deleted or renamed, so that each
  * generated link cites what that commit contains.
  *
  * Outputs: `docs/cloud-api/openapi.yaml`, `routes.md`, `operations.md` and the
@@ -72,13 +73,15 @@ function load(file) {
   }
   return sf;
 }
+/** Whether `walk` parses a file with this name. @param {string} file */
+const indexable = (file) => /\.ts$/.test(file) && !/\.(test|spec)\.ts$/.test(file);
 function walk(dir) {
   for (const ent of fs
     .readdirSync(dir, { withFileTypes: true })
     .sort((a, b) => a.name.localeCompare(b.name))) {
     const file = path.join(dir, ent.name);
     if (ent.isDirectory()) walk(file);
-    else if (/\.ts$/.test(file) && !/\.(test|spec)\.ts$/.test(file)) load(file);
+    else if (indexable(file)) load(file);
   }
 }
 // Public DTOs take priority over similarly named internal types.
@@ -653,15 +656,33 @@ if (revision !== document['x-source-revision'])
   throw Error(
     `Lody checkout ${root} is at ${revision}, but docs/cloud-api/http.json pins ${document['x-source-revision']}`,
   );
-// HEAD names the commit only if no file read, whether parsed into the index or
-// cited, is modified, staged, untracked or ignored.
-const read = [...new Set([...files.keys(), ...used])].map((f) => path.relative(root, f)).sort();
-const modified = execFileSync(
+// HEAD names the commit only if no file that is or would be read differs from
+// it: nothing parsed or cited may be modified, staged, untracked or ignored,
+// and no file the index would parse at HEAD may be deleted or renamed. The
+// index folders are queried as a whole, so that files missing from the working
+// tree are reported too.
+const read = new Set([...files.keys(), ...used].map((f) => path.relative(root, f)));
+const indexed = (file) =>
+  read.has(file) || (indexable(file) && indexRoots.some((dir) => file.startsWith(`${dir}/`)));
+const status = execFileSync(
   'git',
-  ['--literal-pathspecs', '-C', root, 'status', '--porcelain', '--ignored', '--', ...read],
+  [
+    ...['--literal-pathspecs', '-C', root, 'status', '--porcelain=v1', '-z'],
+    ...['--ignored', '--untracked-files=all', '--', ...indexRoots, ...read],
+  ],
   { encoding: 'utf8' },
-).trimEnd();
-if (modified) throw Error(`Source files differ from ${revision} in ${root}:\n${modified}`);
+).split('\0');
+const modified = [];
+for (let i = 0; i < status.length; i++) {
+  const entry = status[i];
+  if (!entry) continue;
+  const paths = [entry.slice(3)];
+  // A rename or copy is followed by its source path.
+  if (/[RC]/.test(entry.slice(0, 2))) paths.push(status[++i]);
+  if (paths.some(indexed)) modified.push(paths.length > 1 ? `${entry} <- ${paths[1]}` : entry);
+}
+if (modified.length)
+  throw Error(`Source files differ from ${revision} in ${root}:\n${modified.join('\n')}`);
 const manifest = {
   repository: 'https://github.com/LodyAI/Lody',
   revision,
