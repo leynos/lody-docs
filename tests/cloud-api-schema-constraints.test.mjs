@@ -84,12 +84,57 @@ describe('keyof over intersections', () => {
     }
   });
 
-  it('keeps an exact key set when shared properties are provably compatible', () => {
+  it('refuses nested conflicting intersections through aliases and parentheses', () => {
+    const named = "type Inner = { kind: string } & { kind: 'a' };\ntype Leaf = { kind: 'b' };\n";
+    for (const type of [
+      "Inner & { kind: 'b' }",
+      "{ kind: 'b' } & Inner",
+      '(Leaf & Inner)',
+      "({ kind: string } & ({ kind: 'a' } & Leaf))",
+      "(({ kind: 'b' } & { kind: string }) & { kind: 'a' })",
+    ]) {
+      const { schema, reasons } = unresolvedReasons(
+        `${named}export type Thing = keyof (${type});\n`,
+      );
+      assert.equal(schema['x-unresolved'], true, type);
+      assert.deepEqual(reasons, ['Key set of the type is not exactly known.'], type);
+    }
+  });
+
+  it('refuses any property declared twice with different types, even compatible ones', () => {
     for (const type of [
       "{ kind: 'a' } & { kind: string; a: number }",
+      "{ kind: string; a: 1 } & { kind: 'a' } & { kind: 'a' }",
+      "Base & { kind: 'a' }",
+    ])
+      assert.equal(
+        schemaOf(`interface Base { kind: string }\nexport type Thing = keyof (${type});\n`).schema[
+          'x-unresolved'
+        ],
+        true,
+        type,
+      );
+    assert.equal(
+      schemaOf(
+        "interface Base { kind: string }\ninterface K extends Base { kind: 'a' }\nexport type Thing = keyof K;\n",
+      ).schema['x-unresolved'],
+      true,
+    );
+  });
+
+  it('refuses the same type text meaning different types in different modules', () => {
+    const { schema } = schemaOf(
+      "import type { A } from './a';\ntype Kind = 'a';\nexport type Thing = keyof ({ kind: Kind } & A);\n",
+      { 'packages/shared/src/a.ts': "type Kind = 'b';\nexport type A = { kind: Kind };\n" },
+    );
+    assert.equal(schema['x-unresolved'], true);
+  });
+
+  it('keeps an exact key set when repeats are one identical declaration', () => {
+    for (const type of [
       "{ kind: 'a'; a: number } & { kind: 'a' }",
       '{ kind: string } & { kind: string; a: 1 }',
-      "{ kind: string; a: 1 } & { kind: 'a' } & { kind: 'a' }",
+      "({ kind: 'a' } & { a: 1 }) & { kind: 'a' }",
     ])
       assert.deepEqual(schemaOf(`export type Thing = keyof (${type});\n`).schema, {
         type: 'string',

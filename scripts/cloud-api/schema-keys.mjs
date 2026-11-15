@@ -7,11 +7,12 @@
  * name in the module that uses it (`schema-scope.mjs`). For a name neither
  * declared nor imported, `literalKeys` accepts the indexed declarations only
  * when they all give the same keys, which is then exact whichever one is
- * meant. `propertyKeys` gives an exact set only when TypeScript cannot reduce
- * the type to `never`: intersected parts that share a property must declare
- * provably compatible types for it. Anything else yields null, which the type
- * converter (`schema-types.mjs`, `schema-utilities.mjs`) reports as
- * `x-unresolved`.
+ * meant. `propertyKeys` gives an exact set only when no property is declared
+ * twice anywhere in the flattened type (intersections, aliases, parentheses
+ * and interface bases), except as repeats of one identical declaration, so
+ * TypeScript cannot have reduced it to `never`. Anything else yields null,
+ * which the type converter (`schema-types.mjs`, `schema-utilities.mjs`)
+ * reports as `x-unresolved`.
  */
 import ts from 'typescript';
 import { entityParts } from './schema-scope.mjs';
@@ -21,32 +22,6 @@ import { entityParts } from './schema-scope.mjs';
  * @property {string | number} key
  * @property {ts.TypeNode | undefined} type the declared type; undefined for a method
  */
-
-/**
- * Whether two declared types of one property can both hold at once without
- * the intersection becoming `never`: the same type text in one module (or a
- * self-contained keyword or literal type), or a literal and its keyword.
- * @param {ts.TypeNode | undefined} a
- * @param {ts.TypeNode | undefined} b
- */
-function compatible(a, b) {
-  if (!a || !b) return false;
-  const selfContained = (/** @type {ts.TypeNode} */ t) =>
-    ts.isLiteralTypeNode(t) ||
-    [
-      ts.SyntaxKind.StringKeyword,
-      ts.SyntaxKind.NumberKeyword,
-      ts.SyntaxKind.BooleanKeyword,
-    ].includes(t.kind);
-  if (a.getText() === b.getText())
-    return a.getSourceFile() === b.getSourceFile() || (selfContained(a) && selfContained(b));
-  /** @param {ts.TypeNode} keyword @param {ts.TypeNode} literal */
-  const widens = (keyword, literal) =>
-    ts.isLiteralTypeNode(literal) &&
-    ((keyword.kind === ts.SyntaxKind.StringKeyword && ts.isStringLiteral(literal.literal)) ||
-      (keyword.kind === ts.SyntaxKind.NumberKeyword && ts.isNumericLiteral(literal.literal)));
-  return widens(a, b) || widens(b, a);
-}
 
 /**
  * The property entries of type members, or null if any name is not fixed or
@@ -71,16 +46,18 @@ function memberEntries(members) {
 }
 
 /**
- * Entries with later declarations of a key replacing earlier ones, as an
- * interface's own member replaces an inherited one.
+ * Whether every declaration of a property has the same type text in the same
+ * module, so that repeating it cannot make an intersection `never`.
  * @param {PropertyEntry[]} entries
  */
-function override(entries) {
-  /** @type {Map<string | number, PropertyEntry>} */
-  const byKey = new Map();
-  for (const entry of entries) byKey.set(entry.key, entry);
-  return [...byKey.values()];
-}
+const identical = (entries) =>
+  entries.every(
+    (entry) =>
+      entry.type !== undefined &&
+      entries[0].type !== undefined &&
+      entry.type.getText() === entries[0].type.getText() &&
+      entry.type.getSourceFile() === entries[0].type.getSourceFile(),
+  );
 
 /**
  * Create the key resolver of a conversion.
@@ -129,9 +106,21 @@ export function createKeyResolver(ctx) {
    * @returns {Array<string | number> | null}
    */
   function propertyKeys(node) {
-    return entriesOf(node, new Set())?.map((entry) => entry.key) ?? null;
+    const entries = entriesOf(node, new Set());
+    if (!entries) return null;
+    /** @type {Map<string | number, PropertyEntry[]>} */
+    const byKey = new Map();
+    for (const entry of entries) byKey.set(entry.key, [...(byKey.get(entry.key) ?? []), entry]);
+    // A property declared more than once anywhere in the flattened type could
+    // make an intersection `never`, whose key set is every key; only repeats
+    // of one identical declaration are accepted.
+    for (const declarations of byKey.values()) if (!identical(declarations)) return null;
+    return [...byKey.keys()];
   }
   /**
+   * Every property declaration of a type, with the whole intersection tree
+   * flattened through parentheses, aliases and interface bases; nothing is
+   * merged or dropped, so that `propertyKeys` sees every repeat.
    * @param {ts.TypeNode} node
    * @param {Set<ts.Node>} path declarations being expanded, to stop cycles
    * @returns {PropertyEntry[] | null}
@@ -141,19 +130,7 @@ export function createKeyResolver(ctx) {
     if (ts.isTypeLiteralNode(node)) return memberEntries(node.members);
     if (ts.isIntersectionTypeNode(node)) {
       const parts = node.types.map((part) => entriesOf(part, path));
-      if (parts.includes(null)) return null;
-      /** @type {Map<string | number, PropertyEntry[]>} */
-      const byKey = new Map();
-      for (const entry of /** @type {PropertyEntry[][]} */ (parts).flat())
-        byKey.set(entry.key, [...(byKey.get(entry.key) ?? []), entry]);
-      // A shared property whose types may conflict could make the whole
-      // intersection `never`, whose key set is every key, not these: every
-      // pair of declarations of it must be compatible, not only each with the
-      // first.
-      for (const entries of byKey.values())
-        for (const [i, a] of entries.entries())
-          for (const b of entries.slice(i + 1)) if (!compatible(a.type, b.type)) return null;
-      return [...byKey.values()].map((entries) => entries[0]);
+      return parts.includes(null) ? null : /** @type {PropertyEntry[][]} */ (parts).flat();
     }
     if (!ts.isTypeReferenceNode(node) || node.typeArguments) return null;
     const parts = entityParts(node.typeName);
@@ -181,7 +158,8 @@ export function createKeyResolver(ctx) {
     }
     const own = memberEntries(decl.members);
     if (!own || inherited.includes(null)) return null;
-    return override([.../** @type {PropertyEntry[][]} */ (inherited).flat(), ...own]);
+    // A redeclared inherited member is kept as a second declaration too.
+    return [.../** @type {PropertyEntry[][]} */ (inherited).flat(), ...own];
   }
   return { literalKeys, propertyKeys };
 }
