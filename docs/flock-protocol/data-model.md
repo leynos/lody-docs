@@ -18,11 +18,16 @@ that keys sort and can be scanned by prefix. A value is any JSON value
 `(physicalTime, logicalCounter, peerId)`. When two replicas hold different
 entries for one key, the entry with the higher `physicalTime` wins; on a tie
 the higher `logicalCounter` wins; on a further tie the lexicographically
-greater `peerId` wins ([E-U1](evidence.md#e-u1)). This is a total order, so
-merge is commutative, associative and idempotent, which is the condition for a
-state-based CRDT to converge [[1]](references.md#ref-1). The tie-break by
-process identifier follows Lamport's construction of a total order from
-logical clocks [[3]](references.md#ref-3).
+greater `peerId` wins ([E-U1](evidence.md#e-u1)). This is a total order on
+clocks. It is a total order on entries only if equal clocks imply equal
+entries, that is, if no peer issues two different writes with one clock; the
+package states that the local clock advances on every local write
+([E-U3](evidence.md#e-u3)), and the [`FlockLWW`](../../tla/FlockLWW.tla)
+model assumes the same. Under that assumption, merge is commutative,
+associative and idempotent, which is the condition for a state-based CRDT to
+converge [[1]](references.md#ref-1). The tie-break by process identifier
+follows Lamport's construction of a total order from logical clocks
+[[3]](references.md#ref-3).
 
 For screen readers: the following flowchart shows how two different entries for
 one key are ordered. If their physical times differ, the entry with the higher

@@ -322,8 +322,13 @@ each ([E-D3](evidence.md#e-d3)). `deleteLocalProjectResources` decides
 
 - **Stale request.** If the project exists and was created after the request
   (`createdAtMs > requestedAt`), the command is dropped. A project removed and
-  registered again is not removed by the earlier request
-  ([E-D5](evidence.md#e-d5)). The model checks this as **D1**.
+  registered again with a strictly later `createdAtMs` is not removed by the
+  earlier request ([E-D5](evidence.md#e-d5)). The model checks this as **D1**
+  when the two timestamps differ. The comparison is strict, so a registration
+  in the same millisecond as the request is removed; the model finds this
+  counterexample when equal timestamps are allowed
+  ([formal model](formal-model.md#an-observation-about-the-shipped-protocol),
+  [O2](observations.md#o2-re-adding-during-a-pending-removal)).
 - **Still referenced.** If the workspace catalogue or a live session refers to
   the project, the daemon only hides it as a standalone project. It requires
   the catalogue to be ready first; if it is not, the pass throws and a later

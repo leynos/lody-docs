@@ -157,9 +157,10 @@ cheap hardening is to re-check for a transport when a sync resolves as "not
 attempted", or to have `retryDirtyNow` request a fresh sync after the active
 one settles.
 
-Even if it occurred, the document would not stay unsent for ever: the next
-local write, the next connectivity edge, or the next process start (through
-the initial join sync) would upload it.
+If it occurred, the next local write, the next connectivity edge, or the
+next process start (through the initial join sync) would upload the update.
+Until one of those events happens, the update stays unsent, indefinitely if
+none occurs.
 
 ## O5. Client clocks
 

@@ -27,10 +27,11 @@ treats row contents as opaque. The two command modules model row contents in
 detail and abstract the transport to _state-based anti-entropy_: `Push` merges
 a replica into the stream's accumulated state, and `Pull` merges that state
 into a replica. This is an abstraction, not a refinement. Property S4 of
-`FlockReplication` (replicas that have exchanged everything agree) shows that
-the two agree on final states; it does not show that every intermediate
-behaviour of the stream-based protocol appears in the command modules, which
-do not explore partial delivery. See assumption
+`FlockReplication` shows only that replicas within that model agree once they
+have exchanged everything. No check relates its final states to those of the
+command modules, and nothing shows that every intermediate behaviour of the
+stream-based protocol appears in the command modules, which do not explore
+partial delivery. See assumption
 [A6](#abstractions-and-assumptions).
 
 ## FlockLWW

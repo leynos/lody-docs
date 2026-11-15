@@ -79,12 +79,12 @@ with the mechanism removed, which must produce a counterexample.
 | S2 | A joined, clean document has uploaded every local write | `dirtyVersion` | `FlockReplication` |
 | S3 | A dirty document on a connected daemon always has a pending wake-up | Retry timer and streams-online kick | `FlockReplication` |
 | S4 | Replicas that have exchanged everything hold identical state | LWW merge | `FlockReplication` |
-| L1 | Every replica eventually becomes clean and fully exchanged | All of the above, under fairness | `FlockReplication` |
+| L1 | In the modelled instance, every replica eventually becomes clean and fully exchanged, provided a sync retried while online eventually succeeds and crashes and outages are bounded; the local data plane and the mobile client are not modelled ([fairness](formal-model.md#fairness), [A9](formal-model.md#abstractions-and-assumptions)) | All of the above, under fairness | `FlockReplication` |
 | P1 | Within the setup flow, only the owning daemon publishes the provider configuration | Row ownership | `ProviderSetup` |
-| P3 | A stale setup row never outruns a cancellation already in the stream | Authority gate | `ProviderSetup` |
+| P3 | A stale setup row never outruns a cancellation that was already in the stream at the daemon's last start | Authority gate | `ProviderSetup` |
 | L1 | A cancellation eventually removes both the setup and any published configuration, everywhere | Permanent cancellation row and daemon reconciliation | `ProviderSetup` |
-| D1 | A delete request never removes a project registered after it | `createdAtMs` guard | `LocalProjectDelete` |
-| L1 | Every command row eventually drains | Scan-based draining | `LocalProjectDelete` |
+| D1 | A delete request never removes a project registered after it with a later timestamp; a registration in the same millisecond can be removed ([counterexample](formal-model.md#an-observation-about-the-shipped-protocol)) | `createdAtMs` guard | `LocalProjectDelete` |
+| L1 | Every delete-project command row eventually drains, under weak fairness of exchange, daemon processing and client acknowledgement; other command families are not covered | Scan-based draining | `LocalProjectDelete` |
 
 _Table 2: Guarantees of the protocol, the mechanism behind each, and the model
 that checks it._
