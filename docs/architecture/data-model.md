@@ -18,7 +18,7 @@ marked **Infer**.
 | Store | What it is | Who can read it | Consistency |
 | ----- | ---------- | --------------- | ----------- |
 | Cloud database | The private backend behind the cloud functions | Whoever the cloud authorizes, one call at a time | Decided by the cloud; **Infer** |
-| Replicated documents | Loro documents, their metadata, and Flock documents, carried by Loro Durable Streams | Every replica with a Streams token for the workspace | Eventual; replicas converge |
+| Replicated documents | Loro documents, their metadata, and Flock documents, carried by Loro Durable Streams | Every replica of the workspace; through the gateway, holders of a Streams token for it, though what the token grants is not established (**Infer**) | Eventual; replicas converge |
 | Local disk | Files and SQLite databases in the machine's data directory | Processes of the installing user on that machine | Local, immediate |
 
 _Table 1: The three kinds of store._

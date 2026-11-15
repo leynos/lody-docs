@@ -157,12 +157,14 @@ cheap hardening is to re-check for a transport when a sync resolves as "not
 attempted", or to have `retryDirtyNow` request a fresh sync after the active
 one settles.
 
-If it occurred, the next local write, the next connectivity edge, or the
-next process start (through the initial join sync) would start another sync.
-That sync uploads the update only if a transport is attached and the sync
-succeeds; a connectivity edge that removes the last transport, or a write or
-restart while offline, does not. Until a later sync succeeds, the update stays
-unsent, indefinitely if none does.
+If it occurred, the next local write, the next rising edge of Streams health
+(which fires `onStreamsOnline` and so `retryDirtyNow`;
+[E-S11](evidence.md#e-s11)), or the next process start (through the initial join
+sync) would request a sync. A request made while a sync is already in flight
+joins that sync instead of starting another ([E-S3](evidence.md#e-s3)). The
+update is uploaded only when a requested sync runs with a transport attached and
+succeeds; a write or restart while offline does not upload it. Until such a sync
+succeeds, the update stays unsent, indefinitely if none does.
 
 ## O5. Client clocks
 
