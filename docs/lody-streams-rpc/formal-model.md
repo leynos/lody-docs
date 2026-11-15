@@ -42,16 +42,19 @@ within the stated bounds, and nothing beyond them.
 
 ## RpcReplay
 
-The daemon keeps its read offset in memory. A restart resets it, so every
-request still in the stream is read again, and an unexpired request is
-dispatched again. The same happens inside one running instance when the read
-loop resets its offset after a 404 or a 410.
+The daemon keeps its read offset in memory, and starts a task for each
+request it reads without waiting for the task to finish. A restart resets
+the offset, so every request still in the stream is read again, and an
+unexpired request is dispatched again. The same happens inside one running
+instance when the read loop resets its offset after a 404 or a 410; tasks
+started before that reset keep running.
 
-The model has a request stream, a clock, a read offset, and counts of handler
-runs per request: in total, in the current server instance, and in the
-current _read pass_. A pass ends at a crash, a restart, or an in-process
-offset reset. Some requests are `machine/restart` requests: an accepted one
-starts a new server instance, as a crash does.
+The model has a request stream, a clock, a read offset, the tasks started and
+not yet finished, and counts per request: tasks started in the current _read
+pass_, and handler runs in total and in the current server instance. A pass
+ends at a crash, a restart, or an in-process offset reset. Some requests are
+`machine/restart` requests: an accepted one starts a new server instance, as
+a crash does, and its run is counted in the instance it ends.
 
 Three constants select the case:
 
@@ -67,8 +70,8 @@ Three constants select the case:
 
 | Id | Property | Statement | Shipped |
 | -- | -------- | --------- | ------- |
-| R1 | `OncePerPass` | A request's handler runs at most once per read pass | Holds |
-| | `OncePerInstance` | A request's handler runs at most once per server instance | **Violated** after an in-process reset |
+| R1 | `AdmitOncePerPass` | The read loop starts at most one task per request per read pass | Holds |
+| | `OncePerInstance` | A request's handler runs at most once per server instance | Holds without an in-process reset; **violated** with one |
 | R2 | `RestartLoopBounded` | A restart request causes no more restarts than its lifetime in ticks | Holds |
 | R3 | `NoSilentLoss` | A request read while unexpired is not left behind a persisted offset, unhandled | Holds by construction |
 | | `AtMostOnce` | A request's handler runs at most once | **Violated** |
@@ -79,10 +82,13 @@ them._
 
 What the model settles:
 
-- **Replay is "once per read pass", not "once per instance".** An
-  in-process reset after a 404 or a 410 runs an unexpired request again in
-  the same instance, in six steps. "Once per read pass" is the strongest
-  statement available for any method outside the history family.
+- **Replay is bounded by read passes, not by instances.** Without an
+  in-process reset, a request runs at most once per server instance. A reset
+  after a 404 or a 410 runs an unexpired request again in the same instance,
+  in six steps, possibly while the first task is still pending. What remains
+  true is R1: each pass starts at most one task per request. That is a
+  property of the read loop, not of handler execution, and it is the
+  strongest statement available for any method outside the history family.
 - **The restart question has a conditional answer.** If the backend accepts
   a reused proof, an accepted `machine/restart` is read again by the new
   instance and restarts it again, repeatedly, until the request expires. If
@@ -135,7 +141,8 @@ In an encrypted workspace the same sealed original can reach a machine by
 the encrypted Streams channel, by Iroh, and by the durable route through the
 session document. The accelerated routes share a receipt journal, and every
 route ends at the execution service, which must win an `agent-start` claim
-before it prompts the agent.
+before it prompts the agent. The receipt row is keyed by request
+identifier, and the start claim by user turn identifier.
 
 The model has one turn, repeated deliveries on both accelerated routes,
 replication of the turn row, the receipt row, the retained acknowledgement,
@@ -144,17 +151,21 @@ are separate steps, as they are in the receiver, which claims and then awaits
 the offer. Every prompt goes through one action, which increments a count of
 prompts.
 
-Two constants select the case. `StartClaim` is `TRUE` for the shipped
+Three constants select the case. `StartClaim` is `TRUE` for the shipped
 behaviour; `FALSE` removes the `agent-start` claim. `ReceiptClaim` is `TRUE`
 for the shipped behaviour; `FALSE` lets every delivery claim and offer as if
 it were the first. Both ablations use the same prompt and offer actions as
 the shipped model, so a different outcome is due to the claim alone.
+`EarlyReturn` states an assumption about the execution service: it finishes
+the start row on any normal return of the turn body, and this study did not
+establish that every such return reaches the prompt. `FALSE` assumes that it
+does; `TRUE` lets the body return normally before prompting.
 
 | Id | Property | Statement | Shipped |
 | -- | -------- | --------- | ------- |
 | X1 | `RunAtMostOnce` | The agent is prompted at most once for the turn | Holds |
-| X2 | `OfferAtMostOnce` | The turn is offered to the dispatch watcher at most once | Holds |
-| X3 | `SettledImpliesRan` | A settled start row means that the agent was prompted | Holds |
+| X2 | `OfferAtMostOnce` | One request identifier offers the turn to the dispatch watcher at most once | Holds |
+| X3 | `SettledImpliesRan` | A settled start row means that the agent was prompted | Holds if every normal return reaches the prompt |
 | | `ClaimImpliesRan` | A start claim with no live owner means that the agent ran | **Violated** |
 | | `ReceiptImpliesOffer` | A claimed receipt leads to an offer | **Violated** |
 | | `DeliveryAcknowledged` | Every processed delivery on an accelerated route is acknowledged | **Violated** |
@@ -167,6 +178,15 @@ presents the turn, it is prompted, the daemon crashes, and the restarted
 daemon prompts it again. The claim is what makes the routes, and restarts,
 safe. Without the receipt claim, X2 fails: a second delivery offers the turn
 again.
+
+X2 covers one request identifier. The model has one receipt row, so it does
+not show that a turn sent under two different request identifiers is offered
+once; each identifier has its own receipt row and can offer the turn. X1 is
+what covers that case, because the start claim is keyed by the turn.
+
+X3 depends on `EarlyReturn`. If the turn body can return normally before it
+prompts, the start row is settled although the agent never ran, in three
+steps. Whether that path exists in the execution service was not traced.
 
 The observations are the corners that the prose document reports:
 
@@ -187,14 +207,15 @@ it reaches.
 
 | Configuration | Kind | Property checked | Result |
 | ------------- | ---- | ---------------- | ------ |
-| `RpcReplay.cfg` | Shipped, one in-process reset | R1, R2, R3 | Pass (14,418 states) |
-| `RpcReplay_RestartSingleUse.cfg` | Shipped, backend refuses reuse | `RestartOnce` | Pass (13,130 states) |
-| `RpcReplay_DurableOffset.cfg` | Candidate, no in-process reset | `AtMostOnce`, `RestartOnce` | Pass (2,790 states) |
+| `RpcReplay.cfg` | Shipped, one in-process reset | R1, R2, R3 | Pass (47,296 states) |
+| `RpcReplay_NoReset.cfg` | Shipped, no in-process reset | `OncePerInstance` | Pass (9,712 states) |
+| `RpcReplay_RestartSingleUse.cfg` | Shipped, backend refuses reuse | `RestartOnce` | Pass (38,102 states) |
+| `RpcReplay_DurableOffset.cfg` | Candidate, no in-process reset | `AtMostOnce`, `RestartOnce` | Pass (3,727 states) |
 | `RpcReplay_AtMostOnce.cfg` | Observation | `AtMostOnce` | Violated in 5 steps |
 | `RpcReplay_GatewayReset.cfg` | Observation | `OncePerInstance` | Violated in 6 steps |
 | `RpcReplay_RestartLoop.cfg` | Observation, backend accepts reuse | `RestartOnce` | Violated in 5 steps |
 | `RpcReplay_DurableOffsetLoss.cfg` | Candidate trade-off | `NoSilentLoss` | Violated in 3 steps |
-| `RpcReplay_WitnessRun.cfg` | Witness for R1 | `NeverRun` | Violated in 3 steps |
+| `RpcReplay_WitnessAdmit.cfg` | Witness for R1 | `NeverAdmitted` | Violated in 2 steps |
 | `RpcReplay_WitnessRestart.cfg` | Witness for R2 | `NeverRestarted` | Violated in 3 steps |
 | `RpcHistoryClaim.cfg` | Shipped | H1, H2 | Pass (52 states) |
 | `RpcHistoryClaim_WriteFirst.cfg` | Ablation | `WriteAtMostOnce` | Violated in 5 steps |
@@ -206,6 +227,7 @@ it reaches.
 | `EncryptedDispatch_NoStartClaim.cfg` | Ablation | `RunAtMostOnce` | Violated in 4 steps |
 | `EncryptedDispatch_NoReceiptClaim.cfg` | Ablation | `OfferAtMostOnce` | Violated in 6 steps |
 | `EncryptedDispatch_Uncertain.cfg` | Observation | `ClaimImpliesRan` | Violated in 3 steps |
+| `EncryptedDispatch_EarlyReturn.cfg` | Assumption check | `SettledImpliesRan` | Violated in 3 steps |
 | `EncryptedDispatch_ReceiptCrash.cfg` | Observation | `ReceiptImpliesOffer` | Violated in 3 steps |
 | `EncryptedDispatch_NoAck.cfg` | Observation | `DeliveryAcknowledged` | Violated in 3 steps |
 | `EncryptedDispatch_WitnessPrompt.cfg` | Witness for X1 | `NeverPrompted` | Violated in 3 steps |
@@ -221,7 +243,7 @@ _Table 5: TLC results for the RPC models._
 | B1 | The stream delivers every appended request, in order, to a reader that starts from the beginning, including after an in-process reset | Gateway ordering, retention, redelivery after a 404 or 410, and offset semantics are assumed, not modelled; production behaviour is unknown |
 | B2 | A handler run is one atomic step | A crash between a handler's side effect and its response is not distinguished from a crash before it |
 | B3 | Time is a bounded counter, and a restart takes one tick | The restart loop is bounded by the request lifetime; real durations are not modelled |
-| B4 | One history request and one encrypted turn | Interference between different requests is not explored |
+| B4 | One history request; one encrypted turn with one receipt identity | Interference between different requests, and one turn sent under several request identifiers, are not explored |
 | B5 | Signatures, sealing, authorization, and membership checks always succeed | The models cover ordering and durability only, not the cryptography |
 | B6 | The sealed acknowledgement that is held in memory is tied to the process that made the offer | The tested path that persists an unretained acknowledgement on a later delivery in the same process is included; nothing else about in-memory frames is |
 | B7 | No fairness and no liveness property in the RPC models; deadlock checking is off | The models say what cannot happen, not what eventually happens. That the durable route still delivers a silenced turn is argued in prose, not checked |

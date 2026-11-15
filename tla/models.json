@@ -95,7 +95,14 @@
     "config": "RpcReplay.cfg",
     "expect": "pass",
     "group": "safety",
-    "note": "Shipped request replay, with one in-process offset reset: a request runs at most once per read pass; bounded restart loop; no request left behind a persisted offset (R1-R3)."
+    "note": "Shipped request replay, with tasks that outlive one in-process offset reset: at most one task started per request per read pass; bounded restart loop; no request left behind a persisted offset (R1-R3)."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_NoReset.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Without an in-process offset reset, a request runs at most once per server instance, the restart handler included."
   },
   {
     "module": "RpcReplay",
@@ -193,14 +200,7 @@
     "config": "RpcReplay_GatewayReset.cfg",
     "expect": "OncePerInstance",
     "group": "ablation",
-    "note": "Observation: an in-process offset reset after a 404 or 410 runs an unexpired request again in the same server instance."
-  },
-  {
-    "module": "RpcReplay",
-    "config": "RpcReplay_WitnessRun.cfg",
-    "expect": "NeverRun",
-    "group": "ablation",
-    "note": "Witness: a handler run is reachable, so R1 is not vacuous."
+    "note": "Observation: after an in-process offset reset, a request runs again in the same server instance, possibly while its first task is still pending."
   },
   {
     "module": "RpcReplay",
@@ -264,5 +264,19 @@
     "expect": "NeverSettled",
     "group": "ablation",
     "note": "Witness: a settled start row is reachable, so X3 is not vacuous."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_WitnessAdmit.cfg",
+    "expect": "NeverAdmitted",
+    "group": "ablation",
+    "note": "Witness: a started task is reachable, so R1 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_EarlyReturn.cfg",
+    "expect": "SettledImpliesRan",
+    "group": "ablation",
+    "note": "Assumption check: if the turn body can return normally before prompting, a start row is settled although the agent never ran."
   }
 ]

@@ -15,15 +15,21 @@
 (* FALSE lets every delivery claim and offer as if it were the first.      *)
 (* Both ablations use the same Prompt and Offer actions as the shipped     *)
 (* model, so a difference in outcome is due to the claim alone.            *)
+(*                                                                         *)
+(* EarlyReturn states an assumption about the execution service: the start *)
+(* row is finished on any normal return of the turn body, and whether every *)
+(* such return reaches the prompt was not established.  FALSE assumes it  *)
+(* does; TRUE lets the body return normally before prompting.             *)
 (***************************************************************************)
 EXTENDS Naturals, FiniteSets
 
 CONSTANTS MaxCrashes,   \* bound on daemon crashes
           MaxSends,     \* bound on deliveries per accelerated route
           StartClaim,   \* BOOLEAN
-          ReceiptClaim  \* BOOLEAN
+          ReceiptClaim, \* BOOLEAN
+          EarlyReturn   \* BOOLEAN
 
-ASSUME StartClaim \in BOOLEAN /\ ReceiptClaim \in BOOLEAN
+ASSUME StartClaim \in BOOLEAN /\ ReceiptClaim \in BOOLEAN /\ EarlyReturn \in BOOLEAN
 
 Accelerated == {"streams", "iroh"}
 Sources == {"stash", "doc"}
@@ -150,15 +156,17 @@ Prompt(src) ==
     /\ UNCHANGED <<sends, pending, receipt, claimedHere, ackKept, acks, offers,
                    stash, docTurn, start, crashes>>
 
-(* After the turn, the owner finishes the start row as settled. *)
+(* When the turn body returns normally, the owner finishes the start row *)
+(* as settled.  With EarlyReturn, the body may return before prompting.   *)
 Finish ==
     /\ StartClaim
-    /\ ranHere
     /\ start = "started"
+    /\ (ranHere \/ (EarlyReturn /\ permit))
     /\ start' = "settled"
     /\ ranHere' = FALSE
+    /\ permit' = FALSE
     /\ UNCHANGED <<sends, pending, receipt, claimedHere, ackKept, acks, offers,
-                   stash, docTurn, permit, seen, runs, crashes>>
+                   stash, docTurn, seen, runs, crashes>>
 
 (* A crash loses memory.  Both journals and the document survive. *)
 Crash ==
@@ -200,10 +208,13 @@ TypeOK ==
 (* routes delivered it and however often.                                *)
 RunAtMostOnce == runs <= 1
 
-(* X2.  The turn is offered to the watcher at most once. *)
+(* X2.  A delivery identity (one request ID, one receipt row) offers the  *)
+(* turn to the watcher at most once.  Distinct request IDs for the same    *)
+(* turn have distinct receipt rows and are not covered; X1 covers them.    *)
 OfferAtMostOnce == offers <= 1
 
-(* X3.  A settled start row means that the agent was prompted. *)
+(* X3.  A settled start row means that the agent was prompted.  Holds     *)
+(* only if every normal return of the turn body reaches the prompt.       *)
 SettledImpliesRan == (start = "settled") => runs >= 1
 
 (* Not guaranteed by the shipped protocol: a start claim with no live    *)
