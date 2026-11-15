@@ -1,0 +1,250 @@
+/**
+ * Conversion of TypeScript type syntax to JSON Schema.
+ *
+ * `createTypeConverter` returns `convert`, for a type node, and `named`, for a
+ * declared DTO, which it emits once as a `Dto_` component schema and refers to
+ * thereafter. Interfaces include the members they inherit. Keywords,
+ * literals, arrays, tuples (with optional and rest elements), unions,
+ * intersections, object literals, indexed access, `readonly` and the
+ * supported utility types (`schema-utilities.mjs`) are expanded; record keys
+ * come from `schema-keys.mjs`; `typeof` a Zod or Effect schema goes to
+ * `schema-zod.mjs` or `schema-effect.mjs`. Anything else becomes an
+ * `x-unresolved` schema rather than a guess.
+ */
+import ts from 'typescript';
+import { comment, propertyName, ref } from './schema-context.mjs';
+import { createUtilities, flatten, isTransparentOperator } from './schema-utilities.mjs';
+
+/**
+ * Create the type converter of a conversion.
+ * @param {import('./schema-context.mjs').Context} ctx
+ */
+export function createTypeConverter(ctx) {
+  const { index, schemas, opaque, location, variableAt } = ctx;
+  const utilities = createUtilities(ctx);
+
+  /** @param {string} name @param {ts.Node} node */
+  function named(name, node) {
+    const key = `Dto_${name}`;
+    if (schemas[key]) return ref(key);
+    /** @type {any} */
+    const decl = index.declarations.get(name);
+    if (!decl) return opaque(node, 'Definition is outside the indexed public DTO sources.');
+    if (decl.typeParameters?.length) return opaque(node, 'Generic type requires explicit review.');
+    schemas[key] = {}; // Break recursion.
+    const value = ts.isInterfaceDeclaration(decl) ? interfaceSchema(decl) : convert(decl.type);
+    schemas[key] = {
+      ...value,
+      ...(comment(decl) ? { description: comment(decl) } : {}),
+      'x-source': location(decl),
+    };
+    return ref(key);
+  }
+
+  /**
+   * An interface's own members together with those it inherits. A base that
+   * cannot be expanded to an object schema makes the interface unresolved.
+   * @param {ts.InterfaceDeclaration} decl
+   */
+  function interfaceSchema(decl) {
+    const own = members(decl.members);
+    const heritage = (decl.heritageClauses ?? []).flatMap((clause) => clause.types);
+    if (!heritage.length) return own;
+    /** @type {Record<string, any>} */
+    const properties = {};
+    /** @type {string[]} */
+    const required = [];
+    let additionalProperties;
+    for (const base of heritage) {
+      const schema =
+        ts.isIdentifier(base.expression) && !base.typeArguments
+          ? flatten(schemas, named(base.expression.text, base))
+          : undefined;
+      if (schema?.type !== 'object' || schema['x-unresolved'])
+        return opaque(base, 'Inherited interface could not be expanded.');
+      Object.assign(properties, schema.properties);
+      required.push(...(schema.required ?? []));
+      additionalProperties ??= schema.additionalProperties;
+    }
+    // A member the interface redeclares narrows the inherited one.
+    Object.assign(properties, own.properties);
+    required.push(...(own.required ?? []));
+    additionalProperties = own.additionalProperties ?? additionalProperties;
+    const all = [...new Set(required)];
+    return {
+      type: 'object',
+      properties,
+      ...(all.length ? { required: all } : {}),
+      ...(additionalProperties !== undefined ? { additionalProperties } : {}),
+    };
+  }
+
+  /** @param {ts.NodeArray<ts.TypeElement>} nodes */
+  function members(nodes) {
+    /** @type {Record<string, any>} */
+    const properties = {};
+    /** @type {string[]} */
+    const required = [];
+    let additionalProperties;
+    for (const p of nodes) {
+      if (ts.isIndexSignatureDeclaration(p)) {
+        additionalProperties = convert(p.type);
+        continue;
+      }
+      if (!ts.isPropertySignature(p) || !p.type)
+        throw Error(`Unsupported DTO member: ${p.getText()}`);
+      const name = propertyName(p.name);
+      properties[name] = {
+        ...convert(p.type),
+        ...(comment(p) ? { description: comment(p) } : {}),
+      };
+      if (!p.questionToken) required.push(name);
+    }
+    return {
+      type: 'object',
+      properties,
+      ...(required.length ? { required } : {}),
+      ...(additionalProperties !== undefined ? { additionalProperties } : {}),
+    };
+  }
+
+  /**
+   * A tuple, with bounds that allow optional elements and a final rest element.
+   * @param {ts.TupleTypeNode} node
+   */
+  function tuple(node) {
+    const prefixItems = [];
+    let minItems = 0;
+    let rest;
+    for (const [i, element] of node.elements.entries()) {
+      /** @type {ts.TypeNode} */
+      let type = element;
+      let optional = false;
+      let spread = false;
+      if (ts.isNamedTupleMember(element)) {
+        type = element.type;
+        optional = Boolean(element.questionToken);
+        spread = Boolean(element.dotDotDotToken);
+      }
+      if (ts.isOptionalTypeNode(type)) {
+        optional = true;
+        type = type.type;
+      }
+      if (ts.isRestTypeNode(type)) {
+        spread = true;
+        type = type.type;
+      }
+      if (spread) {
+        if (i !== node.elements.length - 1 || !ts.isArrayTypeNode(type))
+          return opaque(node, 'Tuple rest element is not a final array.');
+        rest = convert(type.elementType);
+        continue;
+      }
+      if (!optional && prefixItems.length === minItems) minItems++;
+      prefixItems.push(convert(type));
+    }
+    return rest === undefined
+      ? { type: 'array', prefixItems, minItems, maxItems: prefixItems.length }
+      : { type: 'array', prefixItems, items: rest, minItems };
+  }
+
+  /** @param {any} node @returns {any} */
+  function convert(node) {
+    if (!node) throw Error('Missing type node');
+    switch (node.kind) {
+      case ts.SyntaxKind.StringKeyword:
+        return { type: 'string' };
+      case ts.SyntaxKind.NumberKeyword:
+        return { type: 'number' };
+      case ts.SyntaxKind.BooleanKeyword:
+        return { type: 'boolean' };
+      case ts.SyntaxKind.NeverKeyword:
+        return { not: {} };
+      case ts.SyntaxKind.VoidKeyword:
+        return {
+          type: 'null',
+          description: 'No application result; Convex transports a null result.',
+        };
+      case ts.SyntaxKind.UnknownKeyword:
+        return { description: 'Unconstrained value in the public TypeScript contract.' };
+    }
+    if (ts.isParenthesizedTypeNode(node)) return convert(node.type);
+    if (ts.isTypeOperatorNode(node)) {
+      if (isTransparentOperator(node)) return convert(node.type);
+      if (node.operator === ts.SyntaxKind.KeyOfKeyword) return utilities.keyOf(node);
+      return opaque(node, 'Type operator changes the represented values.');
+    }
+    if (ts.isLiteralTypeNode(node)) {
+      const lit = node.literal;
+      if (lit.kind === ts.SyntaxKind.NullKeyword) return { type: 'null' };
+      if (ts.isStringLiteral(lit)) return { type: 'string', const: lit.text };
+      if (ts.isNumericLiteral(lit)) return { type: 'number', const: Number(lit.text) };
+      if ([ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword].includes(lit.kind))
+        return { type: 'boolean', const: lit.kind === ts.SyntaxKind.TrueKeyword };
+    }
+    if (ts.isArrayTypeNode(node)) return { type: 'array', items: convert(node.elementType) };
+    if (ts.isTupleTypeNode(node)) return tuple(node);
+    if (ts.isUnionTypeNode(node)) return { anyOf: node.types.map(convert) };
+    if (ts.isIntersectionTypeNode(node)) return { allOf: node.types.map(convert) };
+    if (ts.isTypeLiteralNode(node)) return members(node.members);
+    if (ts.isIndexedAccessTypeNode(node)) {
+      const object = flatten(schemas, convert(node.objectType));
+      const key =
+        ts.isLiteralTypeNode(node.indexType) && ts.isStringLiteral(node.indexType.literal)
+          ? node.indexType.literal.text
+          : undefined;
+      return (
+        (key !== undefined ? object.properties?.[key] : undefined) ??
+        opaque(node, 'Indexed type could not be expanded.')
+      );
+    }
+    if (ts.isTypeQueryNode(node)) {
+      const target = node.exprName.getText().replace(/\.Type$/, '');
+      const variable = variableAt(node, target);
+      return variable?.initializer
+        ? ctx.effectSchema(variable.initializer)
+        : opaque(node, 'Effect schema definition not found.');
+    }
+    if (ts.isImportTypeNode(node) && node.qualifier) return named(node.qualifier.getText(), node);
+    if (ts.isTypeReferenceNode(node)) return reference(node);
+    return opaque(
+      node,
+      'Unsupported TypeScript syntax; retained as an explicitly unconstrained schema.',
+    );
+  }
+
+  /** @param {ts.TypeReferenceNode} node */
+  function reference(node) {
+    const name = node.typeName.getText(),
+      args = node.typeArguments ?? [];
+    if (['Array', 'ReadonlyArray'].includes(name))
+      return { type: 'array', items: convert(args[0]) };
+    if (name === 'Record') {
+      const values = convert(args[1]);
+      const keys = ctx.literalKeys(args[0]);
+      if (keys === null)
+        return opaque(node, 'Record key type has an ambiguous alias; its keys are unknown.');
+      return keys
+        ? {
+            type: 'object',
+            properties: Object.fromEntries(keys.map((key) => [key, values])),
+            required: keys,
+          }
+        : { type: 'object', additionalProperties: values };
+    }
+    if (name === 'Readonly') return convert(args[0]);
+    if (['Omit', 'Pick', 'Partial', 'Required'].includes(name))
+      return utilities.objectUtility(name, node, args);
+    if (['Extract', 'Exclude'].includes(name)) return utilities.unionUtility(name, node, args);
+    if (name === 'z.infer' || name === 'z.output' || name === 'z.input') {
+      const target = /** @type {any} */ (args[0])?.exprName?.getText();
+      const variable = variableAt(node, target);
+      return variable?.initializer
+        ? ctx.zod(variable.initializer)
+        : opaque(node, 'Runtime schema definition not found.');
+    }
+    return named(name, node);
+  }
+
+  return { convert, named };
+}

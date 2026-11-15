@@ -94,9 +94,17 @@ reads and parses the checkout, `schema.mjs` converts types to JSON Schema,
 `provenance.mjs` verifies the checkout against the pinned commit through an
 injected Git runner, `render.mjs` renders the documents, `outputs.mjs`
 compares or writes them, and `pipeline.mjs` connects these without performing
-any I/O. `tests/cloud-api-units.test.mjs` tests each module in memory, and
-`tests/generate-cloud-api-fixture.test.mjs` tests the whole command against a
-temporary Git repository.
+any I/O. `schema.mjs` is a facade over `schema-context.mjs` (shared state),
+`schema-types.mjs` (TypeScript types and named DTOs), `schema-utilities.mjs`
+(utility types), `schema-keys.mjs` (key sets), `schema-zod.mjs` and
+`schema-effect.mjs`. The `tests/cloud-api-*.test.mjs` files test each module in
+memory, with shared setup in `tests/cloud-api-helpers.mjs`;
+`tests/generate-cloud-api-sources.test.mjs` and
+`tests/generate-cloud-api-schemas.test.mjs` test the whole command against a
+temporary Git repository built by `tests/cloud-api-fixture.mjs`; and
+`tests/generate-cloud-api.test.mjs` checks the committed documents against the
+real Lody checkout. That last check fails when `LODY_SOURCE` names no checkout,
+as it always does under `make`.
 
 The generator needs a Lody checkout. The `Makefile` looks for one at `../Lody`
 and then `../../Lody`; set `LODY_SOURCE` to use another path. The manifest

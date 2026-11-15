@@ -5,7 +5,10 @@
  * spoils one file, and runs the generator in check mode with that directory as
  * its working directory, so the repository's own files are never written. The
  * generator reads the Lody checkout named by `LODY_SOURCE` (or the sibling
- * `Lody` checkout that the Makefile finds); the tests skip when it is absent.
+ * `Lody` checkout that the Makefile finds). When `LODY_SOURCE` is set, as the
+ * Makefile always sets it, a missing checkout is a test failure, so `make test`
+ * cannot pass without the real-source check. When it is unset and no sibling
+ * checkout exists, the suite is skipped with a warning on standard error.
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -19,7 +22,8 @@ const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.
 const generator = path.join(repository, 'scripts/generate-cloud-api.mjs');
 // An explicit LODY_SOURCE wins, as in the Makefile; otherwise look beside the
 // repository, or two levels up when it is a linked worktree.
-const lody = (process.env.LODY_SOURCE ? [process.env.LODY_SOURCE] : ['../Lody', '../../Lody'])
+const explicit = process.env.LODY_SOURCE;
+const lody = (explicit ? [process.env.LODY_SOURCE] : ['../Lody', '../../Lody'])
   .map((candidate) => path.resolve(repository, candidate))
   .find((candidate) => fs.existsSync(path.join(candidate, 'packages/cloud-api/src/index.ts')));
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'cloud-api-check-'));
@@ -48,14 +52,24 @@ function runCheck(cwd) {
   });
 }
 
-describe('generate-cloud-api --check', { skip: lody ? false : 'no Lody checkout found' }, () => {
-  it('accepts up-to-date documents', () => {
+const skip = !lody && !explicit;
+if (skip)
+  process.stderr.write(
+    'warning: generate-cloud-api --check tests skipped: no Lody checkout found; set LODY_SOURCE\n',
+  );
+
+describe('generate-cloud-api --check', { skip: skip && 'no Lody checkout found' }, () => {
+  it('finds the Lody checkout that LODY_SOURCE names', () => {
+    assert.ok(lody, `LODY_SOURCE=${explicit} is not a Lody checkout`);
+  });
+
+  it('accepts up-to-date documents', { skip: !lody }, () => {
     const result = runCheck(workingCopy('clean'));
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^Verified \d+ Convex operations/);
   });
 
-  it('rejects a stale generated document', () => {
+  it('rejects a stale generated document', { skip: !lody }, () => {
     const result = runCheck(
       workingCopy('stale', (dir) => fs.appendFileSync(path.join(dir, 'routes.md'), '\nstale\n')),
     );
@@ -63,7 +77,7 @@ describe('generate-cloud-api --check', { skip: lody ? false : 'no Lody checkout 
     assert.match(result.stderr, /Stale generated document: docs\/cloud-api\/routes\.md/);
   });
 
-  it('rejects an absent generated document', () => {
+  it('rejects an absent generated document', { skip: !lody }, () => {
     const result = runCheck(
       workingCopy('absent', (dir) => fs.rmSync(path.join(dir, 'sources.json'))),
     );
@@ -71,7 +85,7 @@ describe('generate-cloud-api --check', { skip: lody ? false : 'no Lody checkout 
     assert.match(result.stderr, /Stale generated document: docs\/cloud-api\/sources\.json/);
   });
 
-  it('rejects a checkout at a revision other than the pinned one', () => {
+  it('rejects a checkout at a revision other than the pinned one', { skip: !lody }, () => {
     const result = runCheck(
       workingCopy('revision', (dir) => {
         const file = path.join(dir, 'http.json');
