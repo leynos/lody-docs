@@ -8,13 +8,14 @@
  * HTTP routes and hand-written schemas, plus the pinned `x-source-revision`)
  * and `docs/cloud-api/supplemental.json` (Convex calls outside `CloudApi`).
  * Paths are relative to the working directory, which must be the repository
- * root. The checkout must be at the pinned revision, and every source file the
- * generator reads must be unmodified, so that each generated link cites what
- * that commit contains.
+ * root. The checkout must be at the pinned revision, and no source file the
+ * generator reads may be modified, staged, untracked or ignored, so that each
+ * generated link cites what that commit contains.
  *
  * Outputs: `docs/cloud-api/openapi.yaml`, `routes.md`, `operations.md` and the
- * source manifest `sources.json` (revision, operation counts, unresolved types
- * and the hash of every source file read). With `--check`, nothing is written;
+ * source manifest `sources.json` (revision, operation counts, unresolved types,
+ * one digest over every indexed source file, and a hash of each file that
+ * shaped the output or is cited). With `--check`, nothing is written;
  * the script fails with "Stale generated document" if any output differs from
  * what it would generate. `npm run generate` writes the outputs, and `npm run
  * check` (the Makefile `cloud-api-check` gate) verifies them. The generator
@@ -36,6 +37,8 @@ const variables = new Map();
 const unresolved = new Map();
 const schemas = {};
 const ref = (name) => ({ $ref: `#/components/schemas/${name}` });
+/** @param {string} file */
+const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const location = (node) => {
   const sf = node.getSourceFile();
   const line = sf.getLineAndCharacterOfPosition(node.getStart()).line + 1;
@@ -79,22 +82,29 @@ function walk(dir) {
   }
 }
 // Public DTOs take priority over similarly named internal types.
-load(path.join(root, 'packages/cloud-api/src/index.ts'));
-walk(path.join(root, 'packages/cloud-api/src'));
-for (const dir of [
+const indexRoots = [
+  'packages/cloud-api/src',
   'packages/shared/src',
   'packages/e2ee-core/src',
   'packages/e2ee-machine-sharing/src',
-])
-  walk(path.join(root, dir));
+];
+load(path.join(root, 'packages/cloud-api/src/index.ts'));
+for (const dir of indexRoots) walk(path.join(root, dir));
+/**
+ * Find the variable `name`, first in the file of `node`, then in any indexed
+ * file. The file that supplies it shapes the output, so it counts as used.
+ */
 function variableAt(node, name) {
   const sf = node.getSourceFile();
+  let found;
   for (const statement of sf.statements)
     if (ts.isVariableStatement(statement)) {
       for (const v of statement.declarationList.declarations)
-        if (v.name.getText() === name) return v;
+        if (!found && v.name.getText() === name) found = v;
     }
-  return variables.get(name);
+  found ??= variables.get(name);
+  if (found) used.add(found.getSourceFile().fileName);
+  return found;
 }
 function numberValue(node) {
   if (ts.isNumericLiteral(node)) return Number(node.text);
@@ -643,20 +653,14 @@ if (revision !== document['x-source-revision'])
   throw Error(
     `Lody checkout ${root} is at ${revision}, but docs/cloud-api/http.json pins ${document['x-source-revision']}`,
   );
-// HEAD names the commit only if no source file read differs from it.
+// HEAD names the commit only if no file read, whether parsed into the index or
+// cited, is modified, staged, untracked or ignored.
+const read = [...new Set([...files.keys(), ...used])].map((f) => path.relative(root, f)).sort();
 const modified = execFileSync(
   'git',
-  [
-    '-C',
-    root,
-    'status',
-    '--porcelain',
-    '--ignored',
-    '--',
-    ...[...used].map((f) => path.relative(root, f)),
-  ],
+  ['--literal-pathspecs', '-C', root, 'status', '--porcelain', '--ignored', '--', ...read],
   { encoding: 'utf8' },
-).trim();
+).trimEnd();
 if (modified) throw Error(`Source files differ from ${revision} in ${root}:\n${modified}`);
 const manifest = {
   repository: 'https://github.com/LodyAI/Lody',
@@ -667,10 +671,24 @@ const manifest = {
   supplementalOperations: supplemental.length,
   operations: operations.length,
   unresolved: [...unresolved.values()].sort((a, b) => a.source.localeCompare(b.source)),
-  files: [...used].sort().map((file) => ({
-    path: path.relative(root, file),
-    sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),
-  })),
+  // Every file read: the parsed index as one digest, and each file that shaped
+  // the output or is cited by an operation with its own hash.
+  index: {
+    roots: indexRoots,
+    files: files.size,
+    sha256: crypto
+      .createHash('sha256')
+      .update(
+        [...files.keys()]
+          .map((file) => `${path.relative(root, file)}\0${sha256(file)}\n`)
+          .sort()
+          .join(''),
+      )
+      .digest('hex'),
+  },
+  files: [...used]
+    .sort()
+    .map((file) => ({ path: path.relative(root, file), sha256: sha256(file) })),
 };
 document.info.version = `source-${revision.slice(0, 12)}`;
 document['x-source-revision'] = revision;

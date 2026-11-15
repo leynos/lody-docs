@@ -37,6 +37,16 @@
       "reason": "Structural schema retained; semantic refinement requires the source validator."
     }
   ],
+  "index": {
+    "roots": [
+      "packages/cloud-api/src",
+      "packages/shared/src",
+      "packages/e2ee-core/src",
+      "packages/e2ee-machine-sharing/src"
+    ],
+    "files": 385,
+    "sha256": "dfa2998ddec4074a2059a90504324a486df4038319b426183161702d0825c65e"
+  },
   "files": [
     {
       "path": "apps/cli/src/agent/managed-agent-runtime.ts",

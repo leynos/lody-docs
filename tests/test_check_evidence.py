@@ -111,13 +111,49 @@ def test_missing_file_fails(tmp_path: pathlib.Path, lody: pathlib.Path) -> None:
     assert failures == ["E-1: no such file pkg/src/missing.ts"]
 
 
+MALFORMED_ROWS = [
+    pytest.param(row(ident="E-2").removesuffix(" |"), id="missing-final-pipe"),
+    pytest.param(row(ident="E-2").removeprefix("| "), id="missing-leading-pipe"),
+    pytest.param(row(ident="E-2").replace('<a id="e-2"></a>', ""), id="missing-anchor"),
+]
+
+
+@pytest.mark.parametrize("broken", MALFORMED_ROWS)
 def test_unparsed_evidence_row_fails(
-    tmp_path: pathlib.Path, lody: pathlib.Path
+    tmp_path: pathlib.Path, lody: pathlib.Path, broken: str
 ) -> None:
-    broken = row(ident="E-2").removesuffix(" |")
     rows, failures = check_evidence.check_index(index(tmp_path, row(), broken), lody)
     assert rows == 1
     assert failures == ["line 6: evidence row does not parse"]
+
+
+@pytest.mark.parametrize("broken", MALFORMED_ROWS)
+def test_main_fails_on_unparsed_evidence_row(
+    tmp_path: pathlib.Path,
+    lody: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    broken: str,
+) -> None:
+    index(tmp_path, row(), broken)
+    monkeypatch.setattr(check_evidence, "ROOT", tmp_path)
+    monkeypatch.setattr(check_evidence, "INDEXES", ("evidence.md",))
+    assert check_evidence.main([str(lody)]) == 1
+
+
+def test_prose_and_headers_are_not_evidence_rows(
+    tmp_path: pathlib.Path, lody: pathlib.Path
+) -> None:
+    prose = [
+        "",
+        "Rows marked Checked were compared with the source; Reported rows",
+        "were read but not compared. The basis column says which.",
+        "",
+        "| Basis | Meaning |",
+        "| ----- | ------- |",
+        "| `Checked` | Compared |",
+    ]
+    path = index(tmp_path, row(), *prose)
+    assert check_evidence.check_index(path, lody) == (1, [])
 
 
 def test_checked_row_without_code_span_fails(

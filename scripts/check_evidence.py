@@ -25,8 +25,12 @@ ROW = re.compile(
     r"\[[^\]]+\]\([^)#]+#L(?P<start>\d+)(?:-L(?P<end>\d+))?\) "
     r"\| (?P<text>.*) \| (?P<basis>Checked|Reported) \|$"
 )
-# Every evidence row starts with its anchor; headers and prose do not.
-EVIDENCE_ROW = re.compile(r"^\| <a id=")
+# A line is an evidence row if it carries an evidence anchor anywhere, or ends
+# in a basis cell, whatever its pipes look like; headers and prose do neither.
+# Such a line must parse with ROW, or the check fails.
+EVIDENCE_ROW = re.compile(
+    r"<a id=\"e-|\|\s*(?:Checked|Reported)\s*\|?\s*$", re.IGNORECASE
+)
 
 
 def decisive_texts(cell: str) -> list[str]:
@@ -41,7 +45,7 @@ def check_index(index: pathlib.Path, lody: pathlib.Path) -> tuple[int, list[str]
     for number, line in enumerate(index.read_text().splitlines(), start=1):
         match = ROW.match(line)
         if match is None:
-            if EVIDENCE_ROW.match(line):
+            if EVIDENCE_ROW.search(line):
                 failures.append(f"line {number}: evidence row does not parse")
             continue
         rows += 1
