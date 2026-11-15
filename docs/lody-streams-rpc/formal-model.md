@@ -56,7 +56,7 @@ Two constants select the case:
 | -- | -------- | --------- | ------- |
 | R1 | `OncePerInstance` | A request's handler runs at most once per server instance | Holds |
 | R2 | `RestartLoopBounded` | A restart request causes no more restarts than its lifetime in ticks | Holds |
-| R3 | `NoSilentLoss` | A request read while unexpired is not dropped unhandled | Holds |
+| R3 | `NoSilentLoss` | A request read while unexpired is not left behind a persisted offset, unhandled | Holds by construction |
 | | `AtMostOnce` | A request's handler runs at most once | **Violated** |
 | | `RestartOnce` | A restart request restarts the daemon at most once | Depends on the backend |
 
@@ -73,6 +73,11 @@ What the model settles:
   the backend refuses a reused proof, the daemon restarts once. Which case
   holds in production is still unknown; the model shows that nothing on the
   daemon side prevents the loop.
+- **R3 is a contrast, not a finding about the shipped protocol.** Loss is
+  recorded only when a crash leaves an unexpired request behind a persisted
+  offset. With the offset in memory every request is read again, so R3
+  cannot fail. A request that expires before it is read again is dropped by
+  design, and the model does not count that as loss.
 - **A persisted offset trades duplication for loss.** With `"durable"`,
   `AtMostOnce` and `RestartOnce` hold, but `NoSilentLoss` fails: a request
   read just before a crash is never handled. A compatible implementation

@@ -183,6 +183,12 @@ OncePerInstance == \A r \in Requests : runs[r] <= instances
 RestartLoopBounded == \A r \in RestartReqs : restartsBy[r] <= Ttl
 
 (* R3.  A request that was read while unexpired is not silently lost.    *)
+(* `lost` is recorded only when a crash leaves an unexpired request       *)
+(* behind a persisted offset, so it can never be read again.  In the      *)
+(* shipped "memory" mode the offset resets and the request is read        *)
+(* again, so R3 holds by construction there; it exists to show the cost   *)
+(* of the "durable" candidate.  A request that expires before it is read  *)
+(* again is dropped by design and is not counted as lost.                 *)
 NoSilentLoss == lost = {}
 
 (* Not guaranteed by the shipped protocol: a request runs at most once.  *)
