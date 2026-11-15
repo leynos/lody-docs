@@ -240,8 +240,9 @@ AdmitOncePerPass == \A r \in Requests : maxAdmits[r] <= 1
 RestartLoopBounded == \A r \in RestartReqs : restartsBy[r] <= Ttl
 
 (* R3.  A request that was read while unexpired is not silently lost.    *)
-(* `lost` is recorded only when a crash leaves an unexpired task behind  *)
-(* a persisted offset, so it can never be read again.  In the shipped    *)
+(* `lost` is recorded only when a crash or an accepted restart leaves a  *)
+(* task behind a persisted offset while it is still unexpired as the new *)
+(* instance starts, so it can never be read again.  In the shipped       *)
 (* "memory" mode the offset resets and the request is read again, so R3  *)
 (* holds by construction there; it exists to show the cost of the        *)
 (* "durable" candidate.  A request that expires before it is read again  *)
