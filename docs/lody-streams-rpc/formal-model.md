@@ -89,6 +89,12 @@ What the model settles:
   true is R1: each pass starts at most one task per request. That is a
   property of the read loop, not of handler execution, and it is the
   strongest statement available for any method outside the history family.
+  It rests on two assumptions: callers never append the same identifier
+  twice, which the client code supports, and the stream delivers each
+  position once per pass (B1).
+- **A refused restart still ran its handler.** When the backend refuses a
+  reused proof, the handler has run and is counted, so `OncePerInstance`
+  covers refusals too.
 - **The restart question has a conditional answer.** If the backend accepts
   a reused proof, an accepted `machine/restart` is read again by the new
   instance and restarts it again, repeatedly, until the request expires. If
@@ -100,12 +106,12 @@ What the model settles:
   offset. With the offset in memory every request is read again, so R3
   cannot fail. A request that expires before it is read again is dropped by
   design, and the model does not count that as loss.
-- **A persisted offset trades duplication for loss.** With `"durable"` and
-  no in-process reset, `AtMostOnce` and `RestartOnce` hold, but
-  `NoSilentLoss` fails: a request
-  read just before a crash is never handled. A compatible implementation
-  that persists its offset must choose where to persist it, and neither
-  choice gives both properties without a deduplication record.
+- **A persisted offset trades duplication for loss.** With `"durable"` and no
+  in-process reset, `AtMostOnce` and `RestartOnce` hold, but `NoSilentLoss`
+  fails: a request read just before a crash or a restart is never handled. A
+  compatible implementation that persists its offset must choose where to
+  persist it, and neither choice gives both properties without a deduplication
+  record.
 
 ## RpcHistoryClaim
 
@@ -181,8 +187,10 @@ again.
 
 X2 covers one request identifier. The model has one receipt row, so it does
 not show that a turn sent under two different request identifiers is offered
-once; each identifier has its own receipt row and can offer the turn. X1 is
-what covers that case, because the start claim is keyed by the turn.
+once; each identifier has its own receipt row and can offer the turn. That X1
+still holds in that case is an inference, not a checked result: the start
+claim is keyed by the turn, not by the request identifier, but no
+configuration explores two identities for one turn.
 
 X3 depends on `EarlyReturn`. If the turn body can return normally before it
 prompts, the start row is settled although the agent never ran, in three
@@ -209,8 +217,8 @@ it reaches.
 | ------------- | ---- | ---------------- | ------ |
 | `RpcReplay.cfg` | Shipped, one in-process reset | R1, R2, R3 | Pass (47,296 states) |
 | `RpcReplay_NoReset.cfg` | Shipped, no in-process reset | `OncePerInstance` | Pass (9,712 states) |
-| `RpcReplay_RestartSingleUse.cfg` | Shipped, backend refuses reuse | `RestartOnce` | Pass (38,102 states) |
-| `RpcReplay_DurableOffset.cfg` | Candidate, no in-process reset | `AtMostOnce`, `RestartOnce` | Pass (3,727 states) |
+| `RpcReplay_RestartSingleUse.cfg` | Shipped, backend refuses reuse | `RestartOnce` | Pass (82,013 states) |
+| `RpcReplay_DurableOffset.cfg` | Candidate, no in-process reset | `AtMostOnce`, `RestartOnce` | Pass (3,690 states) |
 | `RpcReplay_AtMostOnce.cfg` | Observation | `AtMostOnce` | Violated in 5 steps |
 | `RpcReplay_GatewayReset.cfg` | Observation | `OncePerInstance` | Violated in 6 steps |
 | `RpcReplay_RestartLoop.cfg` | Observation, backend accepts reuse | `RestartOnce` | Violated in 5 steps |
@@ -240,7 +248,7 @@ _Table 5: TLC results for the RPC models._
 
 | # | Abstraction | Consequence |
 | - | ----------- | ----------- |
-| B1 | The stream delivers every appended request, in order, to a reader that starts from the beginning, including after an in-process reset | Gateway ordering, retention, redelivery after a 404 or 410, and offset semantics are assumed, not modelled; production behaviour is unknown |
+| B1 | The stream delivers every appended request, in order and once per read pass, to a reader that starts from the beginning, including after an in-process reset; no caller appends the same identifier twice | Gateway ordering, retention, duplicate delivery, redelivery after a 404 or 410, and offset semantics are assumed, not modelled; production behaviour is unknown |
 | B2 | A handler run is one atomic step | A crash between a handler's side effect and its response is not distinguished from a crash before it |
 | B3 | Time is a bounded counter, and a restart takes one tick | The restart loop is bounded by the request lifetime; real durations are not modelled |
 | B4 | One history request; one encrypted turn with one receipt identity | Interference between different requests, and one turn sent under several request identifiers, are not explored |

@@ -137,21 +137,23 @@ Handle(r) ==
                    restartsBy, usedProof, lost, resets, crashes>>
 
 (* A restart task whose proof the backend refuses is answered with an    *)
-(* error and restarts nothing.                                           *)
+(* error and restarts nothing.  The handler ran, so the run is counted.  *)
 RefuseRestart(r) ==
     /\ pending[r] > 0
     /\ r \in RestartReqs
     /\ now < expires[r]
     /\ RestartSingleUse
     /\ r \in usedProof
+    /\ Ran(r)
+    /\ instRuns' = [instRuns EXCEPT ![r] = @ + 1]
     /\ pending' = Finished(r)
     /\ UNCHANGED <<stream, expires, now, offset, durable, admits, maxAdmits,
-                   runs, instRuns, maxInstRuns, restartsBy, usedProof, lost,
-                   resets, crashes>>
+                   restartsBy, usedProof, lost, resets, crashes>>
 
 (* An accepted restart is answered, then the worker exits and a new      *)
 (* instance starts with no tasks.  The restart handler's run is counted  *)
-(* in the instance it ends.  A restart takes at least one tick.          *)
+(* in the instance it ends.  A restart takes at least one tick.  As with *)
+(* a crash, other unexpired tasks behind a persisted offset are lost.    *)
 HandleRestart(r) ==
     /\ pending[r] > 0
     /\ r \in RestartReqs
@@ -166,7 +168,11 @@ HandleRestart(r) ==
     /\ pending' = Zero
     /\ admits' = Zero
     /\ instRuns' = Zero
-    /\ UNCHANGED <<stream, expires, durable, maxAdmits, lost, resets, crashes>>
+    /\ lost' = IF OffsetMode = "durable"
+               THEN lost \cup {q \in Requests :
+                                 Finished(r)[q] > 0 /\ now < expires[q]}
+               ELSE lost
+    /\ UNCHANGED <<stream, expires, durable, maxAdmits, resets, crashes>>
 
 (* The daemon crashes.  Memory, including started tasks, is lost; the    *)
 (* stream and any persisted offset survive.  With a persisted offset, an *)
@@ -221,7 +227,10 @@ TypeOK ==
 
 (* R1.  The read loop starts at most one task per request per read pass. *)
 (* A pass ends at a crash, a restart, or an in-process offset reset.     *)
-(* Tasks started in an earlier pass may still be running.                *)
+(* Tasks started in an earlier pass may still be running.  R1 rests on   *)
+(* two assumptions built into Send and Read: no caller appends the same  *)
+(* identifier twice, and the stream delivers each position once per      *)
+(* pass.  Gateway behaviour is not verified.                             *)
 AdmitOncePerPass == \A r \in Requests : maxAdmits[r] <= 1
 
 (* R2.  A restart request causes no more restarts than its lifetime in   *)
