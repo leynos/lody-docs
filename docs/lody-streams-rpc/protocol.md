@@ -437,9 +437,16 @@ There is no separate envelope for any of these.
   shape of `result` alone, renews its inactivity timer and keeps the request
   pending (**Impl**; [E-W9](evidence.md#e-w9)). Three methods emit progress:
   `machine/acp-capabilities-refresh`, `machine/acp-binary-install` and
-  `machine/acp-authenticate`. Progress responses precede the final response in
-  emission order, and a failed progress append is discarded (**Impl**, **Test**
-  "emits ACP binary progress without resolving the refresh request early").
+  `machine/acp-authenticate`. Each chains its progress appends and awaits
+  them before appending its final result, so progress responses precede the
+  final result in emission order, and a failed progress append is discarded
+  (**Impl**; [E-S29](evidence.md#e-s29)). **Test** "appends ACP binary
+  progress before the final refresh response" covers the refresh method
+  ([E-S30](evidence.md#e-s30)), and "emits ACP binary progress without
+  resolving the refresh request early" covers the client side. When a handler
+  throws, the error response is appended without awaiting pending progress
+  appends, so its order relative to them is not ensured (**Infer** from
+  [E-S29](evidence.md#e-s29), [E-W24](evidence.md#e-w24)).
 - **Overload** is an ordinary error response with code
   `rpc_request_capacity_exceeded` and message "The machine request queue is
   full." (**Impl**; [E-W27](evidence.md#e-w27)).
@@ -707,9 +714,12 @@ the caller._
   for history methods is marked as a transport failure with an outcome that
   may be unknown (**Impl**; [E-C5](evidence.md#e-c5); **Intent**
   [E-N8](evidence.md#e-n8)).
-- A response produced by a handler proves that the handler returned or threw,
-  and that the daemon's append of the response was stored. What the handler's
-  return means differs by method. For the dispatch methods it means delivery
+- A terminal response produced after a handler returns or throws proves that
+  the handler finished, and that the daemon's append of the response was
+  stored. A progress response is appended while the handler is still running
+  and proves only that the handler had started and the append was stored
+  (**Impl**; [E-S29](evidence.md#e-s29)). What the handler's return means
+  differs by method. For the dispatch methods it means delivery
   or durable acceptance and never that an agent started
   ([methods](methods.md)).
 - Some responses are produced before any handler runs, and prove only that

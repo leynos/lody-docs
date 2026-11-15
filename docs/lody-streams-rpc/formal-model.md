@@ -43,16 +43,23 @@ within the stated bounds, and nothing beyond them.
 ## RpcReplay
 
 The daemon keeps its read offset in memory (**Impl**;
-[E-T30](evidence.md#e-t30)), and starts a task for each request it reads
-without waiting for the task to finish (**Impl**; [E-S1](evidence.md#e-s1)).
-A restart resets the offset, so every request still in the stream is read
-again, and an unexpired request is dispatched again (**Impl**;
-[E-W12](evidence.md#e-w12); **Probe** P-9 in
-[conformance](conformance.md#executed-probes)). The read loop also resets its
-offset after a 404 or a 410 (**Impl**; [E-T29](evidence.md#e-t29)); that the
-gateway then redelivers the same requests is a model assumption (B1), and
-that tasks started before the reset keep running is an inference from the
-reset path, which changes only the offset and cursor (**Infer**).
+[E-T30](evidence.md#e-t30)). Intake does not wait for handlers to finish, but
+admission is bounded: a control or history-write request waits while 128
+tasks of its kind are pending, and an ordinary or watch request beyond its
+limit is answered with an overload error, or dropped when the overload pool
+is also full (**Impl**; [E-S1](evidence.md#e-s1), [E-S5](evidence.md#e-s5)).
+A restart resets the offset, so the daemon reads the retained stream again
+and an unexpired request that passes the same checks is dispatched again
+(**Impl**; [E-T30](evidence.md#e-t30), [E-W12](evidence.md#e-w12)). P-9
+observed this on the local development server with a synthetic handler; it
+says nothing about the production gateway's retention or about real handlers
+(**Probe** P-9 in [conformance](conformance.md#executed-probes)). The read
+loop also resets its offset after a 404 or a 410 (**Impl**;
+[E-T29](evidence.md#e-t29)); that the gateway then redelivers the same
+requests is a model assumption (B1), and that tasks started before the reset
+keep running is an inference from the reset path, which changes only the
+offset and cursor (**Infer**). The model abstracts away capacity waits,
+overload shedding and drops: every request read is admitted.
 
 The model has a request stream, a clock, a read offset, the tasks started and
 not yet finished, and counts per request: tasks started in the current _read

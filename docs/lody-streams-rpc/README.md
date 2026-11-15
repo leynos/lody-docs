@@ -160,12 +160,18 @@ made it unusable.
 ## Guarantees the evidence supports
 
 - A valid, unexpired, correctly addressed request that the daemon reads
-  while its lanes have room is dispatched at least once, and the daemon
-  attempts to append a response to the request's `replyTo`. If every append
-  attempt fails, including the fallback `internal_error` append, no response
-  is published (**Impl**; [E-W12](evidence.md#e-w12),
-  [E-S1](evidence.md#e-s1), [E-S12](evidence.md#e-s12),
-  [E-W24](evidence.md#e-w24)).
+  while its lanes have room is dispatched at least once (**Impl**;
+  [E-W12](evidence.md#e-w12), [E-S1](evidence.md#e-s1)). Where the method
+  produces a response, the daemon attempts to append it to the request's
+  `replyTo` (**Impl**; [E-S12](evidence.md#e-s12),
+  [E-W24](evidence.md#e-w24)). Some paths return without any append
+  attempt: `machine/acp-capabilities-refresh-cancel`, an aborted capability
+  refresh, and a history write whose deadline passes after its claim
+  (**Impl**; [E-M21](evidence.md#e-m21), [E-M63](evidence.md#e-m63),
+  [E-L56](evidence.md#e-l56)). If every append
+  attempt fails, including the fallback `internal_error` append, publication
+  is unconfirmed: an append whose acknowledgement was lost may still have
+  been stored (**Infer**; [E-S12](evidence.md#e-s12)).
 - A request is not dispatched after its `expiresAt` has passed on the
   daemon's clock, unless it had already passed the expiry check (**Impl**;
   [E-W12](evidence.md#e-w12)).
@@ -175,8 +181,9 @@ made it unusable.
 - A saved history refusal is returned again for the same request (**Impl**;
   [E-S8](evidence.md#e-s8), [E-L44](evidence.md#e-l44); **Test**
   [E-L71](evidence.md#e-l71)).
-- Within one request, progress responses precede the final response
-  (**Impl**, **Test**; see
+- Within one request, progress responses precede the final result
+  (**Impl**; [E-S29](evidence.md#e-s29); **Test**, for the capability
+  refresh only, [E-S30](evidence.md#e-s30); see
   [protocol](protocol.md#progress-overload-and-cancellation)).
 - An accepted restart or upgrade waits at most five seconds for its response
   to be delivered before proceeding (**Impl**; [E-S13](evidence.md#e-s13);

@@ -462,13 +462,16 @@ tagged.
   therefore runs its handler again. **Infer** for the replay itself; **Intent**
   for the documentation.
 - **Lane and timeout.** As in the reconciliation and default-timeout tables.
-- **Schemas.** Each request schema named in the family tables is a member of
-  the request union [E-M2](evidence.md#e-m2); each result schema is the one
-  the client applies to that method after the envelope
-  [E-M80](evidence.md#e-m80). The inner request schemas of the Code Collab and
-  file methods are parsed by the server after decryption
-  [E-M96](evidence.md#e-m96). The encrypted-only schemas are cited in their own
-  table.
+- **Schemas.** Each outer request schema (`Loro…RpcRequestSchema`) named in
+  the family tables is a member of the request union
+  [E-M2](evidence.md#e-m2), which does not cover inner payload schemas. Each
+  result schema is the one the client applies to that method after the
+  envelope [E-M80](evidence.md#e-m80). The server parses the inner payload
+  schemas after decrypting the owner envelope: for the Code Collab and file
+  methods [E-M96](evidence.md#e-m96), for the history methods
+  [E-M98](evidence.md#e-m98), and for `session/automation-control`
+  [E-M15](evidence.md#e-m15). The encrypted-only schemas are cited in their
+  own table.
 - **Response loss.** A response append is attempted up to three times and is not
   retained for later delivery [E-L2](evidence.md#e-l2). A side effect can
   therefore stand without the caller seeing the response. **Infer**
@@ -888,18 +891,24 @@ Milestones, in order:
 3. **First durable effect, human origin only.** When `inputOrigin` is `human` in
    an ordinary workspace, a human input row is written to the Operation Inbox
    SQLite store [E-L5](evidence.md#e-l5) [E-L7](evidence.md#e-l7).
-4. **Stash.** The turn is stored in process memory, keyed by `userTurnId`, for
-   ten minutes [E-L5](evidence.md#e-l5) [E-L6](evidence.md#e-l6).
-5. **Wake.** A session check is enqueued and not awaited
-   [E-L5](evidence.md#e-l5).
+4. **Stash.** Only when the guards in step 2 pass: the turn is stored in
+   process memory, keyed by `userTurnId`, for ten minutes
+   [E-L5](evidence.md#e-l5) [E-L6](evidence.md#e-l6).
+5. **Wake.** Only after a stash: a session check is requested and not
+   awaited. The request can coalesce with a queued check that has not started
+   [E-L5](evidence.md#e-l5) [E-L91](evidence.md#e-l91).
 6. **Response.** `accepted` is true for the dispositions `accepted`, `duplicate`
    and `already-terminal` [E-L4](evidence.md#e-l4).
 
 - **What the response proves.** Every response with `accepted: true` proves
   that the payload reached this daemon process and passed the ownership guard
   as of that read. Only the disposition `accepted`, and `duplicate` when the
-  turn was already in the stash, also prove that the turn is in process memory
-  with a check queued. `already-terminal` means the turn was already handled,
+  turn was already in the stash, also prove that the daemon stashed the turn
+  and requested a session check before answering. Neither proves that the
+  turn is still stashed or a check still pending when the caller reads the
+  response: the check may already have run and consumed the stash, or joined a
+  check that was already queued [E-L91](evidence.md#e-l91). `already-terminal`
+  means the turn was already handled,
   and `duplicate` for the turn that is currently running returns before the
   stash; neither stashes the payload nor queues a check, and the caller cannot
   tell the two `duplicate` cases apart. No disposition proves authorization,
@@ -1514,8 +1523,8 @@ Milestones after the preconditions:
 | Crash point | State left | Replay | Basis |
 | --- | --- | --- | --- |
 | Before the claim | nothing | Runs normally if unexpired and the proof still verifies. | **Impl** |
-| After the claim, before the write | claim only | `session_history_write_already_claimed`; outcome uncertain to the caller, which cannot tell this row from the next. A new request ID is a new claim, so a retry under one can apply the operation twice. Retry only after establishing that the write did not occur, for input operations with the `inputAcceptance` query, or where the operation has its own key, such as the input ID in Table 18. | **Impl**, **Infer** |
-| After the write, before the append | claim and the write | Same error; the write stands. For input operations the `inputAcceptance` query resolves the uncertainty. | **Impl**, **Infer** |
+| After the claim, before the write | claim only | `session_history_write_already_claimed`; outcome uncertain to the caller, which cannot tell this row from the next. A new request ID is a new claim, so a retry under one can apply a non-idempotent operation twice. For input operations, `inputAcceptance` can report `accepted`, but `unobserved` does not show that the write did not occur; the documented recovery is to send the identical input again with the same input ID, a new request ID and a new proof, which relies on the Roost SDK's input receipt (Table 18; **Intent**, **Unknown** at SDK level). For other operations, retry only with evidence that the write did not occur or an established operation-specific idempotency contract. | **Impl**, **Infer** |
+| After the write, before the append | claim and the write | Same error; the write stands. For input operations an `inputAcceptance` answer of `accepted` resolves the uncertainty; `unobserved` leaves it unresolved. | **Impl**, **Infer** |
 | After the append | claim, write and response | Same error after an earlier success, with the same ID on the same reply stream. | **Infer** |
 
 _Table 24: Crash points for history write._
