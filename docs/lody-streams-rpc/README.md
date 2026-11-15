@@ -159,9 +159,15 @@ made it unusable.
 
 ## Guarantees the evidence supports
 
-- A valid, unexpired, correctly addressed request that the daemon reads
-  while its lanes have room is dispatched at least once (**Impl**;
-  [E-W12](evidence.md#e-w12), [E-S1](evidence.md#e-s1)). Where the method
+- A valid, unexpired, correctly addressed request whose `rpcVersion` matches
+  the daemon's, and that the daemon reads while its lanes have room, is
+  dispatched at least once (**Impl**; [E-W12](evidence.md#e-w12),
+  [E-S1](evidence.md#e-s1)). A version mismatch is answered with
+  `rpc_version_mismatch` without invoking the handler. History requests are
+  the exception to dispatch: an identical request that arrives while the first
+  is running joins it, and a replay of a claimed or refused request is
+  answered from the claim store (**Impl**; [E-S7](evidence.md#e-s7),
+  [E-S8](evidence.md#e-s8), [E-S10](evidence.md#e-s10)). Where the method
   produces a response, the daemon attempts to append it to the request's
   `replyTo` (**Impl**; [E-S12](evidence.md#e-s12),
   [E-W24](evidence.md#e-w24)). Some paths return without attempting a final

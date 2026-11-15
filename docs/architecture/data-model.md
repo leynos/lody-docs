@@ -55,8 +55,12 @@ _Table 2: Where the authoritative copy of each kind of state lives._
 Two consequences are worth stating plainly.
 
 - **A session's content travels in the replicated documents, not through
-  the cloud API.** The cloud relays the streams that carry it and authorizes
-  access to them. This is why the cloud API's operations cover control, and
+  the cloud API.** The cloud relays the streams that carry it, and clients and
+  the daemon obtain a token for them from a cloud route
+  ([E-O71](evidence.md#e-o71)). What that token grants, and what the gateway
+  enforces with it, are not established (**Infer**; see the
+  [architecture overview](README.md#credentials-and-trust-boundaries)). This
+  is why the cloud API's operations cover control, and
   why the conversation model is in the [Loro](../loro-documents/README.md)
   set. That the cloud database does not also store the content is an
   inference from the client calls; whether the private backend keeps a copy

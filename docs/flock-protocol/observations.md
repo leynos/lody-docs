@@ -158,9 +158,11 @@ attempted", or to have `retryDirtyNow` request a fresh sync after the active
 one settles.
 
 If it occurred, the next local write, the next connectivity edge, or the
-next process start (through the initial join sync) would upload the update.
-Until one of those events happens, the update stays unsent, indefinitely if
-none occurs.
+next process start (through the initial join sync) would start another sync.
+That sync uploads the update only if a transport is attached and the sync
+succeeds; a connectivity edge that removes the last transport, or a write or
+restart while offline, does not. Until a later sync succeeds, the update stays
+unsent, indefinitely if none does.
 
 ## O5. Client clocks
 
