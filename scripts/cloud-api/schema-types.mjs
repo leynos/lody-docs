@@ -3,16 +3,19 @@
  *
  * `createTypeConverter` returns `convert`, for a type node, and `named`, for a
  * declared DTO, which it emits once as a `Dto_` component schema and refers to
- * thereafter. Interfaces include the members they inherit. Keywords,
+ * thereafter. Interfaces include the members they inherit, each base
+ * resolved in the extending module and cached per declaration. Keywords,
  * literals, arrays, tuples (with optional and rest elements), unions,
  * intersections, object literals, indexed access, `readonly` and the
  * supported utility types (`schema-utilities.mjs`) are expanded; record keys
- * come from `schema-keys.mjs`; `typeof` a Zod or Effect schema goes to
+ * and `keyof` key sets come from `schema-keys.mjs`; properties are built so
+ * that `Object.prototype` names are ordinary properties; `typeof` a Zod or Effect schema goes to
  * `schema-zod.mjs` or `schema-effect.mjs`. Anything else becomes an
  * `x-unresolved` schema rather than a guess.
  */
 import ts from 'typescript';
-import { comment, propertyName, ref } from './schema-context.mjs';
+import { comment, ownProperty, propertiesFrom, propertyName, ref } from './schema-context.mjs';
+import { entityParts } from './schema-keys.mjs';
 import { createUtilities, flatten, isTransparentOperator } from './schema-utilities.mjs';
 
 /**
@@ -42,38 +45,68 @@ export function createTypeConverter(ctx) {
   }
 
   /**
-   * An interface's own members together with those it inherits. A base that
-   * cannot be expanded to an object schema makes the interface unresolved.
+   * Schemas of base declarations, keyed by the declaration itself, so that
+   * two same-named bases in different modules never share one.
+   * @type {Map<ts.Node, any>}
+   */
+  const bases = new Map();
+  /**
+   * The schema of the one declaration a base name means in the extending
+   * interface's module, or undefined.
+   * @param {ts.ExpressionWithTypeArguments} base
+   */
+  function baseSchema(base) {
+    const parts = !base.typeArguments && entityParts(base.expression);
+    const decls = parts ? ctx.declarationsOf(base.getSourceFile(), parts) : null;
+    if (decls?.length !== 1 || decls[0].typeParameters?.length) return undefined;
+    const [decl] = decls;
+    if (!bases.has(decl)) {
+      bases.set(decl, {}); // Break recursion: an inheritance cycle stays unresolved.
+      location(decl);
+      bases.set(
+        decl,
+        flatten(
+          schemas,
+          ts.isInterfaceDeclaration(decl) ? interfaceSchema(decl) : convert(decl.type),
+        ),
+      );
+    }
+    return bases.get(decl);
+  }
+
+  /**
+   * An interface's own members together with those it inherits. Each base is
+   * resolved in the interface's own module (its declarations and imports); a
+   * base that cannot be resolved to one object schema makes the interface
+   * unresolved.
    * @param {ts.InterfaceDeclaration} decl
    */
   function interfaceSchema(decl) {
     const own = members(decl.members);
     const heritage = (decl.heritageClauses ?? []).flatMap((clause) => clause.types);
     if (!heritage.length) return own;
-    /** @type {Record<string, any>} */
-    const properties = {};
+    /** @type {Map<string, any>} */
+    const properties = new Map();
     /** @type {string[]} */
     const required = [];
     let additionalProperties;
     for (const base of heritage) {
-      const schema =
-        ts.isIdentifier(base.expression) && !base.typeArguments
-          ? flatten(schemas, named(base.expression.text, base))
-          : undefined;
+      const schema = baseSchema(base);
       if (schema?.type !== 'object' || schema['x-unresolved'])
         return opaque(base, 'Inherited interface could not be expanded.');
-      Object.assign(properties, schema.properties);
+      for (const [key, value] of Object.entries(schema.properties ?? {}))
+        properties.set(key, value);
       required.push(...(schema.required ?? []));
       additionalProperties ??= schema.additionalProperties;
     }
     // A member the interface redeclares narrows the inherited one.
-    Object.assign(properties, own.properties);
+    for (const [key, value] of Object.entries(own.properties)) properties.set(key, value);
     required.push(...(own.required ?? []));
     additionalProperties = own.additionalProperties ?? additionalProperties;
     const all = [...new Set(required)];
     return {
       type: 'object',
-      properties,
+      properties: propertiesFrom(properties),
       ...(all.length ? { required: all } : {}),
       ...(additionalProperties !== undefined ? { additionalProperties } : {}),
     };
@@ -81,8 +114,8 @@ export function createTypeConverter(ctx) {
 
   /** @param {ts.NodeArray<ts.TypeElement>} nodes */
   function members(nodes) {
-    /** @type {Record<string, any>} */
-    const properties = {};
+    /** @type {Map<string, any>} */
+    const properties = new Map();
     /** @type {string[]} */
     const required = [];
     let additionalProperties;
@@ -94,15 +127,15 @@ export function createTypeConverter(ctx) {
       if (!ts.isPropertySignature(p) || !p.type)
         throw Error(`Unsupported DTO member: ${p.getText()}`);
       const name = propertyName(p.name);
-      properties[name] = {
+      properties.set(name, {
         ...convert(p.type),
         ...(comment(p) ? { description: comment(p) } : {}),
-      };
+      });
       if (!p.questionToken) required.push(name);
     }
     return {
       type: 'object',
-      properties,
+      properties: propertiesFrom(properties),
       ...(required.length ? { required } : {}),
       ...(additionalProperties !== undefined ? { additionalProperties } : {}),
     };
@@ -148,6 +181,26 @@ export function createTypeConverter(ctx) {
       : { type: 'array', prefixItems, items: rest, minItems };
   }
 
+  /**
+   * `keyof` of an object type whose property names are exactly known; a
+   * numeric name stays a number.
+   * @param {ts.TypeOperatorNode} node
+   */
+  function keyOf(node) {
+    const keys = ctx.propertyKeys(node.type);
+    if (!keys) return opaque(node, 'Key set of the type is not exactly known.');
+    const strings = keys.filter((key) => typeof key === 'string');
+    const numbers = keys.filter((key) => typeof key === 'number');
+    if (!numbers.length) return strings.length ? { type: 'string', enum: strings } : { not: {} };
+    if (!strings.length) return { type: 'number', enum: numbers };
+    return {
+      anyOf: [
+        { type: 'string', enum: strings },
+        { type: 'number', enum: numbers },
+      ],
+    };
+  }
+
   /** @param {any} node @returns {any} */
   function convert(node) {
     if (!node) throw Error('Missing type node');
@@ -171,7 +224,7 @@ export function createTypeConverter(ctx) {
     if (ts.isParenthesizedTypeNode(node)) return convert(node.type);
     if (ts.isTypeOperatorNode(node)) {
       if (isTransparentOperator(node)) return convert(node.type);
-      if (node.operator === ts.SyntaxKind.KeyOfKeyword) return utilities.keyOf(node);
+      if (node.operator === ts.SyntaxKind.KeyOfKeyword) return keyOf(node);
       return opaque(node, 'Type operator changes the represented values.');
     }
     if (ts.isLiteralTypeNode(node)) {
@@ -194,7 +247,7 @@ export function createTypeConverter(ctx) {
           ? node.indexType.literal.text
           : undefined;
       return (
-        (key !== undefined ? object.properties?.[key] : undefined) ??
+        (key !== undefined ? ownProperty(object, key) : undefined) ??
         opaque(node, 'Indexed type could not be expanded.')
       );
     }

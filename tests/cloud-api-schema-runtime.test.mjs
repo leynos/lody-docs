@@ -111,6 +111,25 @@ describe('Zod', () => {
     assert.deepEqual(fieldOf('z.unknown()'), {});
   });
 
+  it('converts z.any() to an unconstrained schema', () => {
+    const { schema, converter } = zodOf('z.object({ a: z.any() })');
+    assert.deepEqual(schema.properties.a, {});
+    assert.equal(converter.unresolved.size, 0);
+  });
+
+  for (const method of ['passthrough', 'strip', 'readonly'])
+    it(`keeps a constrained schema through .${method}()`, () => {
+      const { schema, converter } = zodOf(
+        `z.object({ a: z.string().min(1), b: z.number().optional() }).${method}()`,
+      );
+      assert.deepEqual(schema, {
+        type: 'object',
+        properties: { a: { type: 'string', minLength: 1 }, b: { type: 'number' } },
+        required: ['a'],
+      });
+      assert.equal(converter.unresolved.size, 0);
+    });
+
   it('keeps the structure of a refinement but flags it partial and unresolved', () => {
     for (const method of ['refine', 'superRefine']) {
       const { schema, converter } = zodOf(`z.string().${method}((v) => v.length > 0)`);

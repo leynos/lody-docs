@@ -6,12 +6,13 @@
  * property, the property must satisfy both (`allOf`). An intersection that
  * includes anything other than a plain object schema is not flattened, so
  * callers cannot mistake it for one. `createUtilities` converts `Pick`,
- * `Omit`, `Partial`, `Required`, `Extract`, `Exclude` and `keyof`, and returns
+ * `Omit`, `Partial`, `Required`, `Extract` and `Exclude`, and returns
  * an `x-unresolved` schema whenever a key set or filter cannot be established
  * exactly. Used by `schema-types.mjs`.
  */
 import { isDeepStrictEqual } from 'node:util';
 import ts from 'typescript';
+import { ownProperty, propertiesFrom } from './schema-context.mjs';
 
 /**
  * Follow component references to the schema they name.
@@ -37,17 +38,21 @@ export function flatten(schemas, schema) {
   const parts = s.allOf.map((/** @type {any} */ part) => flatten(schemas, part));
   if (!parts.every((/** @type {any} */ p) => p.type === 'object' && !p.additionalProperties))
     return { allOf: parts };
-  /** @type {Record<string, any>} */
-  const properties = {};
+  /** @type {Map<string, any>} */
+  const properties = new Map();
   for (const part of parts)
-    for (const [key, value] of Object.entries(part.properties ?? {}))
-      properties[key] =
-        key in properties && !isDeepStrictEqual(properties[key], value)
-          ? { allOf: [properties[key], value] }
-          : value;
+    for (const [key, value] of Object.entries(part.properties ?? {})) {
+      const earlier = properties.get(key);
+      properties.set(
+        key,
+        properties.has(key) && !isDeepStrictEqual(earlier, value)
+          ? { allOf: [earlier, value] }
+          : value,
+      );
+    }
   return {
     type: 'object',
-    properties,
+    properties: propertiesFrom(properties),
     required: [...new Set(parts.flatMap((/** @type {any} */ p) => p.required ?? []))],
   };
 }
@@ -90,7 +95,7 @@ export function createUtilities(ctx) {
           ? []
           : name === 'Required'
             ? Object.keys(props)
-            : (object.required ?? []).filter((/** @type {string} */ k) => k in props),
+            : (object.required ?? []).filter((/** @type {string} */ k) => Object.hasOwn(props, k)),
       // An index signature survives every utility except Pick.
       ...(name !== 'Pick' && object.additionalProperties !== undefined
         ? { additionalProperties: object.additionalProperties }
@@ -127,7 +132,7 @@ export function createUtilities(ctx) {
       const value = flat(v);
       if (literals) return value.const !== undefined && literals.includes(value.const);
       return Object.entries(discriminants).every(
-        ([k, s]) => value.properties?.[k]?.const === /** @type {any} */ (s).const,
+        ([k, s]) => ownProperty(value, k)?.const === /** @type {any} */ (s).const,
       );
     };
     const chosen = variants.filter((/** @type {any} */ v) =>
@@ -137,19 +142,7 @@ export function createUtilities(ctx) {
     return chosen.length === 1 ? chosen[0] : { anyOf: chosen };
   }
 
-  /**
-   * `keyof` of an object type with known properties.
-   * @param {ts.TypeOperatorNode} node
-   */
-  function keyOf(node) {
-    const object = flat(ctx.convert(node.type));
-    if (object.type !== 'object' || object.additionalProperties !== undefined)
-      return opaque(node, 'Key type of an open or non-object type.');
-    const keys = Object.keys(object.properties ?? {});
-    return keys.length ? { type: 'string', enum: keys } : { not: {} };
-  }
-
-  return { objectUtility, unionUtility, keyOf };
+  return { objectUtility, unionUtility };
 }
 
 /** Whether a type operator leaves the represented JSON values unchanged. */

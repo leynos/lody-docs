@@ -7,7 +7,14 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import { convertThing, ROOT, schemaOf, THING } from './cloud-api-helpers.mjs';
+import {
+  CONTRACT,
+  CONTRACT_PATH,
+  convertThing,
+  ROOT,
+  schemaOf,
+  THING,
+} from './cloud-api-helpers.mjs';
 
 /** The schema of `Thing = <type>`, without its location. @param {string} type */
 const typeOf = (type) => schemaOf(`export type Thing = ${type};\n`).schema;
@@ -95,6 +102,35 @@ describe('TypeScript types', () => {
     assertUnresolved(typeOf('[...string[], number]'));
   });
 
+  it('keeps numeric property names numeric in keyof', () => {
+    assert.deepEqual(typeOf('keyof { 1: string }'), { type: 'number', enum: [1] });
+    assert.deepEqual(typeOf("keyof { '1': string }"), { type: 'string', enum: ['1'] });
+    const mixed = {
+      anyOf: [
+        { type: 'string', enum: ['a'] },
+        { type: 'number', enum: [2] },
+      ],
+    };
+    assert.deepEqual(typeOf('keyof { a: string; 2: number }'), mixed);
+    assert.deepEqual(
+      schemaOf(
+        'interface Base { 2: number }\ninterface K extends Base { a: string }\nexport type Thing = keyof K;\n',
+      ).schema,
+      mixed,
+    );
+  });
+
+  it('marks keyof of a type with an inexact key set unresolved and records it', () => {
+    for (const type of ['{ [k: string]: number }', "{ ['a' + 'b']: string }", 'Missing']) {
+      const { schema, converter } = schemaOf(`export type Thing = keyof ${type};\n`);
+      assertUnresolved(schema);
+      assert.deepEqual(
+        [...converter.unresolved.values()].map((entry) => entry.reason),
+        ['Key set of the type is not exactly known.'],
+      );
+    }
+  });
+
   it('unwraps readonly but expands keyof', () => {
     assert.deepEqual(typeOf('readonly string[]'), { type: 'array', items: { type: 'string' } });
     assert.deepEqual(typeOf('keyof { id: string; n: number }'), {
@@ -151,6 +187,52 @@ describe('interfaces', () => {
     assert.deepEqual(schema.properties.kind, { type: 'string', const: 'thing' });
   });
 
+  it('resolves a base in the extending module, not an earlier same-named one', () => {
+    const { schema } = schemaOf(
+      'interface Base { id: string }\nexport interface Thing extends Base { count: number }\n',
+      { [CONTRACT_PATH]: `${CONTRACT}interface Base { other: boolean }\n` },
+    );
+    assert.deepEqual(schema, {
+      type: 'object',
+      properties: { id: { type: 'string' }, count: { type: 'number' } },
+      required: ['id', 'count'],
+    });
+  });
+
+  it('resolves an imported, renamed or namespace base despite a colliding name', () => {
+    const extra = {
+      [CONTRACT_PATH]: `${CONTRACT}interface Base { other: boolean }\n`,
+      'packages/shared/src/real.ts': 'export interface Real { id: string }\n',
+    };
+    for (const source of [
+      "import type { Real as Base } from './real';\nexport interface Thing extends Base { n: number }\n",
+      "import * as m from './real';\nexport interface Thing extends m.Real { n: number }\n",
+    ])
+      assert.deepEqual(schemaOf(source, extra).schema.properties, {
+        id: { type: 'string' },
+        n: { type: 'number' },
+      });
+  });
+
+  it('marks an interface whose imported base cannot be followed unresolved', () => {
+    const { schema } = schemaOf(
+      "import type { Base } from '@lody/elsewhere';\nexport interface Thing extends Base { n: number }\n",
+      { [CONTRACT_PATH]: `${CONTRACT}interface Base { other: boolean }\n` },
+    );
+    assertUnresolved(schema);
+  });
+
+  it('never shares a base schema between same-named bases in different modules', () => {
+    const { converter } = convertThing({
+      'packages/shared/src/other.ts':
+        'interface Base { other: boolean }\nexport interface Other extends Base { x: string }\n',
+      [THING]:
+        "import type { Other } from './other';\ninterface Base { id: string }\nexport interface Thing extends Base { o: Other }\n",
+    });
+    assert.deepEqual(Object.keys(converter.schemas.Dto_Thing.properties), ['id', 'o']);
+    assert.deepEqual(Object.keys(converter.schemas.Dto_Other.properties), ['other', 'x']);
+  });
+
   it('marks an interface with an unknown or generic base unresolved', () => {
     assertUnresolved(schemaOf('export interface Thing extends Missing { a: string }\n').schema);
     assertUnresolved(
@@ -189,9 +271,55 @@ describe('utility types', () => {
   });
 
   it('makes every key required or optional with Required and Partial', () => {
-    assert.deepEqual(typeOf(`Required<${OBJECT}>`).required, ['id', 'name', 'count']);
-    assert.deepEqual(typeOf(`Partial<${OBJECT}>`).required, []);
-    assert.deepEqual(typeOf(`Readonly<${OBJECT}>`).required, ['id', 'count']);
+    const properties = {
+      id: { type: 'string' },
+      name: { type: 'string' },
+      count: { type: 'number' },
+    };
+    assert.deepEqual(typeOf(`Required<${OBJECT}>`), {
+      type: 'object',
+      properties,
+      required: ['id', 'name', 'count'],
+    });
+    assert.deepEqual(typeOf(`Partial<${OBJECT}>`), { type: 'object', properties, required: [] });
+    assert.deepEqual(typeOf(`Readonly<${OBJECT}>`), {
+      type: 'object',
+      properties,
+      required: ['id', 'count'],
+    });
+  });
+
+  for (const order of [
+    "{ constructor: 'a' } & { constructor: string }",
+    "{ constructor: string } & { constructor: 'a' }",
+  ])
+    it(`intersects a property named after an Object.prototype member (${order})`, () => {
+      const schema = typeOf(`Partial<${order}>`);
+      const [first, second] = order.split(' & ').map((part) => typeOf(part).properties.constructor);
+      assert.deepEqual(schema, {
+        type: 'object',
+        properties: { constructor: { allOf: [first, second] } },
+        required: [],
+      });
+      assert.doesNotMatch(JSON.stringify(schema), /null/);
+    });
+
+  it('keeps __proto__ as an ordinary property', () => {
+    const schema = typeOf('Partial<{ __proto__: string } & { a: number }>');
+    assert.ok(Object.hasOwn(schema.properties, '__proto__'));
+    assert.equal(Object.getPrototypeOf(schema.properties), Object.prototype);
+    assert.deepEqual(Object.keys(schema.properties), ['__proto__', 'a']);
+    assert.match(JSON.stringify(schema), /"__proto__":\{"type":"string"\}/);
+    assert.deepEqual(typeOf('{ __proto__: string }').required, ['__proto__']);
+  });
+
+  it('never reads an inherited member as a property', () => {
+    assertUnresolved(typeOf("{ a: string }['constructor']"));
+    assert.deepEqual(typeOf("Omit<{ toString: string; a: number }, 'a'>"), {
+      type: 'object',
+      properties: { toString: { type: 'string' } },
+      required: ['toString'],
+    });
   });
 
   it('keeps both constraints of a property an intersection declares twice', () => {

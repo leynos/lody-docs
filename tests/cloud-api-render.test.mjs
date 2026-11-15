@@ -1,12 +1,10 @@
 /**
- * Unit tests for `scripts/cloud-api/render.mjs` and `scripts/cloud-api/outputs.mjs`:
- * the rendered documents' content, and the read-only staleness check and the
- * writer.
+ * Unit tests for `scripts/cloud-api/render.mjs`: prose wrapping, the route
+ * index, the manifest, the operation reference and the OpenAPI YAML.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import YAML from 'yaml';
-import { findStaleOutputs, writeOutputs } from '../scripts/cloud-api/outputs.mjs';
 import {
   renderManifest,
   renderOpenApi,
@@ -49,40 +47,6 @@ describe('render', () => {
 
   it('renders the manifest as JSON with a final newline', () => {
     assert.equal(renderManifest({ a: 1 }), '{\n  "a": 1\n}\n');
-  });
-});
-
-describe('outputs', () => {
-  it('reports absent and differing outputs as stale', () => {
-    const disk = new Map([
-      ['same', 'x'],
-      ['different', 'old'],
-    ]);
-    const stale = findStaleOutputs(
-      [
-        ['same', 'x'],
-        ['different', 'new'],
-        ['absent', 'y'],
-      ],
-      (file) => disk.get(file),
-    );
-    assert.deepEqual(stale, ['different', 'absent']);
-  });
-
-  it('writes every output', () => {
-    /** @type {Array<[string, string]>} */
-    const written = [];
-    writeOutputs(
-      [
-        ['a', '1'],
-        ['b', '2'],
-      ],
-      (file, data) => written.push([file, data]),
-    );
-    assert.deepEqual(written, [
-      ['a', '1'],
-      ['b', '2'],
-    ]);
   });
 });
 

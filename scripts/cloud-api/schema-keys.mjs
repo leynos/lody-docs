@@ -1,7 +1,10 @@
 /**
- * Resolution of finite key types: record keys and `Pick`/`Omit` key sets.
+ * Module-scoped name resolution and finite key sets.
  *
- * `createKeyResolver` returns `literalKeys`, which turns a key type made only
+ * `createKeyResolver` returns `declarationsOf`, which finds the declarations
+ * a type name used in a module means (also used for interface bases);
+ * `propertyKeys`, the property names `keyof` sees, with numeric names kept as
+ * numbers; and `literalKeys`, which turns a key type made only
  * of string literals into its distinct keys. It follows type aliases from the
  * module that uses them: the module's own declaration; a local namespace
  * member (`Local.Key`); or whatever an import of any form (named, renamed,
@@ -100,6 +103,25 @@ function namespaceMember(sf, namespace, name) {
 }
 
 /**
+ * The identifiers of an entity name or a property-access expression of
+ * identifiers (`Base`, `ns.Base`), or undefined for anything else.
+ * @param {ts.Node} node
+ * @returns {string[] | undefined}
+ */
+export function entityParts(node) {
+  if (ts.isIdentifier(node)) return [node.text];
+  if (ts.isQualifiedName(node)) {
+    const left = entityParts(node.left);
+    return left && [...left, node.right.text];
+  }
+  if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.name)) {
+    const left = entityParts(node.expression);
+    return left && [...left, node.name.text];
+  }
+  return undefined;
+}
+
+/**
  * Create the key resolver of a conversion.
  * @param {import('./schema-context.mjs').Context} ctx
  */
@@ -155,25 +177,30 @@ export function createKeyResolver(ctx) {
    * @returns {TypeDeclaration[] | null}
    */
   function keyDeclarations(node) {
-    const sf = node.getSourceFile();
-    const { typeName } = node;
-    if (ts.isIdentifier(typeName)) return aliasDeclarations(sf, typeName.text);
-    /** @type {ts.EntityName} */
-    let first = typeName;
-    while (ts.isQualifiedName(first)) first = first.left;
-    // Only `Q.Name` is followed; a deeper path is refused.
-    if (typeName.left !== first) return null;
-    const imported = importOf(sf, first.text);
+    const parts = entityParts(node.typeName);
+    return parts ? declarationsOf(node.getSourceFile(), parts) : null;
+  }
+  /**
+   * The declarations a type name used in a module can mean: `Name`, or
+   * `Q.Name` where `Q` is a local namespace or a namespace or `require`
+   * import. Null when the name cannot be resolved safely; a deeper path and
+   * any other import used as a qualifier are refused.
+   * @param {ts.SourceFile} sf
+   * @param {string[]} parts
+   * @returns {TypeDeclaration[] | null}
+   */
+  function declarationsOf(sf, parts) {
+    if (parts.length === 1) return aliasDeclarations(sf, parts[0]);
+    if (parts.length !== 2) return null;
+    const [qualifier, name] = parts;
+    const imported = importOf(sf, qualifier);
     if (!imported) {
-      const members = namespaceMember(sf, first.text, typeName.right.text);
+      const members = namespaceMember(sf, qualifier, name);
       return members.length ? members : null;
     }
-    // `m.Key` with `import * as m from './m'` or `import m = require('./m')`
-    // names an export of that module; any other import used as a qualifier is
-    // refused rather than guessed.
     if (imported.kind !== 'namespace' && imported.kind !== 'require') return null;
     const target = imported.specifier && resolveModule(sf.fileName, imported.specifier);
-    return (target && exportedFrom(target, typeName.right.text, new Set())) || null;
+    return (target && exportedFrom(target, name, new Set())) || null;
   }
   /**
    * The declarations a name in a module can mean: its own, else what its
@@ -262,5 +289,70 @@ export function createKeyResolver(ctx) {
     if (found.length) return found.flat();
     return stars.includes(null) ? null : undefined;
   }
-  return { literalKeys };
+  /**
+   * The property names of an object type, as `keyof` sees them: a numeric
+   * name such as `1` stays a number, distinct from the string `'1'`. Follows
+   * type aliases, interfaces and the interfaces they extend through the
+   * module-scoped resolution above. Null when the key set is not exactly
+   * known: an index signature, a computed name, an unresolved reference or
+   * any other type form.
+   * @param {ts.TypeNode} node
+   * @param {Set<ts.Node>} [seen]
+   * @returns {Array<string | number> | null}
+   */
+  function propertyKeys(node, seen = new Set()) {
+    if (ts.isParenthesizedTypeNode(node)) return propertyKeys(node.type, seen);
+    if (ts.isTypeLiteralNode(node)) return memberKeys(node.members);
+    if (ts.isIntersectionTypeNode(node)) {
+      const parts = node.types.map((part) => propertyKeys(part, seen));
+      return parts.includes(null) ? null : unique(parts.flat());
+    }
+    if (!ts.isTypeReferenceNode(node) || node.typeArguments) return null;
+    const parts = entityParts(node.typeName);
+    return parts ? declarationKeys(node.getSourceFile(), parts, seen) : null;
+  }
+  /**
+   * @param {ts.SourceFile} sf
+   * @param {string[]} parts
+   * @param {Set<ts.Node>} seen
+   * @returns {Array<string | number> | null}
+   */
+  function declarationKeys(sf, parts, seen) {
+    const decls = declarationsOf(sf, parts);
+    if (decls?.length !== 1 || seen.has(decls[0]) || decls[0].typeParameters?.length) return null;
+    const [decl] = decls;
+    seen.add(decl);
+    location(decl);
+    if (ts.isTypeAliasDeclaration(decl)) return propertyKeys(decl.type, seen);
+    const keys = [memberKeys(decl.members)];
+    for (const base of (decl.heritageClauses ?? []).flatMap((clause) => clause.types)) {
+      const baseParts = !base.typeArguments && entityParts(base.expression);
+      keys.push(baseParts ? declarationKeys(decl.getSourceFile(), baseParts, seen) : null);
+    }
+    return keys.includes(null) ? null : unique(keys.flat());
+  }
+  return { literalKeys, declarationsOf, propertyKeys };
 }
+
+/**
+ * The property names of type members, or null if any is not a fixed name or
+ * the type has an index signature.
+ * @param {ts.NodeArray<ts.TypeElement>} members
+ * @returns {Array<string | number> | null}
+ */
+function memberKeys(members) {
+  const keys = [];
+  for (const member of members) {
+    if (ts.isCallSignatureDeclaration(member) || ts.isConstructSignatureDeclaration(member))
+      continue;
+    const name = member.name;
+    if (!name) return null;
+    if (ts.isIdentifier(name) || ts.isStringLiteral(name)) keys.push(name.text);
+    else if (ts.isNumericLiteral(name)) keys.push(Number(name.text));
+    else return null;
+  }
+  return keys;
+}
+
+/** @param {Array<string | number>} keys */
+const unique = (keys) => keys.filter((key, i) => keys.indexOf(key) === i);

@@ -23,6 +23,24 @@ export const comment = (node) =>
     .filter(Boolean)
     .join('\n');
 
+/**
+ * A property schema an object schema declares itself, never one inherited from
+ * `Object.prototype` (`constructor`, `toString`, `__proto__`).
+ * @param {any} schema an object schema
+ * @param {string} name
+ */
+export const ownProperty = (schema, name) =>
+  schema?.properties && Object.hasOwn(schema.properties, name)
+    ? schema.properties[name]
+    : undefined;
+
+/**
+ * Properties built in a `Map`, as a plain object whose keys are all own data
+ * properties, `__proto__` included.
+ * @param {Map<string, any>} properties
+ */
+export const propertiesFrom = (properties) => Object.fromEntries(properties);
+
 /** @param {ts.PropertyName} node */
 export function propertyName(node) {
   if (ts.isIdentifier(node) || ts.isStringLiteral(node) || ts.isNumericLiteral(node))
@@ -59,6 +77,10 @@ export function stringLiteral(node) {
  * @property {(node: any) => any} zod Zod expression to schema
  * @property {(node: any) => any} effectSchema Effect schema expression to schema
  * @property {(node: ts.TypeNode | undefined) => string[] | undefined | null} literalKeys
+ * @property {(sf: ts.SourceFile, parts: string[]) => Array<ts.TypeAliasDeclaration | ts.InterfaceDeclaration> | null} declarationsOf
+ *   the declarations a type name used in a module can mean
+ * @property {(node: ts.TypeNode) => Array<string | number> | null} propertyKeys
+ *   the property names `keyof` sees, numbers kept as numbers
  */
 
 /**
@@ -160,5 +182,7 @@ export function createContext(index, initialSchemas) {
     zod: unset,
     effectSchema: unset,
     literalKeys: unset,
+    declarationsOf: unset,
+    propertyKeys: unset,
   };
 }

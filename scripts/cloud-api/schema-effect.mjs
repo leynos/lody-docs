@@ -9,7 +9,7 @@
  * Used by `schema-types.mjs` for `typeof Schema.Type` references.
  */
 import ts from 'typescript';
-import { propertyName, stringLiteral } from './schema-context.mjs';
+import { propertiesFrom, propertyName, stringLiteral } from './schema-context.mjs';
 
 /**
  * Create the Effect converter of a conversion.
@@ -48,8 +48,8 @@ export function createEffectConverter(ctx) {
       args = node.arguments;
     if (owner.getText() === 'Schema') {
       if (method === 'Struct' && ts.isObjectLiteralExpression(args[0])) {
-        /** @type {Record<string, any>} */
-        const properties = {};
+        /** @type {Map<string, any>} */
+        const properties = new Map();
         /** @type {string[]} */
         const required = [];
         for (const prop of args[0].properties) {
@@ -57,17 +57,19 @@ export function createEffectConverter(ctx) {
             const variable = variableAt(prop, prop.expression.expression.getText());
             if (!variable?.initializer) return opaque(node, 'Effect spread not found.');
             const spread = effectSchema(variable.initializer);
-            Object.assign(properties, spread.properties);
+            for (const [key, value] of Object.entries(spread.properties ?? {}))
+              properties.set(key, value);
             required.push(...(spread.required ?? []));
           } else if (ts.isPropertyAssignment(prop) || ts.isShorthandPropertyAssignment(prop)) {
             const name = propertyName(prop.name);
-            properties[name] = effectSchema(
-              ts.isPropertyAssignment(prop) ? prop.initializer : prop.name,
+            properties.set(
+              name,
+              effectSchema(ts.isPropertyAssignment(prop) ? prop.initializer : prop.name),
             );
             required.push(name);
           } else return opaque(node, 'Effect member needs manual expansion.');
         }
-        return { type: 'object', properties, required };
+        return { type: 'object', properties: propertiesFrom(properties), required };
       }
       if (method === 'Array') return { type: 'array', items: effectSchema(args[0]) };
       if (method === 'NullOr') return { anyOf: [effectSchema(args[0]), { type: 'null' }] };

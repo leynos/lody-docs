@@ -27,7 +27,10 @@ export { comment, ref } from './schema-context.mjs';
  */
 export function createConverter(index, initialSchemas = {}) {
   const ctx = createContext(index, initialSchemas);
-  ctx.literalKeys = createKeyResolver(ctx).literalKeys;
+  const keys = createKeyResolver(ctx);
+  ctx.literalKeys = keys.literalKeys;
+  ctx.declarationsOf = keys.declarationsOf;
+  ctx.propertyKeys = keys.propertyKeys;
   const types = createTypeConverter(ctx);
   ctx.convert = types.convert;
   ctx.named = types.named;

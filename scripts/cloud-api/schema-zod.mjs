@@ -12,7 +12,7 @@
  * the schema `x-unresolved`. Used by `schema-types.mjs` for `z.infer`.
  */
 import ts from 'typescript';
-import { propertyName, stringLiteral } from './schema-context.mjs';
+import { propertiesFrom, propertyName, stringLiteral } from './schema-context.mjs';
 
 /**
  * Create the Zod converter of a conversion.
@@ -61,8 +61,8 @@ export function createZodConverter(ctx) {
         return { type: 'string', enum: args[0].elements.map(stringLiteral) };
       if (method === 'array') return { type: 'array', items: nested(args[0]) };
       if (method === 'object' && ts.isObjectLiteralExpression(args[0])) {
-        /** @type {Record<string, any>} */
-        const properties = {};
+        /** @type {Map<string, any>} */
+        const properties = new Map();
         /** @type {string[]} */
         const required = [];
         for (const p of args[0].properties) {
@@ -71,10 +71,14 @@ export function createZodConverter(ctx) {
           const s = zod(ts.isPropertyAssignment(p) ? p.initializer : p.name);
           const optional = s['x-optional'];
           delete s['x-optional'];
-          properties[propertyName(p.name)] = s;
+          properties.set(propertyName(p.name), s);
           if (!optional) required.push(propertyName(p.name));
         }
-        return { type: 'object', properties, ...(required.length ? { required } : {}) };
+        return {
+          type: 'object',
+          properties: propertiesFrom(properties),
+          ...(required.length ? { required } : {}),
+        };
       }
       if (['union', 'discriminatedUnion'].includes(method)) {
         const array = args[method === 'union' ? 0 : 1];
