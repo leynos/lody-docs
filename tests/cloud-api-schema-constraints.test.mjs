@@ -210,6 +210,23 @@ describe('chained Zod checks', () => {
     }
   });
 
+  it('refuses what a JSON Schema cannot carry without changing validation', () => {
+    for (const expression of [
+      // A flagged expression matches differently without its flags.
+      'z.string().regex(/^abc$/i)',
+      // A constrained key schema restricts, and may require, the keys.
+      "z.record(z.enum(['id']), z.number())",
+      'z.record(z.string().min(2), z.number())',
+      // A record's value schema is not an unknown-key mode.
+      'z.record(z.string(), z.number()).strict()',
+      'z.string().passthrough()',
+    ]) {
+      const { schema, reasons } = zodField(expression);
+      assert.equal(schema.properties.f['x-unresolved'], true, expression);
+      assert.equal(reasons.length, 1, expression);
+    }
+  });
+
   it('refuses a second format or pattern instead of replacing the first', () => {
     for (const expression of ['z.string().uuid().url()', 'z.string().regex(/a/).regex(/b/)'])
       assert.equal(zodField(expression).schema.properties.f['x-unresolved'], true, expression);
@@ -239,6 +256,7 @@ describe('chained Effect checks', () => {
     for (const expression of [
       'Schema.String.check(Schema.isPattern(/a/), Schema.isPattern(/b/))',
       'Schema.Int.check(Schema.isMaxLength(4))',
+      'Schema.String.check(Schema.isPattern(/^abc$/i))',
     ])
       assert.equal(effect(expression).schema['x-unresolved'], true, expression);
   });

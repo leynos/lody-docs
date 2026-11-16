@@ -1,33 +1,47 @@
 /**
  * Conversion of Zod schema expressions to JSON Schema.
  *
- * `createZodConverter` returns `zod`, which follows a schema through the
+ * `createZodConverter` returns the converter, which follows a schema through the
  * variables that name it and converts the `z` constructors and chained
  * methods the public contract uses. An optional field is marked with
  * `x-optional` only while its object is being built; the marker never remains
- * in the output, and `.optional().nullable()` stays optional. Bounds take the
+ * in the output, `.optional().nullable()` stays optional, and a union with an
+ * optional member is optional. Bounds take the
  * keyword their base type needs (`minLength`, `minItems` or `minimum`), and a
  * chain keeps the tighter bound; a check on a schema it does not apply to, or
- * a second format or pattern, is `x-unresolved`. `z` counts as Zod only where
- * it is imported from `zod`.
+ * a second format or pattern, is `x-unresolved`, as is a regular expression
+ * with flags, which a JSON Schema `pattern` cannot carry. `.safe()` is an
+ * integer check, as in Zod 4. A record keeps only an unconstrained string key
+ * schema; `.strict()`, `.passthrough()` and `.strip()` set the object's
+ * unknown-key mode, the last one winning. `z` counts as Zod only where the
+ * import from `zod` is the binding visible at the reference.
  * `.refine` and `.superRefine` keep the structural schema, flag it
  * `x-partial` and record the refinement as unresolved; any other method makes
  * the schema `x-unresolved`. Used by `schema-types.mjs` for `z.infer`.
  */
 import ts from 'typescript';
 import { propertiesFrom, propertyName, stringLiteral } from './schema-context.mjs';
-import { importOf } from './schema-scope.mjs';
+import { declaredIn, enclosing, importOf } from './schema-bindings.mjs';
 
 /**
- * Whether `name` at `node` is bound by an import from a module whose
- * specifier matches `from`, so that a local look-alike is never mistaken for
- * the library.
+ * Whether the binding of `name` visible at `node` is an import from a module
+ * whose specifier matches `from`, so that a local look-alike is never mistaken
+ * for the library. Any enclosing binding of the name, in either space, or a
+ * module-level declaration of it, shadows the import.
  * @param {ts.Node} node
  * @param {string} name
  * @param {RegExp} from
  */
 export function importedFrom(node, name, from) {
-  const binding = importOf(node.getSourceFile(), name);
+  if (enclosing(node, name, 'value') !== undefined || enclosing(node, name, 'type') !== undefined)
+    return false;
+  const sf = node.getSourceFile();
+  if (
+    declaredIn(sf.statements, name, 'value').length ||
+    declaredIn(sf.statements, name, 'type').length
+  )
+    return false;
+  const binding = importOf(sf, name);
   return Boolean(
     binding?.specifier &&
       from.test(binding.specifier) &&
@@ -49,7 +63,19 @@ const APPLIES_TO = /** @type {Record<string, string[]>} */ ({
   min: ['string', 'array', 'number', 'integer'],
   max: ['string', 'array', 'number', 'integer'],
   strict: ['object'],
+  passthrough: ['object'],
+  strip: ['object'],
 });
+
+/**
+ * The body of a regular expression literal, or undefined when it has flags,
+ * whose matching a JSON Schema `pattern` cannot reproduce.
+ * @param {ts.RegularExpressionLiteral} literal
+ */
+export function patternOf(literal) {
+  const end = literal.text.lastIndexOf('/');
+  return literal.text.slice(end + 1) === '' ? literal.text.slice(1, end) : undefined;
+}
 
 /**
  * Create the Zod converter of a conversion.
@@ -119,9 +145,23 @@ export function createZodConverter(ctx) {
       }
       if (['union', 'discriminatedUnion'].includes(method)) {
         const array = args[method === 'union' ? 0 : 1];
-        if (ts.isArrayLiteralExpression(array)) return { anyOf: array.elements.map(nested) };
+        if (ts.isArrayLiteralExpression(array)) {
+          // A union admits an absent value when any member does.
+          const members = array.elements.map(zod);
+          const optional = members.some((m) => m['x-optional']);
+          return {
+            anyOf: members.map(({ 'x-optional': _optional, ...m }) => m),
+            ...(optional ? { 'x-optional': true } : {}),
+          };
+        }
       }
-      if (method === 'record') return { type: 'object', additionalProperties: nested(args.at(-1)) };
+      if (method === 'record') {
+        // A constrained key schema (an enum, a pattern) restricts and may
+        // require keys, which `additionalProperties` alone cannot express.
+        if (args.length > 1 && !isPlainZodString(args[0]))
+          return opaque(node, 'Zod record with a constrained key schema needs manual expansion.');
+        return { type: 'object', additionalProperties: nested(args.at(-1)) };
+      }
     }
     const base = zod(owner);
     if (APPLIES_TO[method] && !APPLIES_TO[method].includes(base.type))
@@ -132,8 +172,14 @@ export function createZodConverter(ctx) {
       const { 'x-optional': optional, ...inner } = base;
       return { anyOf: [inner, { type: 'null' }], ...(optional ? { 'x-optional': true } : {}) };
     }
-    if (method === 'strict') return { ...base, additionalProperties: false };
-    if (['passthrough', 'strip', 'readonly', 'brand'].includes(method)) return base;
+    if (['strict', 'passthrough', 'strip'].includes(method)) {
+      // The last unknown-key mode wins; a record's value schema is not a mode.
+      const { additionalProperties, ...rest } = base;
+      if (additionalProperties !== undefined && additionalProperties !== false)
+        return opaque(node, `Zod .${method}() on a record.`);
+      return method === 'strict' ? { ...rest, additionalProperties: false } : rest;
+    }
+    if (['readonly', 'brand'].includes(method)) return base;
     if (method === 'int') return { ...base, type: 'integer' };
     if (method === 'positive')
       return { ...base, exclusiveMinimum: Math.max(base.exclusiveMinimum ?? 0, 0) };
@@ -167,11 +213,16 @@ export function createZodConverter(ctx) {
           datetime: 'date-time',
         })[method],
       };
-    if (method === 'regex' && ts.isRegularExpressionLiteral(args[0]))
-      return { ...base, pattern: args[0].text.slice(1, args[0].text.lastIndexOf('/')) };
+    if (method === 'regex' && ts.isRegularExpressionLiteral(args[0])) {
+      const pattern = patternOf(args[0]);
+      return pattern === undefined
+        ? opaque(node, 'Zod .regex() with flags needs manual expansion.')
+        : { ...base, pattern };
+    }
     if (method === 'safe')
       return {
         ...base,
+        type: 'integer',
         minimum: Math.max(base.minimum ?? -Infinity, -Number.MAX_SAFE_INTEGER),
         maximum: Math.min(base.maximum ?? Infinity, Number.MAX_SAFE_INTEGER),
       };
@@ -189,5 +240,22 @@ export function createZodConverter(ctx) {
     // Unsupported refinements must not silently look like a fully expanded schema.
     return opaque(node, `Zod method ${method} requires manual review.`);
   }
-  return zod;
+  /**
+   * Whether a node is exactly `z.string()`, the key schema a record may have
+   * without restricting its keys.
+   * @param {ts.Node} node
+   */
+  function isPlainZodString(node) {
+    return (
+      ts.isCallExpression(node) &&
+      node.arguments.length === 0 &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === 'string' &&
+      ts.isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === 'z' &&
+      importedFrom(node.expression.expression, 'z', /^zod(\/|$)/)
+    );
+  }
+  // At the top level, as in any nested position, the optional marker is dropped.
+  return nested;
 }

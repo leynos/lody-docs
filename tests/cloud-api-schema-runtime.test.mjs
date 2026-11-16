@@ -49,7 +49,9 @@ describe('Zod', () => {
     );
     assert.doesNotMatch(JSON.stringify(schema), /x-optional/);
     assert.deepEqual(schema.properties.a, { type: 'array', items: { type: 'string' } });
-    assert.deepEqual(schema.required, ['a', 'b', 'c']);
+    // A union with an optional member admits an absent value, as Zod's does.
+    assert.deepEqual(schema.required, ['a', 'b']);
+    assert.deepEqual(schema.properties.c, { anyOf: [{ type: 'string' }, { type: 'number' }] });
   });
 
   it('uses the bound keyword of the base type', () => {
@@ -79,13 +81,19 @@ describe('Zod', () => {
       minimum: -Number.MAX_SAFE_INTEGER,
       maximum: Number.MAX_SAFE_INTEGER,
     });
+    // `.safe()` is itself an integer check, so fractional values are refused.
+    assert.deepEqual(fieldOf('z.number().safe()'), {
+      type: 'integer',
+      minimum: -Number.MAX_SAFE_INTEGER,
+      maximum: Number.MAX_SAFE_INTEGER,
+    });
   });
 
   it('converts string formats, patterns and transforms', () => {
     assert.deepEqual(fieldOf('z.string().uuid()'), { type: 'string', format: 'uuid' });
     assert.deepEqual(fieldOf('z.string().url()'), { type: 'string', format: 'uri' });
     assert.deepEqual(fieldOf('z.string().datetime()'), { type: 'string', format: 'date-time' });
-    assert.deepEqual(fieldOf('z.string().regex(/^a+$/i)'), { type: 'string', pattern: '^a+$' });
+    assert.deepEqual(fieldOf('z.string().regex(/^a+$/)'), { type: 'string', pattern: '^a+$' });
     assert.deepEqual(fieldOf('z.string().trim()'), {
       type: 'string',
       'x-transform': 'trim input before validation',
@@ -123,6 +131,16 @@ describe('Zod', () => {
     const { schema, converter } = zodOf('z.object({ a: z.any() })');
     assert.deepEqual(schema.properties.a, {});
     assert.equal(converter.unresolved.size, 0);
+  });
+
+  it('applies the last unknown-key mode of an object', () => {
+    const object = { type: 'object', properties: { a: { type: 'string' } }, required: ['a'] };
+    assert.deepEqual(fieldOf('z.object({ a: z.string() }).strict().passthrough()'), object);
+    assert.deepEqual(fieldOf('z.object({ a: z.string() }).strict().strip()'), object);
+    assert.deepEqual(fieldOf('z.object({ a: z.string() }).passthrough().strict()'), {
+      ...object,
+      additionalProperties: false,
+    });
   });
 
   for (const method of ['passthrough', 'strip', 'readonly'])

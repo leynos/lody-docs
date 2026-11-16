@@ -2,8 +2,8 @@
  * The declarations and bindings a module's syntax establishes, for
  * `schema-scope.mjs`: which statements declare a name in the type or value
  * space (every kind, `declare` forms and destructured names included), what
- * an enclosing scope (type parameters, function parameters, namespace bodies
- * and blocks) binds a name to, and which import binds it. Pure syntax; no
+ * an enclosing scope (type parameters, function parameters, catch clauses,
+ * loop variables, namespace bodies and blocks) binds a name to, and which import binds it. Pure syntax; no
  * module is loaded here.
  */
 import ts from 'typescript';
@@ -120,6 +120,8 @@ export function enclosing(at, name, space) {
       )
     )
       return null;
+    // A catch clause and a loop's variable declarations bind values in the body.
+    if (space === 'value' && bindsIn(n, name)) return null;
     if (ts.isModuleBlock(n) || ts.isBlock(n)) {
       const declared = declaredIn(n.statements, name, space);
       if (declared.length) return declared;
@@ -128,6 +130,26 @@ export function enclosing(at, name, space) {
     }
   }
   return undefined;
+}
+
+/**
+ * Whether a catch clause or a `for` loop's variable declarations bind a name.
+ * @param {ts.Node} n
+ * @param {string} name
+ */
+function bindsIn(n, name) {
+  /** @param {ts.BindingName} b */
+  const binds = (b) =>
+    ts.isIdentifier(b) ? b.text === name : bindingElements(b).some((e) => e.name.text === name);
+  if (ts.isCatchClause(n))
+    return Boolean(n.variableDeclaration && binds(n.variableDeclaration.name));
+  if (ts.isForStatement(n) || ts.isForInStatement(n) || ts.isForOfStatement(n)) {
+    const init = n.initializer;
+    return Boolean(
+      init && ts.isVariableDeclarationList(init) && init.declarations.some((d) => binds(d.name)),
+    );
+  }
+  return false;
 }
 
 /**

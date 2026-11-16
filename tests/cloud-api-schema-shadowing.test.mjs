@@ -4,12 +4,15 @@
  * enum, namespace, destructured name, type parameter or function parameter
  * of the name blocks the fallback to an unrelated indexed declaration, and a
  * kind the converter does not expand makes the reference `x-unresolved`.
- * Built-in names count as built-ins only where the module does not bind them.
+ * Built-in names count as built-ins only where the module does not bind them,
+ * and a library namespace counts as the library only where its import is the
+ * binding visible at the reference.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import ts from 'typescript';
 import { enclosing } from '../scripts/cloud-api/schema-bindings.mjs';
+import { importedFrom } from '../scripts/cloud-api/schema-zod.mjs';
 import { CONTRACT, CONTRACT_PATH, convertThing, schemaOf, THING } from './cloud-api-helpers.mjs';
 
 const ZOD = "import { z } from 'zod';\n";
@@ -163,5 +166,40 @@ describe('several bases', () => {
         'interface A { [k: string]: string }\ninterface B { [k: string]: number }\nexport interface Thing extends A, B {}\n',
       ).schema,
     );
+  });
+});
+
+describe('library namespaces', () => {
+  /** Whether each `z` that owns a `.string()` call resolves to Zod. @param {string} source */
+  const zodAt = (source) => {
+    const sf = ts.createSourceFile('x.ts', source, ts.ScriptTarget.Latest, true);
+    /** @type {boolean[]} */
+    const found = [];
+    /** @param {ts.Node} node */
+    const visit = (node) => {
+      if (
+        ts.isPropertyAccessExpression(node) &&
+        node.name.text === 'string' &&
+        ts.isIdentifier(node.expression)
+      )
+        found.push(importedFrom(node.expression, 'z', /^zod(\/|$)/));
+      ts.forEachChild(node, visit);
+    };
+    visit(sf);
+    return found;
+  };
+
+  it('counts z as Zod only where no local binding shadows the import', () => {
+    assert.deepEqual(zodAt(`${ZOD}z.string();\n`), [true]);
+    for (const shadow of [
+      'function f(z: any) { z.string(); }',
+      'namespace N { const z = other; z.string(); }',
+      'namespace N { namespace z {} z.string(); }',
+      '{ function z() {} z.string(); }',
+      'for (const z of []) { z.string(); }',
+      'try {} catch (z) { z.string(); }',
+    ])
+      assert.deepEqual(zodAt(`${ZOD}${shadow}\n`), [false], shadow);
+    assert.deepEqual(zodAt("import { z } from 'not-zod';\nz.string();\n"), [false]);
   });
 });

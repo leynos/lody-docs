@@ -6,8 +6,8 @@
  * `Schema.Int`, `Hex(n)`, `Schema.Struct` (including spreads of another
  * struct's fields), `Schema.Array`, `Schema.NullOr`, `Schema.Literals` and the
  * `isPattern` and `isMaxLength` checks (`maxLength` for strings, `maxItems`
- * for arrays, the tighter of two). `Schema` counts only where it is imported
- * from `effect`, `Hex(n)` only for the one known helper definition, and a
+ * for arrays, the tighter of two; a pattern with flags is refused). `Schema`
+ * counts only where the import from `effect` is the binding visible there, `Hex(n)` only for the one known helper definition, and a
  * spread only for `X.fields` of a plain struct. Anything else becomes
  * `x-unresolved`.
  * Used by `schema-types.mjs` for `typeof Schema.Type` references.
@@ -15,7 +15,7 @@
 import ts from 'typescript';
 import { propertiesFrom, propertyName, stringLiteral } from './schema-context.mjs';
 import { isPlainObject } from './schema-utilities.mjs';
-import { importedFrom } from './schema-zod.mjs';
+import { importedFrom, patternOf } from './schema-zod.mjs';
 
 /** Whether a node is the `Schema` namespace imported from `effect`. @param {ts.Node} node */
 const isSchema = (node) =>
@@ -133,9 +133,10 @@ export function createEffectConverter(ctx) {
           name === 'isPattern' &&
           ts.isRegularExpressionLiteral(first) &&
           base.type === 'string' &&
-          base.pattern === undefined
+          base.pattern === undefined &&
+          patternOf(first) !== undefined
         )
-          base = { ...base, pattern: first.text.slice(1, -1) };
+          base = { ...base, pattern: patternOf(first) };
         else if (name === 'isMaxLength' && ['array', 'string'].includes(base.type)) {
           const key = base.type === 'array' ? 'maxItems' : 'maxLength';
           const value = numberValue(first);
