@@ -148,21 +148,54 @@ export function createUtilities(ctx) {
     if (!literals && !discriminants)
       return opaque(node, 'Utility filter is not a literal or discriminant object type.');
     /**
-     * The constant an object or intersection fixes a property to, from the
-     * object itself or any part of the intersection, or undefined.
+     * Whether an object or any part of an intersection requires a property.
      * @param {any} value
      * @param {string} key
+     * @returns {boolean}
+     */
+    const requires = (value, key) =>
+      (Array.isArray(value.required) && value.required.includes(key)) ||
+      (value.allOf ?? []).some((/** @type {any} */ part) => requires(flat(part), key));
+    /**
+     * The constant a property schema fixes, including one inside the `allOf`
+     * that `flatten` makes when two intersection parts declare the property.
+     * @param {any} property
      * @returns {unknown}
      */
-    const fixed = (value, key) => {
-      const own = ownProperty(value, key)?.const;
-      if (own !== undefined) return own;
-      for (const part of value.allOf ?? []) {
-        const found = fixed(flat(part), key);
+    const constOf = (property) => {
+      if (property === undefined) return undefined;
+      if (property.const !== undefined) return property.const;
+      for (const part of property.allOf ?? []) {
+        const found = constOf(deref(schemas, part));
         if (found !== undefined) return found;
       }
       return undefined;
     };
+    /**
+     * The constant an object or any part of an intersection gives a property.
+     * @param {any} value
+     * @param {string} key
+     * @returns {unknown}
+     */
+    const constant = (value, key) => {
+      const own = constOf(ownProperty(value, key));
+      if (own !== undefined) return own;
+      for (const part of value.allOf ?? []) {
+        const found = constant(flat(part), key);
+        if (found !== undefined) return found;
+      }
+      return undefined;
+    };
+    /**
+     * The constant an object or intersection fixes a property to, or
+     * undefined. An optional property fixes nothing: TypeScript does not
+     * assign `{ k?: 'a' }` to `{ k: 'a' }`, so it neither matches nor
+     * classifies the variant.
+     * @param {any} value
+     * @param {string} key
+     * @returns {unknown}
+     */
+    const fixed = (value, key) => (requires(value, key) ? constant(value, key) : undefined);
     // The filter must be able to classify every variant: a literal, an object,
     // or (for a discriminant filter) an intersection whose parts fix every
     // discriminant. An enum is its literals. Anything else (a nested union, an

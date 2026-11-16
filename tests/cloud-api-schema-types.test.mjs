@@ -387,6 +387,39 @@ describe('utility types', () => {
     );
   });
 
+  it('does not treat an optional discriminant as fixed', () => {
+    // TypeScript keeps an optional `status`: it is not assignable to a required one.
+    assert.deepEqual(
+      typeOf(
+        "Exclude<{ status?: 'active'; id: string } | { status: 'inactive' }, { status: 'active' }>",
+      ).anyOf.map((/** @type {any} */ v) => v.properties.status),
+      [
+        { type: 'string', const: 'active' },
+        { type: 'string', const: 'inactive' },
+      ],
+    );
+    assert.deepEqual(
+      typeOf(
+        "Extract<{ status?: 'active'; id: string } | { status: 'active' }, { status: 'active' }>",
+      ).required,
+      ['status'],
+    );
+    // So is an intersection whose discriminant is optional in every part.
+    assert.equal(
+      typeOf(
+        "Exclude<({ status?: 'active' } & { id: string }) | { status: 'inactive' }, { status: 'active' }>",
+      ).anyOf.length,
+      2,
+    );
+    // A part that requires the key makes the constant from another part fixed.
+    assert.deepEqual(
+      typeOf(
+        "Exclude<({ status?: 'active' } & { status: string }) | { status: 'inactive' }, { status: 'active' }>",
+      ).properties.status,
+      { type: 'string', const: 'inactive' },
+    );
+  });
+
   it('refuses a variant the filter cannot classify instead of keeping it', () => {
     assertUnresolved(typeOf("Exclude<string | 'a', 'a'>"));
     assertUnresolved(typeOf("Extract<({ k: 'x' } | { k: 'y' })[] | 'a', 'a'>"));
