@@ -411,6 +411,13 @@ describe('utility types', () => {
       ).anyOf.length,
       2,
     );
+    // With an open part the intersection stays an allOf, and an optional
+    // discriminant cannot classify it, so the utility is refused, not narrowed.
+    assertUnresolved(
+      typeOf(
+        "Exclude<({ status?: 'active'; id: string } & Record<string, unknown>) | { status: 'inactive' }, { status: 'active' }>",
+      ),
+    );
     // A part that requires the key makes the constant from another part fixed.
     assert.deepEqual(
       typeOf(
