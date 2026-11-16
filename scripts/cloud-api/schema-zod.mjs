@@ -10,8 +10,9 @@
  * keyword their base type needs (`minLength`, `minItems` or `minimum`), and a
  * chain keeps the tighter bound; a check on a schema it does not apply to, or
  * a second format or pattern, is `x-unresolved`, as is a regular expression
- * with flags, which a JSON Schema `pattern` cannot carry. `.safe()` is an
- * integer check, as in Zod 4. A record keeps only an unconstrained string key
+ * with flags, which a JSON Schema `pattern` cannot carry. `.int()` and
+ * `.safe()` are Zod 4's integer check, bounded to the safe-integer range; any
+ * other `z` constructor is one unresolved entry. A record keeps only an unconstrained string key
  * schema; `.strict()`, `.passthrough()` and `.strip()` set the object's
  * unknown-key mode, the last one winning. `z` counts as Zod only where the
  * import from `zod` is the binding visible at the reference.
@@ -162,6 +163,9 @@ export function createZodConverter(ctx) {
           return opaque(node, 'Zod record with a constrained key schema needs manual expansion.');
         return { type: 'object', additionalProperties: nested(args.at(-1)) };
       }
+      // Any other constructor, or a supported one with arguments of another
+      // shape, is one unresolved entry for the whole call.
+      return opaque(node, `Zod constructor z.${method}() needs manual expansion.`);
     }
     const base = zod(owner);
     if (APPLIES_TO[method] && !APPLIES_TO[method].includes(base.type))
@@ -180,7 +184,15 @@ export function createZodConverter(ctx) {
       return method === 'strict' ? { ...rest, additionalProperties: false } : rest;
     }
     if (['readonly', 'brand'].includes(method)) return base;
-    if (method === 'int') return { ...base, type: 'integer' };
+    // Zod 4's integer check, `.int()` and `.safe()` alike, also bounds the
+    // value to the safe-integer range.
+    if (method === 'int' || method === 'safe')
+      return {
+        ...base,
+        type: 'integer',
+        minimum: Math.max(base.minimum ?? -Infinity, -Number.MAX_SAFE_INTEGER),
+        maximum: Math.min(base.maximum ?? Infinity, Number.MAX_SAFE_INTEGER),
+      };
     if (method === 'positive')
       return { ...base, exclusiveMinimum: Math.max(base.exclusiveMinimum ?? 0, 0) };
     if (method === 'nonnegative') return { ...base, minimum: Math.max(base.minimum ?? 0, 0) };
@@ -219,13 +231,6 @@ export function createZodConverter(ctx) {
         ? opaque(node, 'Zod .regex() with flags needs manual expansion.')
         : { ...base, pattern };
     }
-    if (method === 'safe')
-      return {
-        ...base,
-        type: 'integer',
-        minimum: Math.max(base.minimum ?? -Infinity, -Number.MAX_SAFE_INTEGER),
-        maximum: Math.min(base.maximum ?? Infinity, Number.MAX_SAFE_INTEGER),
-      };
     if (method === 'trim') return { ...base, 'x-transform': 'trim input before validation' };
     if (['refine', 'superRefine'].includes(method)) {
       const source = location(node);

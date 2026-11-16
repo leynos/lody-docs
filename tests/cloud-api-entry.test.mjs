@@ -65,7 +65,7 @@ describe('entry point', () => {
     assert.deepEqual(verified, {
       status: 0,
       messages: [
-        'Verified 1 Convex operations; 3 HTTP paths; 1 unresolved types or semantic refinements.',
+        'Verified 1 Convex operations; 3 HTTP paths; 0 unresolved types or semantic refinements.',
       ],
     });
     disk.set('/repo/docs/cloud-api/routes.md', 'stale');

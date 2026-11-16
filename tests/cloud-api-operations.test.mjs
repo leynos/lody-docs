@@ -4,7 +4,13 @@
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildApi, buildManifest, finishDocument } from '../scripts/cloud-api/operations.mjs';
+import {
+  buildApi,
+  buildManifest,
+  compareCodeUnits,
+  EXTRA_DTOS,
+  finishDocument,
+} from '../scripts/cloud-api/operations.mjs';
 import { createConverter } from '../scripts/cloud-api/schema.mjs';
 import { INDEX_ROOTS, loadSourceIndex } from '../scripts/cloud-api/source-index.mjs';
 import { CONTRACT, memoryReader, REVISION, ROOT } from './cloud-api-helpers.mjs';
@@ -78,6 +84,27 @@ describe('operations', () => {
       () => buildApi({ index, converter: createConverter(index), http, supplemental: [] }),
       /Unknown operation bad/,
     );
+  });
+
+  it('fails by name when an extra DTO cannot be resolved', () => {
+    const missing = EXTRA_DTOS[2];
+    const contract = CONTRACT.replace(`export type ${missing} = { id: string };\n`, '');
+    const index = loadSourceIndex(
+      ROOT,
+      memoryReader({
+        'packages/cloud-api/src/index.ts': contract,
+        'packages/shared/src/thing.ts': 'export type Thing = { id: string };\n',
+      }),
+    );
+    assert.throws(
+      () => buildApi({ index, converter: createConverter(index), http, supplemental: [] }),
+      new RegExp(`EXTRA_DTOS entry ${missing} could not be resolved`),
+    );
+  });
+
+  it('orders by code unit, whatever the locale', () => {
+    assert.deepEqual(['b', 'a', 'B', 'é', 'e'].sort(compareCodeUnits), ['B', 'a', 'b', 'e', 'é']);
+    assert.equal(compareCodeUnits('x', 'x'), 0);
   });
 
   it('stamps the revision without reordering the document', () => {

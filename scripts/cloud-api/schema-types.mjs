@@ -361,8 +361,10 @@ export function createTypeConverter(ctx) {
       return utilities.objectUtility(name, node, args);
     if (['Extract', 'Exclude'].includes(name)) return utilities.unionUtility(name, node, args);
     if (name === 'z.infer' || name === 'z.output' || name === 'z.input') {
-      const target = /** @type {any} */ (args[0])?.exprName?.getText();
-      const variable = variableAt(node, target);
+      // Only `typeof schema` names a schema; any other argument is unresolved.
+      if (!args[0] || !ts.isTypeQueryNode(args[0]))
+        return opaque(node, `${name} argument is not a typeof query of a schema.`);
+      const variable = variableAt(node, args[0].exprName.getText());
       return variable?.initializer
         ? ctx.zod(variable.initializer)
         : opaque(node, 'Runtime schema definition not found.');

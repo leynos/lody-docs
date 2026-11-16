@@ -17,6 +17,7 @@ import path from 'node:path';
 import { after } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
+import { EXTRA_DTO_SOURCE } from './cloud-api-helpers.mjs';
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const generator = path.join(repository, 'scripts/generate-cloud-api.mjs');
@@ -36,17 +37,18 @@ export const THING = 'packages/shared/src/thing.ts';
 /** The module that exports the `CloudApi` type; it is loaded first. */
 export const INDEX = 'packages/cloud-api/src/index.ts';
 export const SOURCES = {
-  [INDEX]: [
-    "import type { Thing } from '@lody/shared';",
-    '',
-    'export type CloudApi = {',
-    '  demo: {',
-    '    /** Fetch one thing. */',
-    '    getThing: Query<{ id: string }, Thing>;',
-    '  };',
-    '};',
-    '',
-  ].join('\n'),
+  [INDEX]:
+    [
+      "import type { Thing } from '@lody/shared';",
+      '',
+      'export type CloudApi = {',
+      '  demo: {',
+      '    /** Fetch one thing. */',
+      '    getThing: Query<{ id: string }, Thing>;',
+      '  };',
+      '};',
+      '',
+    ].join('\n') + EXTRA_DTO_SOURCE,
   [THING]: [
     "import { z } from 'zod';",
     '',

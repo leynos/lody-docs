@@ -10804,9 +10804,9 @@ components:
           x-partial: true
         expiresAt:
           type: integer
-          exclusiveMinimum: 0
           minimum: -9007199254740991
           maximum: 9007199254740991
+          exclusiveMinimum: 0
         token:
           type: string
           pattern: ^[0-9a-f]{64}$
@@ -10860,9 +10860,9 @@ components:
             - ready
         expiresAt:
           type: integer
-          exclusiveMinimum: 0
           minimum: -9007199254740991
           maximum: 9007199254740991
+          exclusiveMinimum: 0
         material:
           anyOf:
             - type: object
@@ -15862,8 +15862,9 @@ components:
           maxLength: 128
         pullRequestNumber:
           type: integer
-          exclusiveMinimum: 0
+          minimum: -9007199254740991
           maximum: 9007199254740991
+          exclusiveMinimum: 0
         replyPreview:
           type: string
           maxLength: 400
@@ -16340,15 +16341,17 @@ components:
               pattern: ^[a-f0-9]{64}$
             size:
               type: integer
-              exclusiveMinimum: 0
+              minimum: -9007199254740991
               maximum: 536870912
+              exclusiveMinimum: 0
             contentSha256:
               type: string
               pattern: ^[a-f0-9]{64}$
             contentSize:
               type: integer
-              exclusiveMinimum: 0
+              minimum: -9007199254740991
               maximum: 1073741824
+              exclusiveMinimum: 0
           required:
             - file
             - sha256
@@ -16367,15 +16370,17 @@ components:
               pattern: ^[a-f0-9]{64}$
             size:
               type: integer
-              exclusiveMinimum: 0
+              minimum: -9007199254740991
               maximum: 536870912
+              exclusiveMinimum: 0
             contentSha256:
               type: string
               pattern: ^[a-f0-9]{64}$
             contentSize:
               type: integer
-              exclusiveMinimum: 0
+              minimum: -9007199254740991
               maximum: 1073741824
+              exclusiveMinimum: 0
           required:
             - file
             - sha256

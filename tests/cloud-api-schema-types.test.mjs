@@ -359,4 +359,45 @@ describe('utility types', () => {
     assertUnresolved(typeOf('Extract<string | number, string>'));
     assertUnresolved(typeOf('Exclude<{ a: string } | { b: string }, { a: string }>'));
   });
+
+  it('classifies an enum by its literals, Extract and Exclude alike', () => {
+    /** @param {string} utility */
+    const ofEnum = (utility) =>
+      schemaOf(
+        `import { z } from 'zod';\nconst Status = z.enum(['a', 'b', 'c']);\nexport type Thing = ${utility}<z.infer<typeof Status>, 'a'>;\n`,
+      ).schema;
+    assert.deepEqual(ofEnum('Exclude'), {
+      anyOf: [
+        { type: 'string', const: 'b' },
+        { type: 'string', const: 'c' },
+      ],
+    });
+    assert.deepEqual(ofEnum('Extract'), { type: 'string', const: 'a' });
+  });
+
+  it('classifies an intersection by the discriminants its parts fix', () => {
+    const schema = typeOf(
+      "Extract<({ kind: 'x' } & ({ a: string } | { b: string })) | { kind: 'y' }, { kind: 'y' }>",
+    );
+    assert.deepEqual(schema.properties.kind, { type: 'string', const: 'y' });
+    assertUnresolved(
+      typeOf(
+        "Extract<({ a: string } | { b: string }) & { c: string } | { kind: 'y' }, { kind: 'y' }>",
+      ),
+    );
+  });
+
+  it('refuses a variant the filter cannot classify instead of keeping it', () => {
+    assertUnresolved(typeOf("Exclude<string | 'a', 'a'>"));
+    assertUnresolved(typeOf("Extract<({ k: 'x' } | { k: 'y' })[] | 'a', 'a'>"));
+  });
+
+  it('marks z.infer of anything but a typeof query unresolved', () => {
+    for (const argument of ['(typeof schemas)[number]', 'Alias'])
+      assertUnresolved(
+        schemaOf(
+          `import { z } from 'zod';\nconst schemas = [z.string()];\ntype Alias = typeof schemas;\nexport type Thing = z.infer<${argument}>;\n`,
+        ).schema,
+      );
+  });
 });

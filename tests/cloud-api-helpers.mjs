@@ -7,6 +7,7 @@
  * helper reads the real Lody checkout, runs git or writes a file.
  */
 import path from 'node:path';
+import { EXTRA_DTOS } from '../scripts/cloud-api/operations.mjs';
 import { createConverter } from '../scripts/cloud-api/schema.mjs';
 import { loadSourceIndex } from '../scripts/cloud-api/source-index.mjs';
 
@@ -19,15 +20,25 @@ export const CONTRACT_PATH = 'packages/cloud-api/src/index.ts';
 /** The module that declares `Thing` in most tests. */
 export const THING = 'packages/shared/src/thing.ts';
 /** A contract with one query whose result is `Thing`. */
-export const CONTRACT = [
-  'export type CloudApi = {',
-  '  demo: {',
-  '    /** Fetch one thing. */',
-  '    getThing: Query<{ id: string }, Thing>;',
-  '  };',
-  '};',
-  '',
-].join('\n');
+/**
+ * Minimal declarations of the DTOs the generator expands although no
+ * operation names them; generation fails when one is missing. Appended to a
+ * contract module, after the lines that tests cite.
+ */
+export const EXTRA_DTO_SOURCE = EXTRA_DTOS.map(
+  (name) => `export type ${name} = { id: string };\n`,
+).join('');
+
+export const CONTRACT =
+  [
+    'export type CloudApi = {',
+    '  demo: {',
+    '    /** Fetch one thing. */',
+    '    getThing: Query<{ id: string }, Thing>;',
+    '  };',
+    '};',
+    '',
+  ].join('\n') + EXTRA_DTO_SOURCE;
 
 /**
  * A source reader over in-memory files, keyed by checkout-relative path.

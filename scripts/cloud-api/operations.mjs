@@ -17,7 +17,7 @@ import { comment, ref } from './schema.mjs';
 import { CONTRACT_MODULE } from './source-index.mjs';
 
 /** Schemas expanded even though no operation names them directly. */
-const EXTRA_DTOS = [
+export const EXTRA_DTOS = [
   'MachinePairingView',
   'SharePackageManifest',
   'DaemonRelease',
@@ -185,7 +185,11 @@ export function buildApi({ index, converter, http, supplemental }) {
       kind,
       operations.filter((op) => op.kind === kind),
     );
-  for (const name of EXTRA_DTOS) named(name, contract);
+  // A missing extra DTO fails generation by name rather than collapsing into
+  // one unresolved entry keyed by the whole contract.
+  for (const name of EXTRA_DTOS)
+    if (named(name, contract)['x-unresolved'])
+      throw Error(`EXTRA_DTOS entry ${name} could not be resolved in the indexed sources`);
   document.components.schemas = schemas;
   for (const item of Object.values(document.paths))
     for (const op of Object.values(/** @type {Record<string, any>} */ (item))) {
@@ -206,6 +210,13 @@ export const finishDocument = (document, revision) => ({
   info: { ...document.info, version: `source-${revision.slice(0, 12)}` },
   'x-source-revision': revision,
 });
+
+/**
+ * Compare two strings by UTF-16 code unit, independent of locale.
+ * @param {string} a
+ * @param {string} b
+ */
+export const compareCodeUnits = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** @param {Buffer} bytes */
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -242,7 +253,8 @@ export function buildManifest({
     typedOperations: operations.filter((o) => !o.supplemental).length,
     supplementalOperations: supplementalCount,
     operations: operations.length,
-    unresolved: [...unresolved].sort((a, b) => a.source.localeCompare(b.source)),
+    // Code-unit order, as for the digests below, so no locale changes the bytes.
+    unresolved: [...unresolved].sort((a, b) => compareCodeUnits(a.source, b.source)),
     // Every file read: the parsed index as one digest, and each file that shaped
     // the output or is cited by an operation with its own hash.
     index: {

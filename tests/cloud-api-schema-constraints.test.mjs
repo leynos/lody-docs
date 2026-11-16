@@ -227,6 +227,15 @@ describe('chained Zod checks', () => {
     }
   });
 
+  it('records an unsupported constructor once, against the whole call', () => {
+    for (const expression of ['z.date()', 'z.int()', 'z.tuple([z.string()])', 'z.enum(VALUES)']) {
+      const { schema, reasons } = zodField(expression);
+      assert.equal(schema.properties.f['x-unresolved'], true, expression);
+      assert.equal(reasons.length, 1, expression);
+      assert.match(reasons[0], /Zod constructor z\.\w+\(\) needs manual expansion/, expression);
+    }
+  });
+
   it('refuses a second format or pattern instead of replacing the first', () => {
     for (const expression of ['z.string().uuid().url()', 'z.string().regex(/a/).regex(/b/)'])
       assert.equal(zodField(expression).schema.properties.f['x-unresolved'], true, expression);

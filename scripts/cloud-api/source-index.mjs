@@ -115,7 +115,10 @@ export function createSourceIndex(root, reader) {
  * @param {string} dir
  */
 function walk(index, reader, dir) {
-  const entries = reader.listDirectory(dir).sort((a, b) => a.name.localeCompare(b.name));
+  // Code-unit order, so that the parse order is the same in every locale.
+  const entries = reader
+    .listDirectory(dir)
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   for (const entry of entries) {
     const file = path.join(dir, entry.name);
     if (entry.directory) walk(index, reader, file);

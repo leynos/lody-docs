@@ -133,7 +133,6 @@ export function createUtilities(ctx) {
   function unionUtility(name, node, args) {
     const source = deref(schemas, ctx.convert(args[0]));
     const filter = flat(ctx.convert(args[1]));
-    const variants = source.anyOf ?? [source];
     const literals =
       filter.const !== undefined
         ? [filter.const]
@@ -148,12 +147,57 @@ export function createUtilities(ctx) {
         : undefined;
     if (!literals && !discriminants)
       return opaque(node, 'Utility filter is not a literal or discriminant object type.');
+    /**
+     * The constant an object or intersection fixes a property to, from the
+     * object itself or any part of the intersection, or undefined.
+     * @param {any} value
+     * @param {string} key
+     * @returns {unknown}
+     */
+    const fixed = (value, key) => {
+      const own = ownProperty(value, key)?.const;
+      if (own !== undefined) return own;
+      for (const part of value.allOf ?? []) {
+        const found = fixed(flat(part), key);
+        if (found !== undefined) return found;
+      }
+      return undefined;
+    };
+    // The filter must be able to classify every variant: a literal, an object,
+    // or (for a discriminant filter) an intersection whose parts fix every
+    // discriminant. An enum is its literals. Anything else (a nested union, an
+    // open type, an intersection without fixed discriminants) is refused
+    // rather than kept or dropped unexamined.
+    /** @type {any[]} */
+    const variants = [];
+    for (const variant of source.anyOf ?? [source]) {
+      const value = flat(variant);
+      if (
+        value.const !== undefined ||
+        value.type === 'object' ||
+        (discriminants &&
+          value.allOf &&
+          Object.keys(discriminants).every((k) => fixed(value, k) !== undefined))
+      )
+        variants.push(variant);
+      else if (
+        Array.isArray(value.enum) &&
+        Object.keys(value).every((key) => ['type', 'enum'].includes(key))
+      )
+        variants.push(
+          ...value.enum.map((/** @type {any} */ v) => ({
+            ...(value.type ? { type: value.type } : {}),
+            const: v,
+          })),
+        );
+      else return opaque(node, 'Utility union has a variant that the filter cannot classify.');
+    }
     /** @param {any} v */
     const matches = (v) => {
       const value = flat(v);
       if (literals) return value.const !== undefined && literals.includes(value.const);
       return Object.entries(discriminants).every(
-        ([k, s]) => ownProperty(value, k)?.const === /** @type {any} */ (s).const,
+        ([k, s]) => fixed(value, k) === /** @type {any} */ (s).const,
       );
     };
     const chosen = variants.filter((/** @type {any} */ v) =>

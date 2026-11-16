@@ -71,9 +71,17 @@ describe('Zod', () => {
       minimum: 2,
       maximum: 9,
     });
+    // Zod 4's integer check also bounds the value to the safe-integer range.
     assert.deepEqual(fieldOf('z.number().int().positive()'), {
       type: 'integer',
+      minimum: -Number.MAX_SAFE_INTEGER,
+      maximum: Number.MAX_SAFE_INTEGER,
       exclusiveMinimum: 0,
+    });
+    assert.deepEqual(fieldOf('z.number().max(5).int()'), {
+      type: 'integer',
+      minimum: -Number.MAX_SAFE_INTEGER,
+      maximum: 5,
     });
     assert.deepEqual(fieldOf('z.number().nonnegative()'), { type: 'number', minimum: 0 });
     assert.deepEqual(fieldOf('z.number().int().safe()'), {
