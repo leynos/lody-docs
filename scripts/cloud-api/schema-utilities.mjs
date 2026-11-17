@@ -225,6 +225,23 @@ export function createUtilities(ctx) {
         );
       else return opaque(node, 'Utility union has a variant that the filter cannot classify.');
     }
+    // An optional filter discriminant admits a variant that lacks the key or
+    // makes it optional too; whether such a variant is assignable is not
+    // modelled, so it is refused rather than kept or dropped.
+    const optional = Object.keys(discriminants ?? {}).filter(
+      (k) => !(filter.required ?? []).includes(k),
+    );
+    for (const variant of variants) {
+      const value = flat(variant);
+      if (
+        (value.type === 'object' || value.allOf) &&
+        optional.some((k) => fixed(value, k) === undefined)
+      )
+        return opaque(
+          node,
+          'Utility filter has an optional discriminant that a variant does not require.',
+        );
+    }
     /** @param {any} v */
     const matches = (v) => {
       const value = flat(v);

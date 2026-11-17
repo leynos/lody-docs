@@ -418,6 +418,17 @@ describe('utility types', () => {
         "Exclude<({ status?: 'active'; id: string } & Record<string, unknown>) | { status: 'inactive' }, { status: 'active' }>",
       ),
     );
+    // An optional filter discriminant against a variant that does not require
+    // the key is refused; against variants that all require it, it narrows.
+    assertUnresolved(
+      typeOf("Exclude<{ status?: 'active' } | { status: 'inactive' }, { status?: 'active' }>"),
+    );
+    assert.deepEqual(
+      typeOf(
+        "Extract<{ status: 'active'; id: string } | { status: 'inactive' }, { status?: 'active' }>",
+      ).properties.status,
+      { type: 'string', const: 'active' },
+    );
     // A part that requires the key makes the constant from another part fixed.
     assert.deepEqual(
       typeOf(
