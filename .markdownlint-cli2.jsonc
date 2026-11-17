@@ -1,0 +1,20 @@
+{
+  // Follows docs/documentation-style-guide.md: prose wraps at 80 columns and
+  // code at 120; tables and headings are not wrapped.
+  "config": {
+    "MD004": { "style": "dash" },
+    "MD013": {
+      "line_length": 80,
+      "code_block_line_length": 120,
+      "tables": false,
+      "headings": false
+    },
+    // Each model section repeats "State", "Properties" and so on.
+    "MD024": { "siblings_only": true },
+    "MD029": { "style": "ordered" },
+    // Anchors for evidence and reference ids.
+    "MD033": { "allowed_elements": ["a", "br"] },
+    "MD049": { "style": "underscore" }
+  },
+  "ignores": [".tools/**", "node_modules/**"]
+}

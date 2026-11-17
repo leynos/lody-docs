@@ -1,0 +1,214 @@
+{
+  "P-5 bucket create": 201,
+  "P-5 round trip": {
+    "type": "machine/ping_response",
+    "machineId": "machine-4e7aca3c-a063-4a3e-8096-94f78053c8d9",
+    "requestId": "p5",
+    "success": true,
+    "message": "pong"
+  },
+  "P-6 valid raw request": [
+    {
+      "keys": [
+        "jsonrpc",
+        "id",
+        "method",
+        "rpcVersion",
+        "machineId",
+        "result"
+      ],
+      "result": {
+        "type": "machine/ping_response",
+        "machineId": "machine-4e7aca3c-a063-4a3e-8096-94f78053c8d9",
+        "requestId": "ok-1",
+        "success": true,
+        "message": "pong"
+      }
+    }
+  ],
+  "P-6 unknown method": [],
+  "P-6 extra key": [],
+  "P-6 wrong machine": [],
+  "P-6 expired": [],
+  "P-7 version mismatch": [
+    {
+      "keys": [
+        "jsonrpc",
+        "id",
+        "method",
+        "rpcVersion",
+        "machineId",
+        "error"
+      ],
+      "error": {
+        "code": "rpc_version_mismatch",
+        "message": "Expected rpcVersion=1, got 0"
+      }
+    }
+  ],
+  "P-7 handler absent": [
+    {
+      "keys": [
+        "jsonrpc",
+        "id",
+        "method",
+        "rpcVersion",
+        "machineId",
+        "error"
+      ],
+      "error": {
+        "code": "internal_error",
+        "message": "this.deps.getMachineStatus is not a function"
+      }
+    }
+  ],
+  "P-8 array body flattened": {
+    "a": 1,
+    "b": 1
+  },
+  "P-6 warnings": [
+    "[rpc-server:machine-4e7aca3c-a063-4a3e-8096-94f78053c8d9] ignored invalid RPC request: issues=[{\"code\":\"invalid_union\",\"errors\":[],\"note\":\"No matching discrimin",
+    "[rpc-server:machine-4e7aca3c-a063-4a3e-8096-94f78053c8d9] ignored invalid RPC request: issues=[{\"code\":\"unrecognized_keys\",\"keys\":[\"traceId\"],\"path\":[],\"message"
+  ],
+  "P-9 handler calls before restart": [
+    "p5",
+    "ok-1",
+    "batch-a",
+    "batch-b"
+  ],
+  "P-9 handler calls after restart": [
+    "p5",
+    "ok-1",
+    "batch-a",
+    "batch-b"
+  ],
+  "P-9 responses per id after restart": {
+    "p5": 0,
+    "ok-1": 2,
+    "batch-a": 2,
+    "batch-b": 2,
+    "bad-version": 2,
+    "expired": 0,
+    "unknown-method": 0
+  },
+  "P-10 stream op before bucket exists": {
+    "status": 404,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": "{\"error\":\"bucket not found\"}"
+  },
+  "P-10 bucket create": {
+    "status": 201,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": ""
+  },
+  "P-10 create": {
+    "status": 201,
+    "nextOffset": "00000000000000000000",
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": ""
+  },
+  "P-10 create again same ttl": {
+    "status": 200,
+    "nextOffset": "00000000000000000000",
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": ""
+  },
+  "P-10 create again other ttl": {
+    "status": 409,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": "{\"error\":\"stream already exists with different config\"}"
+  },
+  "P-10 append object": {
+    "status": 204,
+    "nextOffset": "00000000000000000007",
+    "ttl": null,
+    "upToDate": null,
+    "contentType": null,
+    "body": ""
+  },
+  "P-10 append empty array": {
+    "status": 400,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": "{\"error\":\"empty json array append is not allowed\"}"
+  },
+  "P-10 append wrong content type": {
+    "status": 409,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": "{\"error\":\"append content type mismatch\"}"
+  },
+  "P-10 read offset -1": {
+    "status": 200,
+    "nextOffset": "00000000000000000007",
+    "ttl": null,
+    "upToDate": "true",
+    "contentType": "application/json",
+    "body": "[{\"n\":1}]"
+  },
+  "P-10 read offset 0": {
+    "status": 200,
+    "nextOffset": "00000000000000000007",
+    "ttl": null,
+    "upToDate": "true",
+    "contentType": "application/json",
+    "body": "[{\"n\":1}]"
+  },
+  "P-10 append at 2.5s": {
+    "status": 204,
+    "nextOffset": "00000000000000000014",
+    "ttl": null,
+    "upToDate": null,
+    "contentType": null,
+    "body": ""
+  },
+  "P-10 head at 2.5s": {
+    "status": 200,
+    "nextOffset": "00000000000000000014",
+    "ttl": "2",
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": ""
+  },
+  "P-10 head at 5s (ttl 4s from creation)": {
+    "status": 404,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": ""
+  },
+  "P-10 append to missing stream": {
+    "status": 404,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": "{\"error\":\"stream not found\"}"
+  },
+  "P-10 read missing stream": {
+    "status": 404,
+    "nextOffset": null,
+    "ttl": null,
+    "upToDate": null,
+    "contentType": "application/json",
+    "body": "{\"error\":\"stream not found\"}"
+  }
+}

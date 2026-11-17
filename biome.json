@@ -1,0 +1,22 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.2/schema.json",
+  "files": {
+    "includes": [
+      "scripts/**/*.mjs",
+      "tests/**/*.mjs",
+      "*.json",
+      "docs/cloud-api/http.json",
+      "docs/cloud-api/supplemental.json",
+      "!package-lock.json"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "single" }
+  },
+  "linter": { "rules": { "preset": "recommended" } }
+}

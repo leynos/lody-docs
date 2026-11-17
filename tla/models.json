@@ -1,0 +1,282 @@
+[
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped replication, checkpointing and upload scheduling: S1-S4."
+  },
+  {
+    "module": "ProviderSetup",
+    "config": "ProviderSetup.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped provider-setup queue with the authority gate: P1-P4."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped delete-local-project command: D1 and L1."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_NoRowUpdates.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Without client row rewrites, a removed registration stays removed (D2)."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_CursorFirst.cfg",
+    "expect": "NoSkippedRange",
+    "group": "ablation",
+    "note": "Saving the cursor before the data lets the durable cursor run ahead."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_CursorFirstDiverges.cfg",
+    "expect": "QuiescentConvergence",
+    "group": "ablation",
+    "note": "A crash in that window makes a replica skip remote data permanently."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_NoDirtyVersion.cfg",
+    "expect": "CleanImpliesPushed",
+    "group": "ablation",
+    "note": "Without dirtyVersion, a write during a sync is marked clean unsent."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplication_NoOnlineKick.cfg",
+    "expect": "NoStrandedDirty",
+    "group": "ablation",
+    "note": "Without the streams-online kick, an offline write is never retried."
+  },
+  {
+    "module": "ProviderSetup",
+    "config": "ProviderSetup_NoAuthorityGate.cfg",
+    "expect": "NoStalePublish",
+    "group": "ablation",
+    "note": "Without the authority gate, a stale setup row outruns a remote cancellation."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_NoStaleGuard.cfg",
+    "expect": "FreshProjectNeverRemoved",
+    "group": "ablation",
+    "note": "Without the createdAtMs guard, an old command removes a newer registration."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_Resurrection.cfg",
+    "expect": "NoResurrection",
+    "group": "ablation",
+    "note": "Observation on shipped behaviour: a concurrent row rewrite can undo a removal."
+  },
+  {
+    "module": "FlockReplication",
+    "config": "FlockReplicationLive.cfg",
+    "expect": "pass",
+    "group": "liveness",
+    "note": "L1: every replica ends clean and fully exchanged."
+  },
+  {
+    "module": "ProviderSetup",
+    "config": "ProviderSetupLive.cfg",
+    "expect": "pass",
+    "group": "liveness",
+    "note": "L1 and L2: cancellation wins; the queue settles."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped request replay, with tasks that outlive one in-process offset reset: at most one task started per request per read pass; bounded restart loop; no request left behind a persisted offset (R1-R3)."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_NoReset.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Without an in-process offset reset, a request runs at most once per server instance, the restart handler included."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_RestartSingleUse.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "If the backend refuses a reused lifecycle proof, a restart request restarts the daemon once."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_DurableOffset.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Candidate: with a persisted read offset and no in-process reset, a request runs at most once."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped history-write admission: the write is applied at most once (H1, H2)."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch.cfg",
+    "expect": "pass",
+    "group": "safety",
+    "note": "Shipped encrypted dispatch over three routes: one offer and at most one agent start (X1-X3)."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_AtMostOnce.cfg",
+    "expect": "AtMostOnce",
+    "group": "ablation",
+    "note": "Observation: the shipped protocol runs an unexpired request again after a restart."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_RestartLoop.cfg",
+    "expect": "RestartOnce",
+    "group": "ablation",
+    "note": "Observation: if the backend accepts a reused lifecycle proof, a restart request restarts the daemon repeatedly until it expires."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_DurableOffsetLoss.cfg",
+    "expect": "NoSilentLoss",
+    "group": "ablation",
+    "note": "Candidate trade-off: a persisted read offset loses a request read just before a crash."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_WriteFirst.cfg",
+    "expect": "WriteAtMostOnce",
+    "group": "ablation",
+    "note": "Writing before claiming applies the write twice after a crash."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_ClaimedUnwritten.cfg",
+    "expect": "ClaimImpliesWritten",
+    "group": "ablation",
+    "note": "Observation: a crash after the claim leaves the write undone and the identifier refused."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_NoStartClaim.cfg",
+    "expect": "RunAtMostOnce",
+    "group": "ablation",
+    "note": "Without the agent-start claim, two routes start the same turn."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_Uncertain.cfg",
+    "expect": "ClaimImpliesRan",
+    "group": "ablation",
+    "note": "Observation: a crash after the start claim leaves the turn claimed and never run."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_NoAck.cfg",
+    "expect": "DeliveryAcknowledged",
+    "group": "ablation",
+    "note": "Observation: a crash between the receipt claim and the retained ACK silences the request."
+  },
+  {
+    "module": "LocalProjectDelete",
+    "config": "LocalProjectDelete_EqualTimestamps.cfg",
+    "expect": "FreshProjectNeverRemoved",
+    "group": "ablation",
+    "note": "Observation: when a registration and a delete request share a millisecond, the strict staleness guard can remove a project registered after the request."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_GatewayReset.cfg",
+    "expect": "OncePerInstance",
+    "group": "ablation",
+    "note": "Observation: after an in-process offset reset, a request runs again in the same server instance, possibly while its first task is still pending."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_WitnessRestart.cfg",
+    "expect": "NeverRestarted",
+    "group": "ablation",
+    "note": "Witness: an accepted restart is reachable, so R2 is not vacuous."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_RespondOnClaim.cfg",
+    "expect": "AcceptedImpliesWritten",
+    "group": "ablation",
+    "note": "Answering on the claim, before the write, sends an accepted reply for a write that never happens."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_WitnessWrite.cfg",
+    "expect": "NeverWritten",
+    "group": "ablation",
+    "note": "Witness: an applied write is reachable, so H1 is not vacuous."
+  },
+  {
+    "module": "RpcHistoryClaim",
+    "config": "RpcHistoryClaim_WitnessAccept.cfg",
+    "expect": "NeverAccepted",
+    "group": "ablation",
+    "note": "Witness: an accepted reply is reachable, so H2 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_NoReceiptClaim.cfg",
+    "expect": "OfferAtMostOnce",
+    "group": "ablation",
+    "note": "Without the receipt claim, a repeated delivery offers the turn again."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_ReceiptCrash.cfg",
+    "expect": "ReceiptImpliesOffer",
+    "group": "ablation",
+    "note": "Observation: a crash between the receipt claim and the offer leaves the receipt started and never offered."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_WitnessPrompt.cfg",
+    "expect": "NeverPrompted",
+    "group": "ablation",
+    "note": "Witness: a prompt is reachable, so X1 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_WitnessOffer.cfg",
+    "expect": "NeverOffered",
+    "group": "ablation",
+    "note": "Witness: an offer is reachable, so X2 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_WitnessSettle.cfg",
+    "expect": "NeverSettled",
+    "group": "ablation",
+    "note": "Witness: a settled start row is reachable, so X3 is not vacuous."
+  },
+  {
+    "module": "RpcReplay",
+    "config": "RpcReplay_WitnessAdmit.cfg",
+    "expect": "NeverAdmitted",
+    "group": "ablation",
+    "note": "Witness: a started task is reachable, so R1 is not vacuous."
+  },
+  {
+    "module": "EncryptedDispatch",
+    "config": "EncryptedDispatch_EarlyReturn.cfg",
+    "expect": "SettledImpliesRan",
+    "group": "ablation",
+    "note": "Assumption check: if the turn body can return normally before prompting, a start row is settled although the agent never ran."
+  }
+]

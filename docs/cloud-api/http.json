@@ -1,0 +1,5286 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Lody Cloud HTTP API \u2014 public client contract",
+    "version": "generated",
+    "description": "Source-derived documentation of optional Lody Cloud HTTP clients. Hosted handlers are private: x-source identifies client evidence, not server validation. See README.md for coverage, credentials, protocol boundaries, and known discrepancies. This is not a promise that every route is available to third-party callers."
+  },
+  "servers": [
+    {
+      "url": "https://backend.lody.ai",
+      "description": "Authentication and purpose-bound authorization ingress"
+    }
+  ],
+  "security": [
+    {
+      "SessionBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication"
+    },
+    {
+      "name": "CLI credentials"
+    },
+    {
+      "name": "Authorization proofs"
+    },
+    {
+      "name": "Attachments"
+    },
+    {
+      "name": "Sharing"
+    },
+    {
+      "name": "Runtime downloads"
+    },
+    {
+      "name": "Utilities"
+    },
+    {
+      "name": "Convex"
+    }
+  ],
+  "paths": {
+    "/api/auth/sign-in/email": {
+      "post": {
+        "operationId": "signInEmail",
+        "summary": "Sign in with email and password",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialReply"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "callbackURL": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password", "callbackURL"]
+              },
+              "example": {
+                "email": "reader@example.test",
+                "password": "synthetic-example-password",
+                "callbackURL": "https://backend.lody.ai/api/auth/mobile/email-verified"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-up/email": {
+      "post": {
+        "operationId": "signUpEmail",
+        "summary": "Register with email and password",
+        "description": "Native callbackURL is https://backend.lody.ai/api/auth/mobile/email-verified. A successful registration can still require email verification; a usable token is not guaranteed.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "callbackURL": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "email", "password", "callbackURL"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-in/social": {
+      "post": {
+        "operationId": "signInSocial",
+        "summary": "Sign in with a Google ID token",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialReply"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "const": "google"
+                  },
+                  "idToken": {
+                    "type": "object",
+                    "properties": {
+                      "token": {
+                        "type": "string"
+                      },
+                      "nonce": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["token", "nonce"]
+                  }
+                },
+                "required": ["provider", "idToken"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/send-verification-email": {
+      "post": {
+        "operationId": "send_verification_email",
+        "summary": "Send verification email",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["status"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "callbackURL": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "callbackURL"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/request-password-reset": {
+      "post": {
+        "operationId": "request_password_reset",
+        "summary": "Request password reset",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["status"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "redirectTo": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "redirectTo"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/mobile/start": {
+      "get": {
+        "operationId": "startNativeAuth",
+        "summary": "Start GitHub or Discord native browser sign-in",
+        "description": "Browser handoff uses PKCE S256. Keep verifier local and compare returned state. The callback carries a one-use code, not a session credential. Redirect sequence and exact status codes are private.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Auth/NativeAuthHandoff.swift",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "3XX": {
+            "description": "Browser redirect during provider sign-in; chain is deployment-defined."
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["github", "discord"]
+            }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "lody://auth/mobile-callback"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "S256"
+            }
+          }
+        ]
+      }
+    },
+    "/api/auth/mobile/exchange": {
+      "post": {
+        "operationId": "exchangeNativeAuth",
+        "summary": "Exchange the native callback code",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Auth/NativeAuthHandoff.swift",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialReply"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "code_verifier": {
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "const": "lody://auth/mobile-callback"
+                  }
+                },
+                "required": ["code", "code_verifier", "redirect_uri"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/get-session": {
+      "get": {
+        "operationId": "getSession",
+        "summary": "Resolve the current account session",
+        "description": "Native clients use a raw session bearer. CLI validation also probes this route; account credential and CLI API key are not universally interchangeable.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["id"]
+                        }
+                      },
+                      "required": ["user"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ]
+      }
+    },
+    "/api/auth/convex/token": {
+      "get": {
+        "operationId": "getConvexToken",
+        "summary": "Exchange a session credential for a Convex JWT",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["token"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/sign-out": {
+      "post": {
+        "operationId": "signOut",
+        "summary": "Sign out the account session",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/organization/list": {
+      "get": {
+        "operationId": "listOrganizations",
+        "summary": "List the current account workspaces",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "logo": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["id", "name"]
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/organization/list-members": {
+      "get": {
+        "operationId": "listOrganizationMembers",
+        "summary": "Page through organization members",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/android/app/src/main/kotlin/app/lody/android/auth/CloudAuthHttp.kt",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "userId": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          },
+                          "user": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["members"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "const": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ]
+      }
+    },
+    "/api/auth/organization/get-full-organization": {
+      "get": {
+        "operationId": "getOrganization",
+        "summary": "Read organization and member metadata",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/WorkspaceSettingsCloud.swift",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["userId", "role"]
+                      }
+                    }
+                  },
+                  "required": ["id", "members"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/auth/device": {
+      "get": {
+        "operationId": "inspectDeviceCode",
+        "summary": "Verify a device authorization user code",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["CLI credentials"],
+        "x-source": "packages/components/src/routes/device.lazy.tsx",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/cli/device/approve": {
+      "post": {
+        "operationId": "approveDevice",
+        "summary": "Approve a CLI device authorization request",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["CLI credentials"],
+        "x-source": "packages/components/src/routes/device.lazy.tsx",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userCode": {
+                    "type": "string"
+                  }
+                },
+                "required": ["userCode"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli/api-key/create": {
+      "post": {
+        "operationId": "createCliKey",
+        "summary": "Create an automatic or manual CLI API key",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["CLI credentials"],
+        "x-source": ["packages/components/src/lib/cli-api-key.ts", "apps/cli/src/lib/auth.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiKey": {
+                      "type": "string"
+                    },
+                    "apiKeyId": {
+                      "type": "string"
+                    },
+                    "apiKeyStart": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "record": {
+                      "$ref": "#/components/schemas/CliKeyRecord"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "required": ["apiKey"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "enum": ["auto", "manual"]
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                },
+                "required": ["source"]
+              },
+              "examples": {
+                "automatic": {
+                  "value": {
+                    "source": "auto"
+                  }
+                },
+                "manual": {
+                  "value": {
+                    "source": "manual",
+                    "note": "Synthetic integration example"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli/api-key/list": {
+      "post": {
+        "operationId": "listCliKeys",
+        "summary": "List CLI key metadata",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["CLI credentials"],
+        "x-source": "packages/components/src/lib/cli-api-key.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "records": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CliKeyRecord"
+                      }
+                    }
+                  },
+                  "required": ["records"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli/api-key/revoke": {
+      "post": {
+        "operationId": "revokeCliKey",
+        "summary": "Revoke a CLI API key",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["CLI credentials"],
+        "x-source": "packages/components/src/lib/cli-api-key.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    }
+                  },
+                  "required": ["success"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "keyId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["keyId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli/machine-pairing/create": {
+      "post": {
+        "operationId": "createMachinePairing",
+        "summary": "Create a short-lived machine connection token",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["CLI credentials"],
+        "x-source": "packages/components/src/lib/cli-api-key.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "request": {
+                      "$ref": "#/components/schemas/Dto_MachinePairingView"
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["request", "token"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["workspaceId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cli/machine-pairing/exchange": {
+      "post": {
+        "operationId": "exchangeMachinePairing",
+        "summary": "Exchange a connection token for a temporary machine API key",
+        "description": "Token starts with lody_pair_. Public shared TTL is 30 minutes. Retry the same command on reachability failures; validate the returned key through deviceAuth:validateCliToken. This is distinct from encrypted-device pairing.",
+        "tags": ["CLI credentials"],
+        "x-source": "apps/cli/src/lib/auth.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiKey": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["apiKey"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client treats token as invalid or expired."
+          },
+          "401": {
+            "description": "Client treats token as invalid or expired."
+          },
+          "404": {
+            "description": "Client treats token as invalid or expired."
+          },
+          "410": {
+            "description": "Client treats token as invalid or expired."
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "machineId": {
+                    "type": "string"
+                  },
+                  "machineName": {
+                    "type": "string"
+                  }
+                },
+                "required": ["token", "machineId", "machineName"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/verify-password": {
+      "post": {
+        "operationId": "verifyPassword",
+        "summary": "Verify the current account password",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "packages/components/src/lib/verify-password.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["valid"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["password"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-history/request-token": {
+      "post": {
+        "operationId": "request_token",
+        "summary": "Mint a session history read proof",
+        "description": "Purpose-bound authorization; only the short-lived proof crosses machine RPC. Edit proofs bind requestId and intentDigest. Long-lived credentials remain on HTTPS.",
+        "tags": ["Authorization proofs"],
+        "x-source": [
+          "packages/components/src/lib/preview-control-api.ts",
+          "apps/cli/src/lib/cloud-cli-port.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryMint"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-history/request-token-cli": {
+      "post": {
+        "operationId": "request_token_cli",
+        "summary": "Mint a session history read proof",
+        "description": "Purpose-bound authorization; only the short-lived proof crosses machine RPC. Edit proofs bind requestId and intentDigest. Long-lived credentials remain on HTTPS.",
+        "tags": ["Authorization proofs"],
+        "x-source": [
+          "packages/components/src/lib/preview-control-api.ts",
+          "apps/cli/src/lib/cloud-cli-port.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryCliMint"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-history/request-edit-token": {
+      "post": {
+        "operationId": "request_edit_token",
+        "summary": "Mint a session history edit proof",
+        "description": "Purpose-bound authorization; only the short-lived proof crosses machine RPC. Edit proofs bind requestId and intentDigest. Long-lived credentials remain on HTTPS.",
+        "tags": ["Authorization proofs"],
+        "x-source": [
+          "packages/components/src/lib/preview-control-api.ts",
+          "apps/cli/src/lib/cloud-cli-port.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/HistoryMint"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "requestId": {
+                        "type": "string"
+                      },
+                      "intentDigest": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["requestId", "intentDigest"]
+                  }
+                ]
+              },
+              "example": {
+                "workspaceId": "workspace_example",
+                "machineId": "machine_example",
+                "sessionId": "session_example",
+                "requestId": "5ad98e88-21cb-4e8b-b801-5aa0a6ff1463",
+                "intentDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-history/request-edit-token-cli": {
+      "post": {
+        "operationId": "request_edit_token_cli",
+        "summary": "Mint a session history edit proof",
+        "description": "Purpose-bound authorization; only the short-lived proof crosses machine RPC. Edit proofs bind requestId and intentDigest. Long-lived credentials remain on HTTPS.",
+        "tags": ["Authorization proofs"],
+        "x-source": [
+          "packages/components/src/lib/preview-control-api.ts",
+          "apps/cli/src/lib/cloud-cli-port.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/HistoryCliMint"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "requestId": {
+                        "type": "string"
+                      },
+                      "intentDigest": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["requestId", "intentDigest"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-history/verify": {
+      "post": {
+        "operationId": "verifyHistoryRead",
+        "summary": "Verify a relayed session history proof",
+        "description": "Target CLI asks the cloud to verify the proof. Failed HTTP requests deny access. Edit access requires allowed=true and expiresAt; read access requires allowed=true.",
+        "tags": ["Authorization proofs"],
+        "x-source": ["apps/cli/src/lib/cloud-cli-port.ts", "packages/platform/src/cloud-port.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "allowed": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["allowed"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryVerify"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-history/verify-edit": {
+      "post": {
+        "operationId": "verifyHistoryEdit",
+        "summary": "Verify a relayed session history proof",
+        "description": "Target CLI asks the cloud to verify the proof. Failed HTTP requests deny access. Edit access requires allowed=true and expiresAt; read access requires allowed=true.",
+        "tags": ["Authorization proofs"],
+        "x-source": ["apps/cli/src/lib/cloud-cli-port.ts", "packages/platform/src/cloud-port.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "allowed": {
+                      "type": "boolean"
+                    },
+                    "expiresAt": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": ["allowed"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/HistoryVerify"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "requestId": {
+                        "type": "string"
+                      },
+                      "intentDigest": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["requestId", "intentDigest"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-preview/request-token": {
+      "post": {
+        "operationId": "mintPreviewProof",
+        "summary": "Mint an exact remote preview intent proof",
+        "description": "Requester identity is removed from the submitted intent and returned by the server. Client compares requesterUserId with the signed-in user. Full action payload definitions remain in the linked shared contracts; this schema leaves them explicitly partial.",
+        "tags": ["Authorization proofs"],
+        "x-source": "packages/components/src/lib/preview-control-api.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewMint"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-preview/verify": {
+      "post": {
+        "operationId": "verifyPreviewProof",
+        "summary": "Verify a remote preview intent proof",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authorization proofs"],
+        "x-source": "apps/cli/src/lib/cloud-cli-port.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verification"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "intent": {
+                    "$ref": "#/components/schemas/UnknownObject"
+                  },
+                  "requestToken": {
+                    "type": "string"
+                  },
+                  "localProjectId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["intent", "requestToken"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-automation/request-token": {
+      "post": {
+        "operationId": "mintAutomationProof",
+        "summary": "Mint an exact remote automation intent proof",
+        "description": "Requester identity is removed from the submitted intent and returned by the server. Client compares requesterUserId with the signed-in user. Full action payload definitions remain in the linked shared contracts; this schema leaves them explicitly partial.",
+        "tags": ["Authorization proofs"],
+        "x-source": [
+          "packages/components/src/lib/automation-control-api.ts",
+          "packages/shared/src/automations/control.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationMint"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session-automation/verify": {
+      "post": {
+        "operationId": "verifyAutomationProof",
+        "summary": "Verify a remote automation intent proof",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authorization proofs"],
+        "x-source": "apps/cli/src/lib/cloud-cli-port.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Verification"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "intent": {
+                    "$ref": "#/components/schemas/UnknownObject"
+                  },
+                  "requestToken": {
+                    "type": "string"
+                  },
+                  "localProjectId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["intent", "requestToken"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machine-lifecycle/request-token": {
+      "post": {
+        "operationId": "mintMachineLifecycleProof",
+        "summary": "Mint a machine restart or upgrade proof",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authorization proofs"],
+        "x-source": "packages/components/src/lib/machine-lifecycle-api.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LifecycleRequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "machineId": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": ["restart", "upgrade"]
+                  },
+                  "requestId": {
+                    "type": "string"
+                  },
+                  "targetVersion": {
+                    "type": "string"
+                  },
+                  "upgrade": {
+                    "$ref": "#/components/schemas/UnknownObject"
+                  },
+                  "restoreMachineId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["workspaceId", "machineId", "action", "requestId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ios-simulator/ice-servers": {
+      "post": {
+        "operationId": "getSimulatorIceServers",
+        "summary": "Obtain short-lived simulator relay configuration",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authorization proofs"],
+        "x-source": ["apps/cli/src/lib/cloud-cli-port.ts", "packages/platform/src/cloud-port.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IceReply"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "requesterUserId": {
+                    "type": "string"
+                  },
+                  "machineId": {
+                    "type": "string"
+                  },
+                  "localProjectId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["workspaceId", "requesterUserId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bug-reports/request-token": {
+      "post": {
+        "operationId": "mintBugReportProof",
+        "summary": "Mint proof of the requester of machine logs",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authorization proofs"],
+        "x-source": "packages/components/src/lib/bug-report-api.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BugReportRequestToken"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "machineId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["workspaceId", "machineId"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bug-reports/create": {
+      "post": {
+        "operationId": "createBugReport",
+        "summary": "Create a user or machine-backed bug report",
+        "description": "Machine uploads include a requester proof; backend derives reporter identity from that proof. User-only report creation sends workspaceId and description. Logs are user data and are not included in these docs.",
+        "tags": ["Utilities"],
+        "x-source": [
+          "packages/components/src/lib/bug-report-api.ts",
+          "apps/cli/src/lib/bug-report.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bugReportId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["bugReportId"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "workspaceId": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": ["workspaceId", "description"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "workspaceId": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "machineId": {
+                        "type": "string"
+                      },
+                      "requestToken": {
+                        "type": "string"
+                      },
+                      "logContent": {
+                        "type": "string"
+                      },
+                      "logFileNames": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": ["workspaceId", "description", "machineId", "requestToken"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bug-reports/client-diagnostics": {
+      "post": {
+        "operationId": "attachClientDiagnostics",
+        "summary": "Attach client diagnostics to a bug report",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Utilities"],
+        "x-source": "packages/components/src/lib/bug-report-api.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "bugReportId": {
+                    "type": "string"
+                  },
+                  "diagnostics": {}
+                },
+                "required": ["workspaceId", "bugReportId", "diagnostics"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/loro-streams/token": {
+      "post": {
+        "operationId": "mintWorkspaceStreamsGrant",
+        "summary": "Obtain a workspace Streams grant",
+        "description": "Cloud credential exchange only. Streams data transport, Loro documents and Streams RPC are documented separately. expiresIn is seconds. A rejectedToken is supplied only to reject a previously issued grant. 401/403 terminally reject the long-lived credential.",
+        "tags": ["Authorization proofs"],
+        "x-source": "packages/shared/src/loro-streams-auth.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamsGrant"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Long-lived credential rejected."
+          },
+          "403": {
+            "description": "Long-lived credential rejected."
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamsGrantRequest"
+              },
+              "example": {
+                "workspaceId": "workspace_example"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/e2ee/machine-pairing/claim": {
+      "post": {
+        "operationId": "claimEncryptedMachinePairing",
+        "summary": "Claim an encrypted machine pairing offer",
+        "description": "Fixed HTTPS ingress pinned by an independently supplied pairing command. Persist and send the exact original JSON bytes on retry. Account bearer is absent: token and the prepared machine material identify the claim. Compare returned pairingSessionId and material with the command and local preparation; terminal conflict/cancellation/expiry requires a new command.",
+        "tags": ["Authorization proofs"],
+        "x-source": [
+          "apps/cli/src/lib/cloud-cli-port.ts",
+          "apps/cli/src/lib/e2ee/remote-pairing.ts",
+          "packages/shared/src/e2ee-remote-pairing.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dto_RemoteMachineStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "servers": [
+          {
+            "url": "{ingressUrl}",
+            "variables": {
+              "ingressUrl": {
+                "default": "https://backend.lody.ai",
+                "description": "Use the independently verified command-pinned ingress origin, not relay response data."
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "pairingSessionId": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "material": {
+                    "$ref": "#/components/schemas/Dto_LocalE2eePrepareResponse"
+                  }
+                },
+                "required": ["workspaceId", "pairingSessionId", "token", "material"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-images/upload": {
+      "post": {
+        "operationId": "uploadSessionImage",
+        "summary": "Upload one session image",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/shared/src/session-image.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "$ref": "#/components/schemas/ImageReference"
+                    }
+                  },
+                  "required": ["image"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionId": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PNG, JPEG, WebP or GIF, at most 5 MiB."
+                  }
+                },
+                "required": ["sessionId", "file"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/upload": {
+      "post": {
+        "operationId": "uploadSessionFile",
+        "summary": "Upload a file of at most 16 MiB",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/components/src/lib/session-file-upload.ts",
+          "packages/shared/src/session-file.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "file": {
+                          "$ref": "#/components/schemas/FileReference"
+                        }
+                      },
+                      "required": ["file"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/FileReference"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-name",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Percent-encoded original filename."
+          },
+          {
+            "name": "x-file-mime-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-sha256",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          {
+            "name": "x-file-size-bytes",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          },
+          {
+            "name": "x-file-text-preview",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/multipart/create": {
+      "post": {
+        "operationId": "createFileUpload",
+        "summary": "Reserve a multipart file upload",
+        "description": "For files larger than 16 MiB, up to 100 MiB. Native client emits at most seven sequential 16 MiB parts, then completes. Exact remote retention and cleanup timing require server verification.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/components/src/lib/session-file-upload.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uploadId": {
+                      "type": "string"
+                    },
+                    "fileId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["uploadId", "fileId"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-name",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Percent-encoded original filename."
+          },
+          {
+            "name": "x-file-mime-type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-sha256",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          {
+            "name": "x-file-size-bytes",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          },
+          {
+            "name": "x-file-text-preview",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/multipart/{uploadId}/part/{partNumber}": {
+      "put": {
+        "operationId": "uploadFilePart",
+        "summary": "Upload one numbered part",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/components/src/lib/session-file-upload.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartReceipt"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "partNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-part-size-bytes",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/multipart/{uploadId}/complete": {
+      "post": {
+        "operationId": "completeFileUpload",
+        "summary": "Complete an upload with ordered part receipts",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/components/src/lib/session-file-upload.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "file": {
+                          "$ref": "#/components/schemas/FileReference"
+                        }
+                      },
+                      "required": ["file"]
+                    },
+                    {
+                      "$ref": "#/components/schemas/FileReference"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Parts"
+              },
+              "example": {
+                "parts": [
+                  {
+                    "partNumber": 1,
+                    "etag": "synthetic-part-etag"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/multipart/{uploadId}": {
+      "delete": {
+        "operationId": "abortFileUpload",
+        "summary": "Abort an incomplete multipart upload",
+        "description": "Source discrepancy: shared TypeScript helper uses DELETE .../{uploadId}; iOS uses DELETE .../{uploadId}/abort. These are observed client URLs, not a claim that both are accepted. Confirm against private worker before integration.",
+        "tags": ["Attachments"],
+        "x-source": ["packages/shared/src/session-file.ts", "packages/shared/src/ai.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/multipart/{uploadId}/abort": {
+      "delete": {
+        "operationId": "abortFileUploadIos",
+        "summary": "Abort an incomplete multipart upload",
+        "description": "Source discrepancy: shared TypeScript helper uses DELETE .../{uploadId}; iOS uses DELETE .../{uploadId}/abort. These are observed client URLs, not a claim that both are accepted. Confirm against private worker before integration.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-session-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-file-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-images/{sessionId}/{imageId}": {
+      "get": {
+        "operationId": "downloadSessionImages",
+        "summary": "Download session images",
+        "description": "Workspace-authenticated download. iOS requires HTTP 200, nonempty bytes, bounded size, and matching expected size when known. Client handles 401/403 as permission failure and 404/410 as unavailable.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/shared/src/session-image.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign-in required."
+          },
+          "403": {
+            "description": "Permission denied."
+          },
+          "404": {
+            "description": "Unavailable attachment."
+          },
+          "410": {
+            "description": "Unavailable or expired attachment."
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-images/{sessionId}/{imageId}/thumbnail": {
+      "get": {
+        "operationId": "thumbnailSessionImage",
+        "summary": "Get an image thumbnail",
+        "description": "Dimensions are rounded and clamped to 16\u20134096, quality to 1\u2013100; invalid or absent width defaults to 512, quality to 85, fit to scale-down. Absent height preserves aspect ratio. Worker re-normalizes untrusted query inputs.",
+        "tags": ["Attachments"],
+        "x-source": ["packages/shared/src/session-image.ts", "packages/shared/src/ai.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "width",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 512
+            }
+          },
+          {
+            "name": "height",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "quality",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 85
+            }
+          },
+          {
+            "name": "fit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["cover", "contain", "scale-down"]
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/{sessionId}/{fileId}": {
+      "get": {
+        "operationId": "downloadSessionFiles",
+        "summary": "Download session files",
+        "description": "Workspace-authenticated download. iOS requires HTTP 200, nonempty bytes, bounded size, and matching expected size when known. Client handles 401/403 as permission failure and 404/410 as unavailable.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Cloud/SessionAttachments.swift",
+          "packages/shared/src/session-file.ts",
+          "packages/shared/src/ai.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign-in required."
+          },
+          "403": {
+            "description": "Permission denied."
+          },
+          "404": {
+            "description": "Unavailable attachment."
+          },
+          "410": {
+            "description": "Unavailable or expired attachment."
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/session-files/{sessionId}/{fileId}/preview": {
+      "get": {
+        "operationId": "previewSessionFile",
+        "summary": "Read a bounded text preview",
+        "description": "Path is defined by the public shared helper. Source constants set an 8 KiB text sniff, 1 MiB preview fetch bound and 90-day file retention policy. Exact worker response media, status and range support need server verification.",
+        "tags": ["Attachments"],
+        "x-source": ["packages/shared/src/session-file.ts", "packages/shared/src/ai.ts"],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/workspaces/{workspaceId}/avatars/upload": {
+      "post": {
+        "operationId": "uploadAvatar",
+        "summary": "Upload a user or workspace avatar",
+        "description": "Returns an opaque avatarId; client constructs the public avatar URL and updates user image or organization logo separately.",
+        "tags": ["Attachments"],
+        "x-source": [
+          "packages/shared/src/avatar.ts",
+          "packages/components/src/lib/avatar-upload.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "avatar": {
+                      "type": "object",
+                      "properties": {
+                        "avatarId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["avatarId"]
+                    }
+                  },
+                  "required": ["avatar"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          },
+          {
+            "CliKey": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": ["user", "workspace"]
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PNG, JPEG, WebP or GIF, nonempty and at most 1 MiB."
+                  }
+                },
+                "required": ["kind", "file"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/avatars/{avatarId}": {
+      "get": {
+        "operationId": "downloadAvatar",
+        "summary": "Read a public avatar",
+        "description": "Opaque ID matches [A-Za-z0-9_-]{1,128}. Public cache policy: public, max-age=31536000, immutable.",
+        "tags": ["Attachments"],
+        "x-source": "packages/shared/src/avatar.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "avatarId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/shares/{shareId}": {
+      "get": {
+        "operationId": "resolveStaticShare",
+        "summary": "Resolve a static share to a fixed deployment",
+        "description": "Read secret is taken from the link fragment, then sent as bearer. Omit cookies, redirects and referrer; use no-store. Resolve once and pin all subsequent reads to returned deploymentId. Bound response to manifestBytes + 1024.",
+        "tags": ["Sharing"],
+        "x-source": "packages/shared/src/session-share-client.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResolved"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ShareRead": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "shareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/shares/{shareId}/deployments/{deploymentId}/objects/{objectId}": {
+      "get": {
+        "operationId": "readShareObject",
+        "summary": "Read one manifest-listed share object",
+        "description": "Bound read to manifest sizeBytes, then verify size and SHA-256. History can be zstd encoded. Object membership in the fixed manifest is required.",
+        "tags": ["Sharing"],
+        "x-source": "packages/shared/src/session-share-client.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ShareRead": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "shareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "deploymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "objectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/shares/{shareId}/deployments/{deploymentId}/agent/{conversationId}": {
+      "post": {
+        "operationId": "createShareAgentLink",
+        "summary": "Mint a short-lived agent access URL",
+        "description": "No JSON body. Conversation must occur in the pinned manifest. Returned URL must have the same origin, no userinfo/query/fragment and path /api/share-agent/[A-Za-z0-9_.-]{1,2048}. Response bounded to 4096 bytes.",
+        "tags": ["Sharing"],
+        "x-source": "packages/shared/src/session-share-client.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareAgentLink"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ShareRead": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "shareId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "deploymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/share-deployments/{deploymentId}/objects/{objectId}": {
+      "put": {
+        "operationId": "uploadShareObject",
+        "summary": "Upload a verified object into a draft deployment",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Sharing"],
+        "x-source": "packages/shared/src/session-share-client.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ShareUpload": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deploymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          },
+          {
+            "name": "objectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/share-deployments/{deploymentId}/seal": {
+      "post": {
+        "operationId": "sealShareDeployment",
+        "summary": "Seal an uploaded deployment with its manifest",
+        "description": "Send the exact prepared manifest bytes. Upload and seal capabilities cannot publish. An authenticated app subsequently calls sessionSharing:publishDeployment. File attachments in shares remain disabled in this revision.",
+        "tags": ["Sharing"],
+        "x-source": "packages/shared/src/session-share-client.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source."
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ShareUpload": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deploymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Dto_SharePackageManifest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/time": {
+      "get": {
+        "operationId": "getServerTime",
+        "summary": "Read server time in milliseconds",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Utilities"],
+        "x-source": "packages/shared/src/time-sync.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "serverTime": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["serverTime"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ]
+      }
+    },
+    "/api/community/wechat-qr": {
+      "get": {
+        "operationId": "getCommunityQr",
+        "summary": "Read the legacy community QR image",
+        "description": "Hosted endpoint contract retained; current About settings use a bundled offline QR. Cache policy public, max-age=300.",
+        "tags": ["Utilities"],
+        "x-source": "packages/shared/src/community.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ]
+      }
+    },
+    "/api/cli/latest-version": {
+      "get": {
+        "operationId": "latestCliVersion",
+        "summary": "Read the latest CLI package version",
+        "description": "Client sends no Authorization header. This is a package version lookup, not a managed daemon manifest.",
+        "tags": ["Runtime downloads"],
+        "x-source": "packages/components/src/lib/machine-lifecycle-api.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "packageName": {
+                      "const": "lody"
+                    },
+                    "latestVersion": {
+                      "type": "string"
+                    },
+                    "cacheTtlMs": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["packageName", "latestVersion"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/runtimes/{distribution}/channels/{platform}/{channel}.json": {
+      "get": {
+        "operationId": "getRuntimeChannel",
+        "summary": "Read a managed daemon channel manifest",
+        "description": "stable, next and nightly are observed channel names. Manifest is bounded to 131072 bytes; client validates product, platform and channel and verifies artefacts before activation. See daemon release schema in source.",
+        "tags": ["Runtime downloads"],
+        "x-source": "apps/cli/src/lib/managed-daemon-release.ts",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dto_DaemonRelease"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "distribution",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/runtimes/{distribution}/{version}/{platform}/{fileName}": {
+      "get": {
+        "operationId": "downloadRuntimeArtifact",
+        "summary": "Download a versioned runtime artefact",
+        "description": "Distribution-specific runtime names, platforms, filenames and SHA-256 digests come from pinned client manifests. fileName=manifest.json retrieves the versioned daemon manifest as JSON; other files are binary. This public channel is permitted in local-only OSS builds. An operator may configure a mirror.",
+        "tags": ["Runtime downloads"],
+        "x-source": [
+          "apps/cli/src/agent/managed-agent-runtime.ts",
+          "apps/cli/src/lib/managed-daemon-release.ts",
+          "packages/platform/src/runtime-artifacts.ts"
+        ],
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dto_DaemonRelease"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "servers": [
+          {
+            "url": "https://api.lody.ai"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "distribution",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fileName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/auth/organization/update": {
+      "post": {
+        "operationId": "updateOrganization",
+        "summary": "Update the organization name or logo",
+        "description": "Observed public client contract. Server validation, complete error bodies, rate limits and deployment availability are not published in this checkout.",
+        "tags": ["Authentication"],
+        "x-source": "apps/mobile/ios/packages/LodyKit/Sources/LodyKit/Auth/AuthAPI.swift",
+        "responses": {
+          "2XX": {
+            "description": "Client accepts a successful HTTP response. Exact success status is not fixed by source.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "logo": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["id", "name"]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Exact error body and status depend on the hosted handler; do not assume a common error schema.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservedError"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organizationId": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["name"]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "logo": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["logo"]
+                      }
+                    ]
+                  }
+                },
+                "required": ["organizationId", "data"]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConvexError": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "const": "error"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "errorData": {},
+          "logLines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["status", "errorMessage"]
+      },
+      "RequestToken": {
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          }
+        },
+        "required": ["requestToken"],
+        "additionalProperties": false
+      },
+      "BugReportRequestToken": {
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["requestToken"]
+      },
+      "UserRequestToken": {
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requesterUserId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["requestToken", "requesterUserId"],
+        "additionalProperties": false
+      },
+      "LifecycleRequestToken": {
+        "type": "object",
+        "properties": {
+          "requestToken": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requesterUserId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["requestToken", "requesterUserId"]
+      },
+      "CredentialReply": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "image": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "required": ["token"]
+      },
+      "ObservedError": {
+        "type": "object",
+        "properties": {
+          "error": {},
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "description": "Client-observed error fields; no uniform server error format is established. Bodies may also be plain text."
+      },
+      "ImageReference": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "image"
+          },
+          "imageId": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "number"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          }
+        },
+        "required": ["type", "imageId", "mimeType", "sizeBytes"]
+      },
+      "FileReference": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "file"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "number"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "textPreview": {
+            "type": "boolean"
+          }
+        },
+        "required": ["type", "fileId", "mimeType", "sizeBytes"]
+      },
+      "HistoryMint": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string"
+          },
+          "machineId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "intentDigest": {
+            "type": "string"
+          }
+        },
+        "required": ["workspaceId", "machineId", "sessionId"]
+      },
+      "HistoryCliMint": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string"
+          },
+          "machineId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "sourceMachineId": {
+            "type": "string"
+          },
+          "rootSessionId": {
+            "type": "string"
+          },
+          "sessionOwnerUserId": {
+            "type": "string"
+          },
+          "localProjectId": {
+            "type": "string"
+          },
+          "requester": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "machineId": {
+                "type": "string"
+              }
+            },
+            "required": ["userId", "machineId"]
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "intentDigest": {
+            "type": "string"
+          }
+        },
+        "required": ["workspaceId", "machineId", "sessionId", "sourceMachineId", "rootSessionId"]
+      },
+      "HistoryVerify": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string"
+          },
+          "machineId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "rootSessionId": {
+            "type": "string"
+          },
+          "sessionOwnerUserId": {
+            "type": "string"
+          },
+          "localProjectId": {
+            "type": "string"
+          },
+          "requestToken": {
+            "type": "string"
+          }
+        },
+        "required": ["workspaceId", "machineId", "sessionId", "rootSessionId", "requestToken"]
+      },
+      "PreviewMint": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string"
+          },
+          "machineId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "runtimeNonce": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operation": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": ["create", "revoke", "status", "ios-simulator", "android-emulator"]
+              }
+            },
+            "description": "Action-specific command payload lives in packages/shared/src/preview-control.ts; see guide. Additional fields are intentionally unconstrained here.",
+            "required": ["action"],
+            "x-partial": true
+          }
+        },
+        "required": [
+          "workspaceId",
+          "machineId",
+          "sessionId",
+          "runtimeNonce",
+          "requestId",
+          "operation"
+        ]
+      },
+      "Verification": {
+        "type": "object",
+        "properties": {
+          "requesterUserId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "expiresAt": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["requesterUserId", "expiresAt"],
+        "additionalProperties": false
+      },
+      "IceReply": {
+        "type": "object",
+        "properties": {
+          "iceServers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "urls": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "username": {
+                  "type": "string"
+                },
+                "credential": {
+                  "type": "string"
+                }
+              },
+              "required": ["urls"]
+            }
+          },
+          "expiresAt": {
+            "type": "number"
+          }
+        },
+        "required": ["iceServers", "expiresAt"]
+      },
+      "StreamsGrant": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "gatewayBaseUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "shardHostSuffix": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          }
+        },
+        "required": ["token", "expiresIn"]
+      },
+      "StreamsGrantRequest": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "rejectedToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384
+          }
+        },
+        "required": ["workspaceId"]
+      },
+      "PartReceipt": {
+        "type": "object",
+        "properties": {
+          "etag": {
+            "type": "string"
+          }
+        },
+        "required": ["etag"]
+      },
+      "Parts": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "partNumber": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "etag": {
+                  "type": "string"
+                }
+              },
+              "required": ["partNumber", "etag"]
+            }
+          }
+        },
+        "required": ["parts"]
+      },
+      "CliKeyRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "keyStart": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "keyPreview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["auto", "manual", "pairing"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastRequest": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "machineIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "keyStart",
+          "note",
+          "createdAt",
+          "lastRequest",
+          "expiresAt",
+          "enabled"
+        ]
+      },
+      "ShareResolved": {
+        "type": "object",
+        "properties": {
+          "shareId": {
+            "type": "string"
+          },
+          "deploymentId": {
+            "type": "string"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/Dto_SharePackageManifest"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["shareId", "deploymentId", "manifest"]
+      },
+      "ShareAgentLink": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["url", "expiresAt"]
+      },
+      "UnknownObject": {
+        "type": "object",
+        "description": "Body not fully specified by the public client. Consult x-source; no server schema is asserted.",
+        "x-unresolved": true
+      },
+      "AutomationMint": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string"
+          },
+          "machineId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "runtimeNonce": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "responseKey": {
+            "$ref": "#/components/schemas/Dto_RpcSecretPublicKey"
+          },
+          "operation": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "list"
+                  },
+                  "after": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["type"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "settings"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["type"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "configure"
+                  },
+                  "settings": {
+                    "$ref": "#/components/schemas/UnknownObject"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["type", "settings"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "cancel"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["type", "id"]
+              }
+            ]
+          }
+        },
+        "required": [
+          "workspaceId",
+          "machineId",
+          "sessionId",
+          "runtimeNonce",
+          "requestId",
+          "responseKey",
+          "operation"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "SessionBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Raw Better Auth session token. Use the JSON token returned by sign-in; a signed set-auth-token cookie value is not interchangeable."
+      },
+      "CliKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "CLI API key. Some Convex operations instead take cliToken/token inside args."
+      },
+      "ConvexJwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Short-lived token returned by GET /api/auth/convex/token."
+      },
+      "ShareRead": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Per-share read secret: 32 random bytes as 64 lowercase hex characters; extracted from #access=v1.<secret>. Never send the workspace credential."
+      },
+      "ShareUpload": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Per-deployment upload secret. Can upload/seal, cannot publish."
+      }
+    }
+  },
+  "x-source-revision": "61bd9701a5ed6899a9f42787df682acfc3fd7d4b"
+}
