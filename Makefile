@@ -1,4 +1,4 @@
-.PHONY: help all tools deps tlc tlc-liveness tlc-all fmt check-fmt ruff biome typecheck \
+.PHONY: help all tools deps tlc tlc-liveness tlc-all fmt check-fmt ruff interrogate biome typecheck \
 	markdownlint nixie cloud-api-check evidence-check openapi lint test test-python \
 	test-node check clean
 
@@ -51,6 +51,18 @@ check-fmt: deps ## Check Python, JavaScript, and JSON formatting
 ruff: ## Lint the Python sources
 	ruff check $(PYTHON_SOURCES)
 
+# Interrogate measures docstring presence in the Python files under
+# PYTHON_SOURCES; add a new Python directory there. No `--python` pin: a managed
+# interpreter would be downloaded.
+INTERROGATE_VERSION ?= 1.7.0
+INTERROGATE = uv tool run --from 'interrogate==$(INTERROGATE_VERSION)' interrogate --fail-under 100
+
+# To list each undocumented definition, run
+# `uv tool run --from interrogate==1.7.0 interrogate -vv $(PYTHON_SOURCES)`
+# with the sources written out.
+interrogate: ## Enforce complete Python docstring coverage
+	$(INTERROGATE) $(PYTHON_SOURCES)
+
 biome: deps ## Lint the JavaScript and JSON sources
 	npm run lint
 
@@ -72,7 +84,7 @@ evidence-check: ## Check the generated evidence indexes against the Lody source
 openapi: ## Validate the OpenAPI description
 	npm run validate:openapi
 
-lint: check-fmt ruff biome typecheck markdownlint nixie cloud-api-check evidence-check openapi ## Run every lint
+lint: check-fmt ruff interrogate biome typecheck markdownlint nixie cloud-api-check evidence-check openapi ## Run every lint
 
 test: test-python test-node ## Run the tests of the repository scripts
 
