@@ -61,23 +61,27 @@ def index(tmp_path: pathlib.Path, *rows: str) -> pathlib.Path:
 
 
 def test_decisive_texts_undo_table_escapes() -> None:
+    """Check that decisive-text spans have their table pipe escapes undone."""
     assert check_evidence.decisive_texts(r"`'a\|b'` and `beta`") == ["'a|b'", "beta"]
 
 
 def test_matching_checked_row_passes(
     tmp_path: pathlib.Path, lody: pathlib.Path
 ) -> None:
+    """Check that a Checked row whose decisive text is in its range passes."""
     assert check_evidence.check_index(index(tmp_path, row()), lody) == (1, [])
 
 
 def test_escaped_pipe_is_found_in_source(
     tmp_path: pathlib.Path, lody: pathlib.Path
 ) -> None:
+    """Check that an escaped pipe in decisive text matches the source's pipe."""
     cited = row(start=2, end=None, text=r"`'a\|b'`")
     assert check_evidence.check_index(index(tmp_path, cited), lody) == (1, [])
 
 
 def test_absent_decisive_text_fails(tmp_path: pathlib.Path, lody: pathlib.Path) -> None:
+    """Check that a Checked row whose decisive text is absent fails."""
     rows, failures = check_evidence.check_index(
         index(tmp_path, row(text="`gamma`")), lody
     )
@@ -88,11 +92,13 @@ def test_absent_decisive_text_fails(tmp_path: pathlib.Path, lody: pathlib.Path) 
 def test_reported_row_skips_decisive_text(
     tmp_path: pathlib.Path, lody: pathlib.Path
 ) -> None:
+    """Check that a Reported row passes without its decisive text being compared."""
     reported = row(text="`gamma`", basis="Reported")
     assert check_evidence.check_index(index(tmp_path, reported), lody) == (1, [])
 
 
 def test_range_outside_file_fails(tmp_path: pathlib.Path, lody: pathlib.Path) -> None:
+    """Check that a cited range running past the end of its source fails."""
     _, failures = check_evidence.check_index(
         index(tmp_path, row(start=3, end=4, basis="Reported")), lody
     )
@@ -100,11 +106,13 @@ def test_range_outside_file_fails(tmp_path: pathlib.Path, lody: pathlib.Path) ->
 
 
 def test_reversed_range_fails(tmp_path: pathlib.Path, lody: pathlib.Path) -> None:
+    """Check that a cited range whose end precedes its start fails."""
     _, failures = check_evidence.check_index(index(tmp_path, row(start=2, end=1)), lody)
     assert failures == [f"E-1: range 2-1 is outside {SOURCE}"]
 
 
 def test_missing_file_fails(tmp_path: pathlib.Path, lody: pathlib.Path) -> None:
+    """Check that a row citing a file missing from the checkout fails."""
     _, failures = check_evidence.check_index(
         index(tmp_path, row(path="pkg/src/missing.ts")), lody
     )
@@ -122,6 +130,7 @@ MALFORMED_ROWS = [
 def test_unparsed_evidence_row_fails(
     tmp_path: pathlib.Path, lody: pathlib.Path, broken: str
 ) -> None:
+    """Check that each malformed evidence row is reported as unparsed."""
     rows, failures = check_evidence.check_index(index(tmp_path, row(), broken), lody)
     assert rows == 1
     assert failures == ["line 6: evidence row does not parse"]
@@ -134,6 +143,7 @@ def test_main_fails_on_unparsed_evidence_row(
     monkeypatch: pytest.MonkeyPatch,
     broken: str,
 ) -> None:
+    """Check that main fails when an evidence row does not parse."""
     index(tmp_path, row(), broken)
     monkeypatch.setattr(check_evidence, "ROOT", tmp_path)
     monkeypatch.setattr(check_evidence, "INDEXES", ("evidence.md",))
@@ -143,6 +153,7 @@ def test_main_fails_on_unparsed_evidence_row(
 def test_prose_and_headers_are_not_evidence_rows(
     tmp_path: pathlib.Path, lody: pathlib.Path
 ) -> None:
+    """Check that prose and non-evidence tables are skipped, not failed."""
     prose = [
         "",
         "Rows marked Checked were compared with the source; Reported rows",
@@ -159,6 +170,7 @@ def test_prose_and_headers_are_not_evidence_rows(
 def test_checked_row_without_code_span_fails(
     tmp_path: pathlib.Path, lody: pathlib.Path
 ) -> None:
+    """Check that a Checked row without a code span in its cell fails."""
     _, failures = check_evidence.check_index(
         index(tmp_path, row(text="alpha without backticks")), lody
     )
@@ -166,6 +178,7 @@ def test_checked_row_without_code_span_fails(
 
 
 def test_main_reports_missing_checkout(tmp_path: pathlib.Path) -> None:
+    """Check that main exits 2 when the Lody checkout is absent."""
     assert check_evidence.main([str(tmp_path / "absent")]) == 2
 
 
@@ -184,6 +197,7 @@ def test_main_exit_status(
     rows: list[str],
     status: int,
 ) -> None:
+    """Check that main's exit status follows the outcome of the rows."""
     index(tmp_path, *rows)
     monkeypatch.setattr(check_evidence, "ROOT", tmp_path)
     monkeypatch.setattr(check_evidence, "INDEXES", ("evidence.md",))
@@ -196,6 +210,7 @@ def test_main_reports_an_unreadable_index(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    """Check that main exits 3 for an unreadable index and reports the rest."""
     index(tmp_path, row())
     monkeypatch.setattr(check_evidence, "ROOT", tmp_path)
     monkeypatch.setattr(check_evidence, "INDEXES", ("absent.md", "evidence.md"))
@@ -208,10 +223,12 @@ def test_main_reports_an_unreadable_index(
 def test_unreadable_source_is_a_row_failure(
     tmp_path: pathlib.Path, lody: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Check that an unreadable source file is recorded as a row failure."""
     path = index(tmp_path, row())
     real = pathlib.Path.read_text
 
     def read_text(self: pathlib.Path, *args, **kwargs) -> str:
+        """Deny reads of the fixture source and pass other reads through."""
         if self.name == "a.ts":
             raise PermissionError("denied")
         return real(self, *args, **kwargs)

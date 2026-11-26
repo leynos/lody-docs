@@ -62,6 +62,7 @@ class Outcome:
 
     @property
     def ok(self) -> bool:
+        """Return whether the observed outcome matches the model's expectation."""
         return self.observed == self.model.expect
 
 
@@ -97,6 +98,7 @@ def load_models(
 
 
 def classify(output: str) -> str:
+    """Name TLC's outcome: a violated invariant, temporal violation, pass or error."""
     violation = VIOLATION.search(output)
     if violation:
         return violation.group(1)
@@ -181,6 +183,10 @@ def write_log(outcome: Outcome, log_dir: pathlib.Path) -> pathlib.Path:
 
 
 def describe(outcome: Outcome) -> str:
+    """Format one outcome as a report line.
+
+    The counterexample trace is appended only when the model expects a failure.
+    """
     status = "ok  " if outcome.ok else "FAIL"
     states = "-" if outcome.distinct_states is None else f"{outcome.distinct_states:,}"
     line = (
