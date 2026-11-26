@@ -183,7 +183,10 @@ def write_log(outcome: Outcome, log_dir: pathlib.Path) -> pathlib.Path:
 
 
 def describe(outcome: Outcome) -> str:
-    """Format one outcome as a report line, plus any counterexample trace."""
+    """Format one outcome as a report line.
+
+    The counterexample trace is appended only when the model expects a failure.
+    """
     status = "ok  " if outcome.ok else "FAIL"
     states = "-" if outcome.distinct_states is None else f"{outcome.distinct_states:,}"
     line = (
