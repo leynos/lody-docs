@@ -12,16 +12,16 @@ and which files are generated. Every document follows the
 
 ## 1. Prerequisites
 
-| Tool | Needed for | Notes |
-| ---- | ---------- | ----- |
-| GNU Make, `curl`, `sha256sum` | Every target | `make tools` downloads a pinned, checksum-verified `tla2tools.jar` |
-| Java 11 or later | `tlc`, `tlc-liveness` | Any headless runtime will do |
-| Python 3 | `tlc`, `tlc-liveness` | The model runner uses only the standard library |
-| Node.js and npm | Markdown lint, Biome, type-checking, the generator | `make deps` installs the pinned packages; validation used Node.js 26.13.0 |
-| `ruff` | `check-fmt`, `ruff`, `fmt` | |
-| `nixie` | `nixie` | Validates Mermaid diagrams |
-| `uv` and `uvx` | `openapi`, `test-python` | Run a pinned `openapi-spec-validator`, and pytest without installing it |
-| A Lody checkout at the pinned commit | `cloud-api-check`, `evidence-check`, `test-node` | See [section 4](#4-the-cloud-api-reference) |
+| Tool                                 | Needed for                                                     | Notes                                                                                                                                                                                                |
+| ------------------------------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GNU Make, `curl`, `sha256sum`        | Every target                                                   | `make tools` downloads a pinned, checksum-verified `tla2tools.jar`                                                                                                                                   |
+| Java 11 or later                     | `tlc`, `tlc-liveness`                                          | Any headless runtime will do                                                                                                                                                                         |
+| Python 3.9 or later                  | `tlc`, `tlc-liveness`, `openapi`, `test-python`, `interrogate` | The model runner uses only the standard library; the vendored `scripts/uv_gate.py` helper needs 3.9                                                                                                  |
+| Node.js and npm                      | Markdown lint, Biome, type-checking, the generator             | `make deps` installs the pinned packages; validation used Node.js 26.13.0                                                                                                                            |
+| `ruff`                               | `check-fmt`, `ruff`, `fmt`                                     |                                                                                                                                                                                                      |
+| `nixie`                              | `nixie`                                                        | Validates Mermaid diagrams                                                                                                                                                                           |
+| `uv` and `uvx`                       | `openapi`, `test-python`                                       | Run a pinned `openapi-spec-validator`, and pytest without installing it, through the helper, which finds `uv` on `PATH` (there is no `UV` override), runs offline first and goes online at most once |
+| A Lody checkout at the pinned commit | `cloud-api-check`, `evidence-check`, `test-node`               | See [section 4](#4-the-cloud-api-reference)                                                                                                                                                          |
 
 _Table 1: Tools the gates depend on._
 
@@ -29,28 +29,28 @@ _Table 1: Tools the gates depend on._
 
 Every gate is a `Makefile` target. `make help` lists them.
 
-| Target | What it proves |
-| ------ | -------------- |
-| `check-fmt` | Python, JavaScript, and authored JSON are formatted |
-| `ruff` | The Python sources pass lint |
-| `biome` | The generator and authored JSON pass lint |
-| `typecheck` | The generator type-checks |
-| `markdownlint` | Every Markdown file passes the style guide's formatting rules, including the 80-column wrap |
-| `nixie` | Every Mermaid diagram renders |
-| `cloud-api-check` | The generated cloud API files match what the generator produces from the pinned Lody source |
-| `evidence-check` | Every checked row of the architecture and Loro evidence indexes still matches the pinned Lody source |
-| `openapi` | `openapi.yaml` is a valid OpenAPI document |
-| `test` | The evidence checker, the model runner, and the cloud API generator's `--check` mode reject what they should (pytest through `uv`, and `node --test`) |
-| `lint` | All of the above, in that order |
-| `tlc` | Each safety model holds, and each ablation and observation still produces its counterexample (about two minutes) |
-| `tlc-liveness` | Each liveness property holds (about ten minutes on 32 cores) |
-| `all` | `lint`, `test`, and `tlc` |
-| `check` | `lint`, `test`, `tlc`, and `tlc-liveness` |
+| Target            | What it proves                                                                                                                                        |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-fmt`       | Python, JavaScript, and authored JSON are formatted                                                                                                   |
+| `ruff`            | The Python sources pass lint                                                                                                                          |
+| `biome`           | The generator and authored JSON pass lint                                                                                                             |
+| `typecheck`       | The generator type-checks                                                                                                                             |
+| `markdownlint`    | Every Markdown file passes the style guide's formatting rules, including the 80-column wrap                                                           |
+| `nixie`           | Every Mermaid diagram renders                                                                                                                         |
+| `cloud-api-check` | The generated cloud API files match what the generator produces from the pinned Lody source                                                           |
+| `evidence-check`  | Every checked row of the architecture and Loro evidence indexes still matches the pinned Lody source                                                  |
+| `openapi`         | `openapi.yaml` is a valid OpenAPI document                                                                                                            |
+| `test`            | The evidence checker, the model runner, and the cloud API generator's `--check` mode reject what they should (pytest through `uv`, and `node --test`) |
+| `lint`            | All of the above, in that order                                                                                                                       |
+| `tlc`             | Each safety model holds, and each ablation and observation still produces its counterexample (about two minutes)                                      |
+| `tlc-liveness`    | Each liveness property holds (about ten minutes on 32 cores)                                                                                          |
+| `all`             | `lint`, `test`, and `tlc`                                                                                                                             |
+| `check`           | `lint`, `test`, `tlc`, and `tlc-liveness`                                                                                                             |
 
 _Table 2: The gates and what each one establishes._
 
-Run `make all` before every commit. Run `make check` after changing anything
-in `tla/`. Run the gates one after another, not in parallel.
+Run `make all` before every commit. Run `make check` after changing anything in
+`tla/`. Run the gates one after another, not in parallel.
 
 `make fmt` rewrites Python, JavaScript, and JSON formatting. Nothing reformats
 Markdown; wrap prose at 80 columns by hand.
@@ -68,10 +68,10 @@ To add a configuration, create the `.cfg` file in `tla/` and add its entry to
 one at a time: the state space grows quickly with the number of keys and the
 clock bound.
 
-The manifest uses the `ablation` group for every configuration that must
-fail. That covers true ablations, where a mechanism is removed, and
-observations, where a property the shipped protocol lacks is checked against
-the shipped behaviour.
+The manifest uses the `ablation` group for every configuration that must fail.
+That covers true ablations, where a mechanism is removed, and observations,
+where a property the shipped protocol lacks is checked against the shipped
+behaviour.
 
 A change to a model's properties or results must also be reflected in the
 document that reports its state counts and verdicts: the
@@ -97,11 +97,12 @@ or writes them, and `pipeline.mjs` connects these without performing any I/O.
 `schema.mjs` is a facade over `schema-context.mjs` (shared state),
 `schema-scope.mjs` (resolution of every name where it is used, over the
 syntax-level bindings of `schema-bindings.mjs`), `schema-types.mjs` (TypeScript
-types and named DTOs), `schema-utilities.mjs` (utility types), `schema-keys.mjs`
-(key sets), `schema-zod.mjs` and `schema-effect.mjs`. The
-`tests/cloud-api-*.test.mjs` files test each module in memory, with shared setup
-in `tests/cloud-api-helpers.mjs`; `tests/generate-cloud-api-sources.test.mjs`
-and `tests/generate-cloud-api-schemas.test.mjs` test the whole command against a
+types and named DTOs), `schema-utilities.mjs` (utility types),
+`schema-keys.mjs` (key sets), `schema-zod.mjs` and `schema-effect.mjs`. The
+`tests/cloud-api-*.test.mjs` files test each module in memory, with shared
+setup in `tests/cloud-api-helpers.mjs`;
+`tests/generate-cloud-api-sources.test.mjs` and
+`tests/generate-cloud-api-schemas.test.mjs` test the whole command against a
 temporary Git repository built by `tests/cloud-api-fixture.mjs`; and
 `tests/generate-cloud-api.test.mjs` checks the committed documents against the
 real Lody checkout. That last check fails when `LODY_SOURCE` names no checkout,
@@ -110,8 +111,8 @@ as it always does under `make`.
 The generator needs a Lody checkout. The `Makefile` looks for one at `../Lody`
 and then `../../Lody`; set `LODY_SOURCE` to use another path. The manifest
 records one digest over every indexed source file and a hash of each file that
-shapes the output or is cited. Generation compares the exact bytes it reads with
-the pinned commit's blobs, with no Git filters or line-ending conversion
+shapes the output or is cited. Generation compares the exact bytes it reads
+with the pinned commit's blobs, with no Git filters or line-ending conversion
 applied, refuses symbolic links, and refuses a checkout with modified, staged,
 deleted, renamed, untracked, or ignored source files, files flagged
 `assume-unchanged` or `skip-worktree`, or a checkout at another commit, so
@@ -124,9 +125,10 @@ LODY_SOURCE=/path/to/Lody npm run generate
 LODY_SOURCE=/path/to/Lody make cloud-api-check openapi
 ```
 
-When moving the pin to a newer Lody commit, follow the maintenance notes in
-the [cloud API guide](cloud-api/README.md#maintenance-and-validation): the
-generator detects changed content, but it does not discover new HTTP callers.
+When moving the pin to a newer Lody commit, follow the maintenance notes in the
+[cloud API guide](cloud-api/README.md#maintenance-and-validation):
+the generator detects changed content, but it does not discover new HTTP
+callers.
 
 ## 5. The RPC probes
 
@@ -147,12 +149,12 @@ checkout as the generator; see [section 4](#4-the-cloud-api-reference).
 
 When adding a citation to either set, add its row to the index with the
 decisive text copied exactly from one line of the source, and run
-`make evidence-check`. When moving the pin to a newer Lody commit, expect
-this gate to fail wherever the cited code has moved: each failure names the
-row to revisit.
+`make evidence-check`. When moving the pin to a newer Lody commit, expect this
+gate to fail wherever the cited code has moved: each failure names the row to
+revisit.
 
-The Flock and RPC evidence indexes predate this checker and are not covered
-by it.
+The Flock and RPC evidence indexes predate this checker and are not covered by
+it.
 
 ## 7. Document conventions
 
@@ -175,8 +177,8 @@ The style guide is a copy of the
 [upstream guide](https://github.com/leynos/agent-helper-scripts/blob/991af8457b0d7ccda90ad3da11f93f5f155da822/documentation-library/documentation-style-guide.md)
 at the linked commit. Refresh it from upstream instead of editing it here.
 
-Two conventions of the sets that cite evidence sit alongside the style
-guide and are deliberate:
+Two conventions of the sets that cite evidence sit alongside the style guide
+and are deliberate:
 
 - Evidence and literature citations are inline links to stable anchors, such
   as `E-S5` and `[1]`, because many documents cite the same row. Numeric
@@ -185,9 +187,9 @@ guide and are deliberate:
   titles, and text quoted from the Lody source or from upstream packages.
 
 The generated cloud API references follow the same rules. The generator wraps
-their prose and captions their tables, so a style change to those files
-belongs in `scripts/generate-cloud-api.mjs`. Type listings and descriptions
-copied from the Lody source keep their original wording.
+their prose and captions their tables, so a style change to those files belongs
+in `scripts/generate-cloud-api.mjs`. Type listings and descriptions copied from
+the Lody source keep their original wording.
 
 Spelling is not gated in this repository. Check a change against the Oxford
 spelling policy with `typos` and the configuration published beside the
