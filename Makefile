@@ -8,7 +8,16 @@ TLA_TOOLS_URL := https://github.com/tlaplus/tlaplus/releases/download/v$(TLA_TOO
 TLA_TOOLS_JAR := .tools/tla2tools.jar
 NODE_DEPS := node_modules/.package-lock.json
 PYTHON_SOURCES := scripts tests docs/lody-streams-rpc/probes
-PYTEST := uv run --no-project --with pytest==8.4.2 pytest -p no:cacheprovider
+# Every uv call goes through the vendored helper, which cleans the environment,
+# uses the global uv cache, runs offline first and goes online at most once. See
+# https://github.com/leynos/shared-actions/tree/main/uv_gate for the contract.
+# `scripts/uv_gate.py` is the shared-actions helper, vendored byte for byte, so
+# update it by copying the canonical file, never by editing it here.
+UV_GATE ?= python3 scripts/uv_gate.py
+# The helper is held to its upstream's standards, not this repository's, so
+# ruff leaves it alone (and `make fmt` cannot rewrite it).
+RUFF_EXCLUDE = --extend-exclude scripts/uv_gate.py
+PYTEST := $(UV_GATE) tool --from 'pytest==8.4.2' -- pytest -p no:cacheprovider
 # The Lody checkout that the cloud API generator reads. It sits beside this
 # repository, or two levels up when this is a linked worktree.
 LODY_SOURCE ?= $(or $(firstword $(wildcard ../Lody ../../Lody)),../../Lody)
@@ -41,21 +50,21 @@ tlc-liveness: tools ## Run the liveness models (about ten minutes)
 tlc-all: tlc tlc-liveness ## Run every model
 
 fmt: deps ## Format the Python, JavaScript, and JSON sources
-	ruff format $(PYTHON_SOURCES)
+	ruff format $(RUFF_EXCLUDE) $(PYTHON_SOURCES)
 	npm run format
 
 check-fmt: deps ## Check Python, JavaScript, and JSON formatting
-	ruff format --check $(PYTHON_SOURCES)
+	ruff format --check $(RUFF_EXCLUDE) $(PYTHON_SOURCES)
 	npm run check:fmt
 
 ruff: ## Lint the Python sources
-	ruff check $(PYTHON_SOURCES)
+	ruff check $(RUFF_EXCLUDE) $(PYTHON_SOURCES)
 
 # Interrogate measures docstring presence in the Python files under
 # PYTHON_SOURCES; add a new Python directory there. No `--python` pin: a managed
 # interpreter would be downloaded.
 INTERROGATE_VERSION ?= 1.7.0
-INTERROGATE = uv tool run --from 'interrogate==$(INTERROGATE_VERSION)' interrogate --fail-under 100
+INTERROGATE = $(UV_GATE) tool --from 'interrogate==$(INTERROGATE_VERSION)' -- interrogate --fail-under 100
 
 # To list each undocumented definition, run
 # `uv tool run --from interrogate==1.7.0 interrogate -vv $(PYTHON_SOURCES)`
